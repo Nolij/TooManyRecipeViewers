@@ -147,6 +147,15 @@ dependencies {
 	minecraftLibraries(jeiAPI)
 	modShade(jeiAPI)
 	
+	// for testing purposes
+	modRuntimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
+	modRuntimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
+	modRuntimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
+	modRuntimeOnly("maven.modrinth:mekanism:10.7.8.70")
+	modRuntimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
+	modRuntimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
+	modRuntimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
+	modRuntimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
 	modRuntimeOnly("maven.modrinth:actually-additions:1.3.12")
 }
 

@@ -139,7 +139,8 @@ dependencies {
 	val minecraftLibraries by configurations.getting
 	minecraftLibraries.isTransitive = true
 	
-//	shade("dev.nolij:libnolij:${"libnolij_version"()}")
+	shade("dev.nolij:libnolij:${"libnolij_version"()}")
+	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
 	
 	mod("dev.emi:emi-neoforge:${"emi_version"()}")
 	

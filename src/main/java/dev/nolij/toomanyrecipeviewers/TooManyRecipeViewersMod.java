@@ -1,11 +1,15 @@
 package dev.nolij.toomanyrecipeviewers;
 
-import dev.emi.emi.api.EmiEntrypoint;
-import dev.emi.emi.api.EmiPlugin;
+import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
-import dev.emi.emi.platform.neoforge.EmiAgnosNeoForge;
+import dev.nolij.libnolij.refraction.Refraction;
+import dev.nolij.toomanyrecipeviewers.impl.registration.RuntimeRegistration;
+import dev.nolij.toomanyrecipeviewers.impl.runtime.JEIKeyMappings;
+import dev.nolij.toomanyrecipeviewers.impl.runtime.JEIRuntime;
+import dev.nolij.toomanyrecipeviewers.impl.runtime.config.JEIConfigManager;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.registration.IRuntimeRegistration;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
@@ -14,9 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Type;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 
@@ -24,6 +28,7 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 public class TooManyRecipeViewersMod {
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+	public static final Refraction REFRACTION = new Refraction(MethodHandles.lookup());
 	
 	@SuppressWarnings("SameParameterValue")
 	private static <T> List<T> getInstances(Class<?> annotationClass, Class<T> instanceClass) {
@@ -55,10 +60,26 @@ public class TooManyRecipeViewersMod {
 	}
 	
 	private static final List<IModPlugin> jeiPlugins = getInstances(JeiPlugin.class, IModPlugin.class);
+	private static final JemiPlugin jEMI = (JemiPlugin) jeiPlugins.stream().filter(x -> x instanceof JemiPlugin).findFirst().orElseThrow();
 	private static final Set<String> modsWithEMIPlugins = JemiUtil.getHandledMods();
 	
+	static {
+		jeiPlugins.removeIf(x -> modsWithEMIPlugins.contains(x.getPluginUid().getNamespace()));
+		jeiPlugins.remove(jEMI);
+		jeiPlugins.addFirst(jEMI);
+	}
+	
+	private final JEIConfigManager jeiConfigManager = new JEIConfigManager();
+	private final JEIRuntime jeiRuntime;
+	
 	public TooManyRecipeViewersMod() {
+		jeiPlugins.forEach(x -> x.onConfigManagerAvailable(jeiConfigManager));
 		
+		final IRuntimeRegistration runtimeRegistration = new RuntimeRegistration();
+		jeiPlugins.forEach(x -> x.registerRuntime(runtimeRegistration));
+		
+		jeiRuntime = new JEIRuntime(runtimeRegistration, new JEIKeyMappings(), jeiConfigManager);
+		jeiPlugins.forEach(x -> x.onRuntimeAvailable(jeiRuntime));
 	}
 	
 }

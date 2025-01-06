@@ -154,6 +154,8 @@ dependencies {
 	modRuntimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
 	modRuntimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
 	modRuntimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
+	modRuntimeOnly("maven.modrinth:mekanism_extra:1.21.1-1.0.5")
+	modRuntimeOnly("curse.maven:mekanism-weapons-929829:5906398")
 	modRuntimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
 	modRuntimeOnly("maven.modrinth:actually-additions:1.3.12")
 }

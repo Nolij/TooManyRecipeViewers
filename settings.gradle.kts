@@ -9,3 +9,5 @@ plugins {
 }
 
 rootProject.name = "toomanyrecipeviewers-emi"
+
+include(":jei-api")

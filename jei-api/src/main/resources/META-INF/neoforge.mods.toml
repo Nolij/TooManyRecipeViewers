@@ -1,0 +1,11 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+issueTrackerURL = "${issue_url}"
+
+[[mods]]
+modId = "jei_api"
+version = "${jei_version}"
+displayName = "JEI API Stub"
+authors = "JEI Authors"
+description = "JEI API"

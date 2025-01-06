@@ -10,20 +10,11 @@ plugins {
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
 
-buildConfig {
-	className("TooManyRecipeViewersConstants")
-	packageName("dev.nolij.toomanyrecipeviewers")
-
-	useJavaOutput()
-
-	buildConfigField("MOD_ID", "mod_id"())
-}
-
-rootProject.group = "maven_group"()
-rootProject.version = "${"mod_version"()}+jei.${"jei_version"()}"
+project.group = ""
+project.version = "jei_version"()
 
 base {
-	archivesName = "mod_id"()
+	archivesName = "jei-api"
 }
 
 repositories {
@@ -46,13 +37,6 @@ repositories {
 	maven("https://maven.terraformersmc.com/")
 	maven("https://maven.blamejared.com/")
 	maven("https://maven.parchmentmc.org")
-}
-
-dependencies {
-	compileOnly("org.jetbrains:annotations:${"jetbrains_annotations_version"()}")
-
-	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
-	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
 }
 
 tasks.withType<JavaCompile> {
@@ -95,26 +79,15 @@ tasks.withType<GenerateModuleMetadata> {
 	enabled = false
 }
 
-val shade: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-	configurations.runtimeClasspath.get().extendsFrom(this)
-}
-val modCompileOnly: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-}
-val modCompileOnlyShaded: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-}
-val modRuntimeOnly: Configuration by configurations.creating {
-	configurations.runtimeClasspath.get().extendsFrom(this)
-}
-val mod: Configuration by configurations.creating {
+val modShade: Configuration by configurations.creating {
 	configurations.compileClasspath.get().extendsFrom(this)
 	configurations.runtimeClasspath.get().extendsFrom(this)
 }
 
 unimined.minecraft {
 	version("minecraft_version"())
+	
+	runs.off = true
 
 	neoForge {
 		loader("neoforge_version"())
@@ -124,56 +97,20 @@ unimined.minecraft {
 		mojmap()
 		parchment(mcVersion = "minecraft_version"(), version = "parchment_version"())
 	}
-	
+
 	mods {
-		remap(modCompileOnly)
-		remap(modRuntimeOnly)
-		remap(modCompileOnlyShaded)
-		remap(mod)
+		remap(modShade)
 	}
 
 	defaultRemapJar = false
 }
 
 dependencies {
-	val minecraftLibraries by configurations.getting
-	minecraftLibraries.isTransitive = true
-	
-//	shade("dev.nolij:libnolij:${"libnolij_version"()}")
-	
-	mod("dev.emi:emi-neoforge:${"emi_version"()}")
-	
-	modCompileOnlyShaded("mezz.jei:jei-${"minecraft_version"()}-neoforge-api:${"jei_version"()}")
-	runtimeOnly(project(":jei-api"))
-	
-	// for testing purposes
-	modRuntimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
-	modRuntimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
-	modRuntimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
-	modRuntimeOnly("maven.modrinth:mekanism:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
-	modRuntimeOnly("maven.modrinth:actually-additions:1.3.12")
+	modShade("mezz.jei:jei-${"minecraft_version"()}-neoforge-api:${"jei_version"()}")
 }
 
 tasks.jar {
 	enabled = false
-}
-
-val sourcesJar by tasks.registering(Jar::class) {
-	group = "build"
-
-	archiveClassifier = "sources"
-
-	from("LICENSE") {
-		rename { "${it}_${"mod_id"()}" }
-	}
-
-	sourceSets.forEach {
-		from(it.allSource) { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
-	}
 }
 
 tasks.shadowJar {
@@ -181,13 +118,8 @@ tasks.shadowJar {
 		rename { "${it}_${"mod_id"()}" }
 	}
 
-	exclude("*.xcf")
-	exclude("LICENSE_libnolij")
-
-	configurations = listOf(shade, modCompileOnlyShaded)
+	configurations = listOf(modShade)
 	archiveClassifier = ""
-
-	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")
 }
 
 tasks.assemble {

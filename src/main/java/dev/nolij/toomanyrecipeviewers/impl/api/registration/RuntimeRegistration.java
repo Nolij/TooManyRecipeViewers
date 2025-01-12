@@ -1,29 +1,51 @@
-package dev.nolij.toomanyrecipeviewers.impl.registration;
+package dev.nolij.toomanyrecipeviewers.impl.api.registration;
 
-import dev.nolij.toomanyrecipeviewers.impl.helpers.JEIHelpers;
-import dev.nolij.toomanyrecipeviewers.impl.recipe.RecipeManager;
-import dev.nolij.toomanyrecipeviewers.impl.recipe.transfer.RecipeTransferManager;
-import dev.nolij.toomanyrecipeviewers.impl.runtime.*;
+import dev.emi.emi.jemi.runtime.JemiBookmarkOverlay;
+import dev.emi.emi.jemi.runtime.JemiIngredientFilter;
+import dev.emi.emi.jemi.runtime.JemiIngredientListOverlay;
+import dev.emi.emi.jemi.runtime.JemiRecipesGui;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;
 import mezz.jei.api.registration.IRuntimeRegistration;
-import mezz.jei.api.runtime.*;
+import mezz.jei.api.runtime.IBookmarkOverlay;
+import mezz.jei.api.runtime.IEditModeConfig;
+import mezz.jei.api.runtime.IIngredientFilter;
+import mezz.jei.api.runtime.IIngredientListOverlay;
+import mezz.jei.api.runtime.IIngredientManager;
+import mezz.jei.api.runtime.IRecipesGui;
+import mezz.jei.api.runtime.IScreenHelper;
 import org.jetbrains.annotations.NotNull;
 
 public class RuntimeRegistration implements IRuntimeRegistration {
 	
-	private final IRecipeManager recipeManager = new RecipeManager();
-	private final IJeiHelpers jeiHelpers = new JEIHelpers();
-	private final IEditModeConfig editModeConfig = new EditModeConfig();
-	private final IIngredientManager ingredientManager = new IngredientManager();
-	private final IRecipeTransferManager recipeTransferManager = new RecipeTransferManager();
-	private final IScreenHelper screenHelper = new ScreenHelper();
+	private final IRecipeManager recipeManager;
+	private final IJeiHelpers jeiHelpers;
+	private final IEditModeConfig editModeConfig;
+	private final IIngredientManager ingredientManager;
+	private final IRecipeTransferManager recipeTransferManager;
+	private final IScreenHelper screenHelper;
 	
-	private IIngredientListOverlay ingredientListOverlay = new IngredientListOverlay();
-	private IBookmarkOverlay bookmarkOverlay = new BookmarkOverlay();
-	private IRecipesGui recipesGui = new RecipesGUI();
-	private IIngredientFilter ingredientFilter = new IngredientFilter();
+	public RuntimeRegistration(
+		IRecipeManager recipeManager,
+		IJeiHelpers jeiHelpers,
+		IEditModeConfig editModeConfig,
+		IIngredientManager ingredientManager,
+		IRecipeTransferManager recipeTransferManager,
+		IScreenHelper screenHelper
+	) {
+		this.recipeManager = recipeManager;
+		this.jeiHelpers = jeiHelpers;
+		this.editModeConfig = editModeConfig;
+		this.ingredientManager = ingredientManager;
+		this.recipeTransferManager = recipeTransferManager;
+		this.screenHelper = screenHelper;
+	}
+	
+	private IIngredientListOverlay ingredientListOverlay = new JemiIngredientListOverlay();
+	private IBookmarkOverlay bookmarkOverlay = new JemiBookmarkOverlay();
+	private IRecipesGui recipesGui = new JemiRecipesGui();
+	private IIngredientFilter ingredientFilter = new JemiIngredientFilter();
 	
 	@Override
 	public void setIngredientListOverlay(@NotNull IIngredientListOverlay ingredientListOverlay) {

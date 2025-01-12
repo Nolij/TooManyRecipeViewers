@@ -1,11 +1,7 @@
-import xyz.wagyourtail.unimined.api.unimined
-
 plugins {
 	id("java")
-	id("maven-publish")
 	id("com.gradleup.shadow")
 	id("xyz.wagyourtail.unimined")
-	id("com.github.gmazzo.buildconfig")
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
@@ -37,6 +33,13 @@ repositories {
 	maven("https://maven.terraformersmc.com/")
 	maven("https://maven.blamejared.com/")
 	maven("https://maven.parchmentmc.org")
+}
+
+dependencies {
+	compileOnly("org.jetbrains:annotations:${"jetbrains_annotations_version"()}")
+
+	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
+	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
 }
 
 tasks.withType<JavaCompile> {
@@ -79,7 +82,7 @@ tasks.withType<GenerateModuleMetadata> {
 	enabled = false
 }
 
-val modShade: Configuration by configurations.creating {
+val shade: Configuration by configurations.creating {
 	configurations.compileClasspath.get().extendsFrom(this)
 	configurations.runtimeClasspath.get().extendsFrom(this)
 }
@@ -98,15 +101,11 @@ unimined.minecraft {
 		parchment(mcVersion = "minecraft_version"(), version = "parchment_version"())
 	}
 
-	mods {
-		remap(modShade)
-	}
-
 	defaultRemapJar = false
 }
 
 dependencies {
-	modShade("mezz.jei:jei-${"minecraft_version"()}-neoforge-api:${"jei_version"()}")
+	shade("mezz.jei:jei-${"minecraft_version"()}-neoforge:${"jei_version"()}")
 }
 
 tasks.jar {
@@ -115,13 +114,57 @@ tasks.jar {
 
 tasks.shadowJar {
 	from("LICENSE") {
-		rename { "${it}_${"mod_id"()}" }
+		rename { "${it}_jei"}
 	}
-
-	configurations = listOf(modShade)
+	
+	configurations = emptyList()
 	archiveClassifier = ""
+	
+	shade.resolve().forEach { file ->
+		from(zipTree(file.absolutePath))
+	}
+	
+	val included = listOf(
+		"META-INF/accesstransformer.cfg",
+		"META-INF/neoforge.mods.toml",
+		"mezz/jei/api/**",
+		"mezz/jei/common/config/BookmarkTooltipFeature.*",
+		"mezz/jei/common/config/ClientToggleState.*",
+		"mezz/jei/common/config/IClientConfig.*",
+		"mezz/jei/common/config/IClientToggleState.*",
+		"mezz/jei/common/config/IIngredientFilterConfig.*",
+		"mezz/jei/common/config/IIngredientGridConfig.*",
+		"mezz/jei/common/config/IJeiClientConfigs.*",
+		"mezz/jei/common/config/file/**",
+		"mezz/jei/common/config/IngredientSortStage.*",
+		"mezz/jei/common/config/GiveMode.*",
+		"mezz/jei/common/config/RecipeSorterStage.*",
+		"mezz/jei/common/Constants.*",
+		"mezz/jei/common/gui/**",
+		"mezz/jei/common/Internal.*",
+		"mezz/jei/common/input/ClickableIngredient.*",
+		"mezz/jei/common/input/keys/IJeiKeyMappingCategoryBuilder.*",
+		"mezz/jei/common/JeiFeatures.class",
+		"mezz/jei/common/network/**",
+		"mezz/jei/common/platform/**",
+		"mezz/jei/common/util/**",
+		"mezz/jei/core/**",
+		"mezz/jei/library/**",
+		"mezz/jei/neoforge/platform/**",
+	)
+	val excluded = listOf<String>(
+	)
+	
+	inputs.property("included", included.sorted().fold("") { out, value -> "${out}${value};" })
+	inputs.property("excluded", excluded.sorted().fold("") { out, value -> "${out}${value};" })
+	include(included)
+	exclude(excluded)
 }
 
 tasks.assemble {
+	dependsOn(tasks.shadowJar)
+}
+
+rootProject.tasks.compileJava {
 	dependsOn(tasks.shadowJar)
 }

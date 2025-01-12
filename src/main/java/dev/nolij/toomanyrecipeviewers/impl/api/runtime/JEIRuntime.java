@@ -1,10 +1,9 @@
-package dev.nolij.toomanyrecipeviewers.impl.runtime;
+package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 
-import dev.nolij.toomanyrecipeviewers.impl.runtime.config.JEIConfigManager;
+import dev.nolij.toomanyrecipeviewers.impl.api.registration.RuntimeRegistration;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;
-import mezz.jei.api.registration.IRuntimeRegistration;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IEditModeConfig;
 import mezz.jei.api.runtime.IIngredientFilter;
@@ -16,11 +15,6 @@ import mezz.jei.api.runtime.IRecipesGui;
 import mezz.jei.api.runtime.IScreenHelper;
 import mezz.jei.api.runtime.config.IJeiConfigManager;
 import org.jetbrains.annotations.NotNull;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodType;
-
-import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.REFRACTION;
 
 public class JEIRuntime implements IJeiRuntime {
 	
@@ -37,28 +31,12 @@ public class JEIRuntime implements IJeiRuntime {
 	private final IEditModeConfig editModeConfig;
 	private final IJeiConfigManager jeiConfigManager;
 	
-	private static <TObject, TValue> TValue getOrElse(TObject obj, String getterName, Class<? super TValue> valueClass, TValue value) {
-		final MethodHandle getter =
-			REFRACTION.getMethodOrNull(
-				obj.getClass(),
-				getterName,
-				MethodType.methodType(valueClass, obj.getClass()),
-				valueClass);
-		
-		try {
-			//noinspection unchecked,DataFlowIssue
-			return (TValue) getter.invokeExact(obj);
-		} catch (Throwable ignored) {
-			return value;
-		}
-	}
-	
-	public JEIRuntime(IRuntimeRegistration registration, IJeiKeyMappings jeiKeyMappings, IJeiConfigManager jeiConfigManager) {
+	public JEIRuntime(RuntimeRegistration registration, IJeiKeyMappings jeiKeyMappings, IJeiConfigManager jeiConfigManager) {
 		this.recipeManager = registration.getRecipeManager();
-		this.recipesGUI = getOrElse(registration, "getRecipesGui", IRecipesGui.class, new RecipesGUI());
-		this.ingredientFilter = getOrElse(registration, "getIngredientFilter", IIngredientFilter.class, new IngredientFilter());
-		this.ingredientListOverlay = getOrElse(registration, "getIngredientListOverlay", IIngredientListOverlay.class, new IngredientListOverlay());
-		this.bookmarkOverlay = getOrElse(registration, "getBookmarkOverlay", IBookmarkOverlay.class, new BookmarkOverlay());
+		this.recipesGUI = registration.getRecipesGui();
+		this.ingredientFilter = registration.getIngredientFilter();
+		this.ingredientListOverlay = registration.getIngredientListOverlay();
+		this.bookmarkOverlay = registration.getBookmarkOverlay();
 		this.jeiHelpers = registration.getJeiHelpers();
 		this.ingredientManager = registration.getIngredientManager();
 		this.jeiKeyMappings = jeiKeyMappings;

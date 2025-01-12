@@ -99,19 +99,6 @@ val shade: Configuration by configurations.creating {
 	configurations.compileClasspath.get().extendsFrom(this)
 	configurations.runtimeClasspath.get().extendsFrom(this)
 }
-val modCompileOnly: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-}
-val modCompileOnlyShaded: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-}
-val modRuntimeOnly: Configuration by configurations.creating {
-	configurations.runtimeClasspath.get().extendsFrom(this)
-}
-val mod: Configuration by configurations.creating {
-	configurations.compileClasspath.get().extendsFrom(this)
-	configurations.runtimeClasspath.get().extendsFrom(this)
-}
 
 unimined.minecraft {
 	version("minecraft_version"())
@@ -124,13 +111,6 @@ unimined.minecraft {
 		mojmap()
 		parchment(mcVersion = "minecraft_version"(), version = "parchment_version"())
 	}
-	
-	mods {
-		remap(modCompileOnly)
-		remap(modRuntimeOnly)
-		remap(modCompileOnlyShaded)
-		remap(mod)
-	}
 
 	defaultRemapJar = false
 }
@@ -142,23 +122,22 @@ dependencies {
 	shade("dev.nolij:libnolij:${"libnolij_version"()}")
 	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
 	
-	mod("dev.emi:emi-neoforge:${"emi_version"()}")
+	implementation("dev.emi:emi-neoforge:${"emi_version"()}")
 	
-	modCompileOnlyShaded("mezz.jei:jei-${"minecraft_version"()}-neoforge-api:${"jei_version"()}")
-	runtimeOnly(project(":jei-api"))
+	shade(project(":jei-api"))
 	
 	// for testing purposes
-	modRuntimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
-	modRuntimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
-	modRuntimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
-	modRuntimeOnly("maven.modrinth:mekanism:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
-	modRuntimeOnly("maven.modrinth:mekanism_extra:1.21.1-1.0.5")
-	modRuntimeOnly("curse.maven:mekanism-weapons-929829:5906398")
-	modRuntimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
-	modRuntimeOnly("maven.modrinth:actually-additions:1.3.12")
+	runtimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
+	runtimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
+	runtimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
+	runtimeOnly("maven.modrinth:mekanism:10.7.8.70")
+	runtimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
+	runtimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
+	runtimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
+	runtimeOnly("maven.modrinth:mekanism_extra:1.21.1-1.0.5")
+	runtimeOnly("curse.maven:mekanism-weapons-929829:5906398")
+	runtimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
+	runtimeOnly("maven.modrinth:actually-additions:1.3.12")
 }
 
 tasks.jar {
@@ -187,7 +166,7 @@ tasks.shadowJar {
 	exclude("*.xcf")
 	exclude("LICENSE_libnolij")
 
-	configurations = listOf(shade, modCompileOnlyShaded)
+	configurations = listOf(shade)
 	archiveClassifier = ""
 
 	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")

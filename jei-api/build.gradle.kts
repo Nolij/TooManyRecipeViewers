@@ -128,10 +128,12 @@ tasks.shadowJar {
 		"META-INF/accesstransformer.cfg",
 		"META-INF/neoforge.mods.toml",
 		"mezz/jei/api/**",
+		"mezz/jei/common/codecs/**",
 		"mezz/jei/common/config/BookmarkTooltipFeature.*",
 		"mezz/jei/common/config/ClientToggleState.*",
+		"mezz/jei/common/config/DebugConfig.*",
 		"mezz/jei/common/config/IClientConfig.*",
-		"mezz/jei/common/config/IClientToggleState.*",
+		"mezz/jei/common/config/IClientToggleState*",
 		"mezz/jei/common/config/IIngredientFilterConfig.*",
 		"mezz/jei/common/config/IIngredientGridConfig.*",
 		"mezz/jei/common/config/IJeiClientConfigs.*",
@@ -140,6 +142,7 @@ tasks.shadowJar {
 		"mezz/jei/common/config/GiveMode.*",
 		"mezz/jei/common/config/RecipeSorterStage.*",
 		"mezz/jei/common/Constants.*",
+		"mezz/jei/common/input/**/I*",
 		"mezz/jei/common/gui/**",
 		"mezz/jei/common/Internal.*",
 		"mezz/jei/common/input/ClickableIngredient.*",
@@ -151,6 +154,8 @@ tasks.shadowJar {
 		"mezz/jei/core/**",
 		"mezz/jei/library/**",
 		"mezz/jei/neoforge/platform/**",
+		"mezz/jei/gui/**",
+		"mezz/jei/gui/startup/**",
 	)
 	val excluded = listOf<String>(
 	)

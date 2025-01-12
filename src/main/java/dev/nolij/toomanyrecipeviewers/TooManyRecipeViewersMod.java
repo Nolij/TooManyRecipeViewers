@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
@@ -28,12 +29,16 @@ import mezz.jei.api.recipe.category.extensions.IRecipeCategoryDecorator;
 import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;
 import mezz.jei.api.runtime.IIngredientManager;
+import mezz.jei.api.runtime.IJeiKeyMappings;
 import mezz.jei.api.runtime.IScreenHelper;
 import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
 import mezz.jei.common.config.ClientToggleState;
 import mezz.jei.common.config.IClientToggleState;
+import mezz.jei.common.input.IInternalKeyMappings;
 import mezz.jei.common.util.StackHelper;
+import mezz.jei.gui.startup.JeiEventHandlers;
+import mezz.jei.gui.startup.JeiGuiStarter;
 import mezz.jei.library.color.ColorHelper;
 import mezz.jei.library.config.ColorNameConfig;
 import mezz.jei.library.config.EditModeConfig;
@@ -56,18 +61,28 @@ import mezz.jei.library.recipes.RecipeManagerInternal;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import mezz.jei.neoforge.platform.FluidHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RecipesUpdatedEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.lang.invoke.MethodHandles;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
@@ -134,40 +149,51 @@ public class TooManyRecipeViewersMod {
 	
 	private static final JEIConfigManager jeiConfigManager = new JEIConfigManager();
 	
-	public TooManyRecipeViewersMod() {
+	public TooManyRecipeViewersMod(IEventBus modEventBus) {
 		Internal.setServerConnection(new ConnectionToServer());
 		Internal.setJeiClientConfigs(new JEIClientConfigs());
 		
-		LOGGER.info("Loaded JEI Plugins: [{}]", jeiPlugins.stream().map(x -> x.getPluginUid().toString()).collect(Collectors.joining(", ")));
+		LOGGER.info("Loading JEI Plugins: [{}]", jeiPlugins.stream().map(x -> x.getPluginUid().toString()).collect(Collectors.joining(", ")));
 		jeiPlugins.forEach(x -> x.onConfigManagerAvailable(jeiConfigManager));
+		
+		NeoForge.EVENT_BUS.addListener(RecipesUpdatedEvent.class, event -> register());
+//		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> onRuntimeUnavailable());
+		modEventBus.addListener(this::onRegisterClientReloadListeners);
 	}
 	
-	@EmiEntrypoint
-	public static class EMIPlugin implements EmiPlugin {
-		
-		public EMIPlugin() {}
-		
-		private static class JEIRuntimeStorage {
-			private SubtypeManager subtypeManager = null;
-			private ColorHelper colorHelper;
-			private IIngredientManager ingredientManager = null;
-			private ImmutableSetMultimap<String, String> modAliases = null;
-			private IClientToggleState clientToggleState = null;
-			private EditModeConfig editModeConfig;
-			private JeiHelpers jeiHelpers = null;
-			private CraftingRecipeCategory craftingCategory = null;
-			private SmithingRecipeCategory smithingCategory = null;
-			private IRecipeManager recipeManager = null;
-			private IRecipeTransferManager recipeTransferManager = null;
-			private IScreenHelper screenHelper = null;
-			private JEIRuntime jeiRuntime = null;
-		}
-		
-		private JEIRuntimeStorage storage = null;
-		
-		@Override
-		public synchronized void register(EmiRegistry emiRegistry) {
+	private static class JEIRuntimeStorage {
+		private volatile SubtypeManager subtypeManager = null;
+		private volatile ColorHelper colorHelper = null;
+		private volatile IIngredientManager ingredientManager = null;
+		private volatile ImmutableSetMultimap<String, String> modAliases = null;
+		private volatile IClientToggleState clientToggleState = null;
+		private volatile EditModeConfig editModeConfig = null;
+		private volatile JeiHelpers jeiHelpers = null;
+		private volatile CraftingRecipeCategory craftingCategory = null;
+		private volatile SmithingRecipeCategory smithingCategory = null;
+		private volatile IRecipeManager recipeManager = null;
+		private volatile IRecipeTransferManager recipeTransferManager = null;
+		private volatile IScreenHelper screenHelper = null;
+		private volatile ResourceManagerReloadListener resourceReloadHandler = null;
+		private volatile JEIRuntime jeiRuntime = null;
+	}
+	
+	private volatile JEIRuntimeStorage storage = null;
+	
+	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
+		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
+		event.registerReloadListener((ResourceManagerReloadListener) (ResourceManager resourceManager) -> {
+			final JEIRuntimeStorage storage = this.storage;
+			if (storage != null && storage.resourceReloadHandler != null)
+				storage.resourceReloadHandler.onResourceManagerReload(resourceManager);
+		});
+	}
+	
+	public void register() {
+		synchronized (this) {
 			onRuntimeUnavailable();
+			
+			storage = new JEIRuntimeStorage();
 			
 			registerSubtypes();
 			registerIngredients();
@@ -179,155 +205,162 @@ public class TooManyRecipeViewersMod {
 			
 			onRuntimeAvailable();
 		}
-		
-		private void onRuntimeUnavailable() {
+	}
+	
+	private void onRuntimeUnavailable() {
+		synchronized (this) {
 			if (storage != null) {
 				storage = null;
 				Internal.setRuntime(null);
 				
 				jeiPlugins.forEach(IModPlugin::onRuntimeUnavailable);
 			}
-			
-			storage = new JEIRuntimeStorage();
 		}
+	}
+	
+	private void registerSubtypes() {
+		final SubtypeRegistration subtypeRegistration = new SubtypeRegistration();
+		jeiPlugins.forEach(x -> x.registerItemSubtypes(subtypeRegistration));
+		jeiPlugins.forEach(x -> x.registerFluidSubtypes(subtypeRegistration, new FluidHelper()));
+		storage.subtypeManager = new SubtypeManager(subtypeRegistration.getInterpreters());
+	}
+	
+	private void registerIngredients() {
+		storage.colorHelper = new ColorHelper(new ColorNameConfig());
+		final IngredientManagerBuilder ingredientManagerBuilder = new IngredientManagerBuilder(storage.subtypeManager, storage.colorHelper);
+		jeiPlugins.forEach(x -> x.registerIngredients(ingredientManagerBuilder));
+		jeiPlugins.forEach(x -> x.registerExtraIngredients(ingredientManagerBuilder));
+		jeiPlugins.forEach(x -> x.registerIngredientAliases(ingredientManagerBuilder));
+		storage.ingredientManager = ingredientManagerBuilder.build();
+	}
+	
+	private void registerModAliases() {
+		final ModInfoRegistration modInfoRegistration = new ModInfoRegistration();
+		jeiPlugins.forEach(x -> x.registerModInfo(modInfoRegistration));
+		storage.modAliases = modInfoRegistration.getModAliases();
+	}
+	
+	private void createJeiHelpers() {
+		final IFocusFactory focusFactory = new FocusFactory(storage.ingredientManager);
 		
-		private void registerSubtypes() {
-			final SubtypeRegistration subtypeRegistration = new SubtypeRegistration();
-			jeiPlugins.forEach(x -> x.registerItemSubtypes(subtypeRegistration));
-			jeiPlugins.forEach(x -> x.registerFluidSubtypes(subtypeRegistration, new FluidHelper()));
-			storage.subtypeManager = new SubtypeManager(subtypeRegistration.getInterpreters());
-		}
+		final IngredientBlacklistInternal blacklist = new IngredientBlacklistInternal();
+		storage.ingredientManager.registerIngredientListener(blacklist);
 		
-		private void registerIngredients() {
-			storage.colorHelper = new ColorHelper(new ColorNameConfig());
-			final IngredientManagerBuilder ingredientManagerBuilder = new IngredientManagerBuilder(storage.subtypeManager, storage.colorHelper);
-			jeiPlugins.forEach(x -> x.registerIngredients(ingredientManagerBuilder));
-			jeiPlugins.forEach(x -> x.registerExtraIngredients(ingredientManagerBuilder));
-			jeiPlugins.forEach(x -> x.registerIngredientAliases(ingredientManagerBuilder));
-			storage.ingredientManager = ingredientManagerBuilder.build();
-		}
+		storage.clientToggleState = new ClientToggleState();
 		
-		private void registerModAliases() {
-			final ModInfoRegistration modInfoRegistration = new ModInfoRegistration();
-			jeiPlugins.forEach(x -> x.registerModInfo(modInfoRegistration));
-			storage.modAliases = modInfoRegistration.getModAliases();
-		}
+		storage.editModeConfig = new EditModeConfig(new EditModeConfig.ISerializer() {
+			@Override public void initialize(@NotNull EditModeConfig editModeConfig) {}
+			@Override public void save(@NotNull EditModeConfig editModeConfig) {}
+			@Override public void load(@NotNull EditModeConfig editModeConfig) {}
+		}, storage.ingredientManager);
 		
-		private void createJeiHelpers() {
-			final IFocusFactory focusFactory = new FocusFactory(storage.ingredientManager);
-			
-			final IngredientBlacklistInternal blacklist = new IngredientBlacklistInternal();
-			storage.ingredientManager.registerIngredientListener(blacklist);
-			
-			storage.clientToggleState = new ClientToggleState();
-			
-			storage.editModeConfig = new EditModeConfig(new EditModeConfig.ISerializer() {
-				@Override public void initialize(@NotNull EditModeConfig editModeConfig) {}
-				@Override public void save(@NotNull EditModeConfig editModeConfig) {}
-				@Override public void load(@NotNull EditModeConfig editModeConfig) {}
-			}, storage.ingredientManager);
-			
-			storage.jeiHelpers = new JeiHelpers(
-				new GuiHelper(storage.ingredientManager),
-				new StackHelper(storage.subtypeManager),
-				new ModIdHelper(new ModIDFormatConfig(), storage.ingredientManager, storage.modAliases),
-				focusFactory,
-				storage.colorHelper,
-				storage.ingredientManager,
-				new VanillaRecipeFactory(storage.ingredientManager),
-				new CodecHelper(storage.ingredientManager, focusFactory),
-				new IngredientVisibility(blacklist, storage.clientToggleState, storage.editModeConfig, storage.ingredientManager)
+		storage.jeiHelpers = new JeiHelpers(
+			new GuiHelper(storage.ingredientManager),
+			new StackHelper(storage.subtypeManager),
+			new ModIdHelper(new ModIDFormatConfig(), storage.ingredientManager, storage.modAliases),
+			focusFactory,
+			storage.colorHelper,
+			storage.ingredientManager,
+			new VanillaRecipeFactory(storage.ingredientManager),
+			new CodecHelper(storage.ingredientManager, focusFactory),
+			new IngredientVisibility(blacklist, storage.clientToggleState, storage.editModeConfig, storage.ingredientManager)
+		);
+	}
+	
+	private void createRecipeManager() {
+		final List<IRecipeCategory<?>> recipeCategories = registerRecipeCategories();
+		
+		final ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = registerRecipeCatalysts();
+		
+		final RecipeManagerInternal recipeManagerInternal = new RecipeManagerInternal(
+			recipeCategories,
+			recipeCatalysts,
+			storage.ingredientManager,
+			new RecipeCategorySortingConfig(),
+			storage.jeiHelpers.getIngredientVisibility()
+		);
+		final RecipeManagerPluginHelper recipeManagerPluginHelper = new RecipeManagerPluginHelper(recipeManagerInternal);
+		final AdvancedRegistration advancedRegistration = new AdvancedRegistration(storage.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
+		jeiPlugins.forEach(x -> x.registerAdvanced(advancedRegistration));
+		
+		final List<IRecipeManagerPlugin> recipeManagerPlugins = advancedRegistration.getRecipeManagerPlugins();
+		final ImmutableListMultimap<RecipeType<?>, IRecipeCategoryDecorator<?>> recipeCategoryDecorators = advancedRegistration.getRecipeCategoryDecorators();
+		recipeManagerInternal.addPlugins(recipeManagerPlugins);
+		recipeManagerInternal.addDecorators(recipeCategoryDecorators);
+		
+		RecipeRegistration recipeRegistration = new RecipeRegistration(storage.jeiHelpers, storage.ingredientManager, recipeManagerInternal);
+		jeiPlugins.forEach(x -> x.registerRecipes(recipeRegistration));
+		recipeManagerInternal.compact();
+		
+		storage.recipeManager = new RecipeManager(recipeManagerInternal, storage.ingredientManager);
+	}
+	
+	private @NotNull List<IRecipeCategory<?>> registerRecipeCategories() {
+		final RecipeCategoryRegistration recipeCategoryRegistration = new RecipeCategoryRegistration(storage.jeiHelpers);
+		jeiPlugins.forEach(x -> x.registerCategories(recipeCategoryRegistration));
+		
+		storage.craftingCategory = jeiVanillaPlugin.getCraftingCategory()
+			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
+		storage.smithingCategory = jeiVanillaPlugin.getSmithingCategory()
+			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
+		final VanillaCategoryExtensionRegistration vanillaCategoryExtensionRegistration = 
+			new VanillaCategoryExtensionRegistration(
+				storage.craftingCategory, 
+				storage.smithingCategory, 
+				storage.jeiHelpers
 			);
-		}
+		jeiPlugins.forEach(x -> x.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration));
 		
-		private void createRecipeManager() {
-			final List<IRecipeCategory<?>> recipeCategories = registerRecipeCategories();
-			
-			final ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = registerRecipeCatalysts();
-			
-			final RecipeManagerInternal recipeManagerInternal = new RecipeManagerInternal(
-				recipeCategories,
-				recipeCatalysts,
-				storage.ingredientManager,
-				new RecipeCategorySortingConfig(),
-				storage.jeiHelpers.getIngredientVisibility()
-			);
-			final RecipeManagerPluginHelper recipeManagerPluginHelper = new RecipeManagerPluginHelper(recipeManagerInternal);
-			final AdvancedRegistration advancedRegistration = new AdvancedRegistration(storage.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
-			jeiPlugins.forEach(x -> x.registerAdvanced(advancedRegistration));
-			
-			final List<IRecipeManagerPlugin> recipeManagerPlugins = advancedRegistration.getRecipeManagerPlugins();
-			final ImmutableListMultimap<RecipeType<?>, IRecipeCategoryDecorator<?>> recipeCategoryDecorators = advancedRegistration.getRecipeCategoryDecorators();
-			recipeManagerInternal.addPlugins(recipeManagerPlugins);
-			recipeManagerInternal.addDecorators(recipeCategoryDecorators);
-			
-			RecipeRegistration recipeRegistration = new RecipeRegistration(storage.jeiHelpers, storage.ingredientManager, recipeManagerInternal);
-			jeiPlugins.forEach(x -> x.registerRecipes(recipeRegistration));
-			recipeManagerInternal.compact();
-			
-			storage.recipeManager = new RecipeManager(recipeManagerInternal, storage.ingredientManager);
-		}
+		return recipeCategoryRegistration.getRecipeCategories();
+	}
+	
+	private @NotNull ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> registerRecipeCatalysts() {
+		final RecipeCatalystRegistration recipeCatalystRegistration = new RecipeCatalystRegistration(storage.ingredientManager, storage.jeiHelpers);
+		jeiPlugins.forEach(x -> x.registerRecipeCatalysts(recipeCatalystRegistration));
+		return recipeCatalystRegistration.getRecipeCatalysts();
+	}
+	
+	private void registerRecipeTransferHandlers() {
+		final IStackHelper stackHelper = storage.jeiHelpers.getStackHelper();
+		final IRecipeTransferHandlerHelper handlerHelper = new RecipeTransferHandlerHelper(stackHelper, storage.craftingCategory);
+		final RecipeTransferRegistration recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, storage.jeiHelpers, Internal.getServerConnection());
+		jeiPlugins.forEach(x -> x.registerRecipeTransferHandlers(recipeTransferRegistration));
+		storage.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();
+	}
+	
+	private void registerGuiHandlers() {
+		final GuiHandlerRegistration guiHandlerRegistration = new GuiHandlerRegistration(storage.jeiHelpers);
+		jeiPlugins.forEach(x -> x.registerGuiHandlers(guiHandlerRegistration));
+		storage.screenHelper = guiHandlerRegistration.createGuiScreenHelper(storage.ingredientManager);
+	}
+	
+	private void onRuntimeAvailable() {
+		final RuntimeRegistration runtimeRegistration = registerRuntime();
 		
-		private @NotNull List<IRecipeCategory<?>> registerRecipeCategories() {
-			final RecipeCategoryRegistration recipeCategoryRegistration = new RecipeCategoryRegistration(storage.jeiHelpers);
-			jeiPlugins.forEach(x -> x.registerCategories(recipeCategoryRegistration));
-			
-			storage.craftingCategory = jeiVanillaPlugin.getCraftingCategory()
-				.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
-			storage.smithingCategory = jeiVanillaPlugin.getSmithingCategory()
-				.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
-			final VanillaCategoryExtensionRegistration vanillaCategoryExtensionRegistration = 
-				new VanillaCategoryExtensionRegistration(
-					storage.craftingCategory, 
-					storage.smithingCategory, 
-					storage.jeiHelpers
-				);
-			jeiPlugins.forEach(x -> x.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration));
-			
-			return recipeCategoryRegistration.getRecipeCategories();
-		}
+		final IInternalKeyMappings jeiKeyMappings = new JEIKeyMappings();
+		Internal.setKeyMappings(jeiKeyMappings);
 		
-		private @NotNull ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> registerRecipeCatalysts() {
-			final RecipeCatalystRegistration recipeCatalystRegistration = new RecipeCatalystRegistration(storage.ingredientManager, storage.jeiHelpers);
-			jeiPlugins.forEach(x -> x.registerRecipeCatalysts(recipeCatalystRegistration));
-			return recipeCatalystRegistration.getRecipeCatalysts();
-		}
+		final JeiEventHandlers eventHandlers = JeiGuiStarter.start(runtimeRegistration);
+		storage.resourceReloadHandler = eventHandlers.resourceReloadHandler();
 		
-		private void registerRecipeTransferHandlers() {
-			final IStackHelper stackHelper = storage.jeiHelpers.getStackHelper();
-			final IRecipeTransferHandlerHelper handlerHelper = new RecipeTransferHandlerHelper(stackHelper, storage.craftingCategory);
-			final RecipeTransferRegistration recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, storage.jeiHelpers, Internal.getServerConnection());
-			jeiPlugins.forEach(x -> x.registerRecipeTransferHandlers(recipeTransferRegistration));
-			storage.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();
-		}
+		storage.jeiRuntime = new JEIRuntime(runtimeRegistration, jeiKeyMappings, jeiConfigManager);
+		Internal.setRuntime(storage.jeiRuntime);
+		jeiPlugins.forEach(x -> x.onRuntimeAvailable(storage.jeiRuntime));
+	}
+	
+	private @NotNull RuntimeRegistration registerRuntime() {
+		final RuntimeRegistration runtimeRegistration = new RuntimeRegistration(
+			storage.recipeManager,
+			storage.jeiHelpers,
+			storage.editModeConfig,
+			storage.ingredientManager,
+			storage.recipeTransferManager,
+			storage.screenHelper
+		);
 		
-		private void registerGuiHandlers() {
-			final GuiHandlerRegistration guiHandlerRegistration = new GuiHandlerRegistration(storage.jeiHelpers);
-			jeiPlugins.forEach(x -> x.registerGuiHandlers(guiHandlerRegistration));
-			storage.screenHelper = guiHandlerRegistration.createGuiScreenHelper(storage.ingredientManager);
-		}
+		jeiPlugins.forEach(x -> x.registerRuntime(runtimeRegistration));
 		
-		private void onRuntimeAvailable() {
-			final RuntimeRegistration runtimeRegistration = registerRuntime();
-			
-			storage.jeiRuntime = new JEIRuntime(runtimeRegistration, new JEIKeyMappings(), jeiConfigManager);
-			Internal.setRuntime(storage.jeiRuntime);
-			jeiPlugins.forEach(x -> x.onRuntimeAvailable(storage.jeiRuntime));
-		}
-		
-		private @NotNull RuntimeRegistration registerRuntime() {
-			final RuntimeRegistration runtimeRegistration = new RuntimeRegistration(
-				storage.recipeManager,
-				storage.jeiHelpers,
-				storage.editModeConfig,
-				storage.ingredientManager,
-				storage.recipeTransferManager,
-				storage.screenHelper
-			);
-			jeiPlugins.forEach(x -> x.registerRuntime(runtimeRegistration));
-			return runtimeRegistration;
-		}
-		
+		return runtimeRegistration;
 	}
 	
 }

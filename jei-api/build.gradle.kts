@@ -125,6 +125,8 @@ tasks.shadowJar {
 	}
 	
 	val included = listOf(
+		"assets/jei/atlases/gui.json",
+		"assets/jei/textures/jei/atlas/gui/**",
 		"META-INF/accesstransformer.cfg",
 		"META-INF/neoforge.mods.toml",
 		"mezz/jei/api/**",

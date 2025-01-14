@@ -46,7 +46,6 @@ import mezz.jei.library.ingredients.IngredientBlacklistInternal;
 import mezz.jei.library.ingredients.IngredientVisibility;
 import mezz.jei.library.ingredients.subtypes.SubtypeManager;
 import mezz.jei.library.load.registration.*;
-import mezz.jei.library.plugins.debug.JeiDebugPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.plugins.vanilla.anvil.SmithingRecipeCategory;
@@ -113,8 +112,6 @@ public class TooManyRecipeViewersMod {
 	
 	static {
 		final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);
-		
-		pluginClasses.remove(JeiDebugPlugin.class);
 		
 		final ArrayList<IModPlugin> plugins = new ArrayList<>();
 		VanillaPlugin vanillaPlugin = null;

@@ -8,6 +8,6 @@ plugins {
 	id("org.gradle.toolchains.foojay-resolver-convention") version("0.7.0")
 }
 
-rootProject.name = "toomanyrecipeviewers-emi"
+rootProject.name = "toomanyrecipeviewers"
 
 include(":jei-api")

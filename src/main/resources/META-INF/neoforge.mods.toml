@@ -4,7 +4,7 @@ license = "OSL-3.0"
 issueTrackerURL = "${issue_url}"
 
 [[mods]]
-modId = "toomanyrecipeviewers_emi"
+modId = "toomanyrecipeviewers"
 version = "${mod_version}"
 displayName = "${mod_name}"
 displayURL = "${mod_url}"
@@ -14,21 +14,21 @@ description = """
 ${mod_description}
 """
 
-[[dependencies.toomanyrecipeviewers_emi]]
+[[dependencies.toomanyrecipeviewers]]
 modId = "neoforge"
 type = "required"
 versionRange = "${neoforge_range}"
 ordering = "NONE"
 side = "CLIENT"
 
-[[dependencies.toomanyrecipeviewers_emi]]
+[[dependencies.toomanyrecipeviewers]]
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_range}"
 ordering = "NONE"
 side = "CLIENT"
 
-[[dependencies.toomanyrecipeviewers_emi]]
+[[dependencies.toomanyrecipeviewers]]
 modId = "emi"
 type = "required"
 versionRange = "${emi_range}"

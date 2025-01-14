@@ -173,5 +173,5 @@ tasks.shadowJar {
 }
 
 tasks.assemble {
-	dependsOn(tasks.shadowJar)
+	dependsOn(tasks.shadowJar, sourcesJar)
 }

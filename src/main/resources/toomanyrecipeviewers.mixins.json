@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "dev.nolij.toomanyrecipeviewers.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"EmiAgnosMixin"
+	],
+	"client": [],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"refmap": "toomanyrecipeviewers-refmap.json"
+}

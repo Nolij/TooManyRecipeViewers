@@ -105,6 +105,7 @@ unimined.minecraft {
 
 	neoForge {
 		loader("neoforge_version"())
+		mixinConfig("toomanyrecipeviewers.mixins.json")
 	}
 
 	mappings {
@@ -138,6 +139,11 @@ dependencies {
 	runtimeOnly("curse.maven:mekanism-weapons-929829:5906398")
 	runtimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
 	runtimeOnly("maven.modrinth:actually-additions:1.3.12")
+	runtimeOnly("curse.maven:placebo-283644:6068449")
+	runtimeOnly("curse.maven:apotheosis-313970:6078226")
+	runtimeOnly("curse.maven:apothic-attributes-898963:6060907")
+	runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
+	runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
 }
 
 tasks.jar {

@@ -153,6 +153,7 @@ tasks.shadowJar {
 		"mezz/jei/common/JeiFeatures.class",
 		"mezz/jei/common/network/**",
 		"mezz/jei/common/platform/**",
+		"mezz/jei/common/transfer/**",
 		"mezz/jei/common/util/**",
 		"mezz/jei/core/**",
 		"mezz/jei/library/**",

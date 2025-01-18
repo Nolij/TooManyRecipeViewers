@@ -9,6 +9,7 @@ import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.EmiStackInteraction;
+import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.jemi.JemiRecipeHandler;
 import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiStackSerializer;
@@ -60,6 +61,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 import static dev.nolij.toomanyrecipeviewers.JEIRuntimeStorage.*;
 
@@ -81,7 +83,7 @@ public final class EMIPlugin implements EmiPlugin {
 		createJeiHelpers();
 		createRecipeManager(registry);
 		registerRecipeTransferHandlers();
-		registerGuiHandlers();
+		registerGuiHandlers(registry);
 		
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
@@ -304,10 +306,17 @@ public final class EMIPlugin implements EmiPlugin {
 		};
 	}
 	
-	private void registerGuiHandlers() {
+	private void registerGuiHandlers(EmiRegistry registry) {
 		final var guiHandlerRegistration = new GuiHandlerRegistration(storage.jeiHelpers);
 		JEIPlugins.registerGuiHandlers(guiHandlerRegistration);
 		storage.screenHelper = guiHandlerRegistration.createGuiScreenHelper(storage.ingredientManager);
+		
+		registry.addGenericExclusionArea((screen, consumer) -> {
+			final var exclusions = storage.screenHelper.getGuiExclusionAreas(screen).filter(Objects::nonNull).toList();
+			for (final var exclusion : exclusions) {
+				consumer.accept(new Bounds(exclusion.getX(), exclusion.getY(), exclusion.getWidth(), exclusion.getHeight()));
+			}
+		});
 	}
 	
 	private void onRuntimeAvailable() {

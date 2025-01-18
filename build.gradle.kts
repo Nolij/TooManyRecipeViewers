@@ -145,6 +145,9 @@ dependencies {
 	runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
 	runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
 	runtimeOnly("maven.modrinth:c2me-neoforge:0.3.0+alpha.0.47+1.21.1")
+	runtimeOnly("maven.modrinth:sophisticated-core:1.21.1-1.1.3.836")
+	runtimeOnly("maven.modrinth:sophisticated-storage:1.21.1-1.2.6.1038")
+	runtimeOnly("maven.modrinth:sophisticated-backpacks:1.21.1-3.22.5.1173")
 }
 
 tasks.jar {

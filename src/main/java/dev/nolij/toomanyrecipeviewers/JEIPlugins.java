@@ -23,6 +23,7 @@ import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.library.plugins.jei.JeiInternalPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforgespi.language.ModFileScanData;
@@ -109,82 +110,95 @@ public final class JEIPlugins {
 				.orElseThrow();
 	}
 	
-	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher) {
-		for (final IModPlugin plugin : plugins) {
+	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
+		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
+		
+		final var timestamp = System.currentTimeMillis();
+		for (final var plugin : plugins) {
+			final var pluginId = plugin.getPluginUid();
+			final var pluginTimestamp = System.currentTimeMillis();
 			try {
-				dispatcher.accept(plugin);
+				if (onMainThread) {
+					Minecraft.getInstance().executeBlocking(() -> dispatcher.accept(plugin));
+				} else {
+					dispatcher.accept(plugin);
+				}
 			} catch (Throwable t) {
-				LOGGER.error("JEI plugin `{}` threw an exception processing `{}`: ", plugin.getPluginUid(), t.getStackTrace()[1].getMethodName(), t);
+				LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, System.currentTimeMillis() - pluginTimestamp, t);
 			}
+			LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, System.currentTimeMillis() - pluginTimestamp);
 		}
+		
+		final var totalDispatchTime = System.currentTimeMillis() - timestamp;
+		LOGGER.info("{} took {}ms total", callerMethod, totalDispatchTime);
 	}
 	
 	public static void registerItemSubtypes(ISubtypeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerItemSubtypes(registration));
+		dispatch(modPlugins, x -> x.registerItemSubtypes(registration), false);
 	}
 	
 	public static <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
-		dispatch(modPlugins, x -> x.registerFluidSubtypes(registration, platformFluidHelper));
+		dispatch(modPlugins, x -> x.registerFluidSubtypes(registration, platformFluidHelper), false);
 	}
 	
 	public static void registerIngredients(IModIngredientRegistration registration) {
-		dispatch(allPlugins, x -> x.registerIngredients(registration));
+		dispatch(allPlugins, x -> x.registerIngredients(registration), false);
 	}
 	
 	public static void registerExtraIngredients(IExtraIngredientRegistration registration) {
-		dispatch(modPlugins, x -> x.registerExtraIngredients(registration));
+		dispatch(modPlugins, x -> x.registerExtraIngredients(registration), false);
 	}
 	
 	public static void registerIngredientAliases(IIngredientAliasRegistration registration) {
-		dispatch(modPlugins, x -> x.registerIngredientAliases(registration));
+		dispatch(modPlugins, x -> x.registerIngredientAliases(registration), false);
 	}
 	
 	public static void registerModInfo(IModInfoRegistration modAliasRegistration) {
-		dispatch(modPlugins, x -> x.registerModInfo(modAliasRegistration));
+		dispatch(modPlugins, x -> x.registerModInfo(modAliasRegistration), false);
 	}
 	
 	public static void registerCategories(IRecipeCategoryRegistration registration) {
-		dispatch(allPlugins, x -> x.registerCategories(registration));
+		dispatch(allPlugins, x -> x.registerCategories(registration), false);
 	}
 	
 	public static void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
-		dispatch(allPlugins, x -> x.registerVanillaCategoryExtensions(registration));
+		dispatch(allPlugins, x -> x.registerVanillaCategoryExtensions(registration), false);
 	}
 	
 	public static void registerRecipes(IRecipeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipes(registration));
+		dispatch(modPlugins, x -> x.registerRecipes(registration), true);
 	}
 	
 	public static void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipeTransferHandlers(registration));
+		dispatch(modPlugins, x -> x.registerRecipeTransferHandlers(registration), false);
 	}
 	
 	public static void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipeCatalysts(registration));
+		dispatch(modPlugins, x -> x.registerRecipeCatalysts(registration), false);
 	}
 	
 	public static void registerGuiHandlers(IGuiHandlerRegistration registration) {
-		dispatch(modPlugins, x -> x.registerGuiHandlers(registration));
+		dispatch(modPlugins, x -> x.registerGuiHandlers(registration), false);
 	}
 	
 	public static void registerAdvanced(IAdvancedRegistration registration) {
-		dispatch(modPlugins, x -> x.registerAdvanced(registration));
+		dispatch(modPlugins, x -> x.registerAdvanced(registration), false);
 	}
 	
 	public static void registerRuntime(IRuntimeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRuntime(registration));
+		dispatch(modPlugins, x -> x.registerRuntime(registration), false);
 	}
 	
 	public static void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-		dispatch(allPlugins, x -> x.onRuntimeAvailable(jeiRuntime));
+		dispatch(allPlugins, x -> x.onRuntimeAvailable(jeiRuntime), false);
 	}
 	
 	public static void onRuntimeUnavailable() {
-		dispatch(allPlugins, IModPlugin::onRuntimeUnavailable);
+		dispatch(allPlugins, IModPlugin::onRuntimeUnavailable, false);
 	}
 	
 	public static void onConfigManagerAvailable(IJeiConfigManager configManager) {
-		dispatch(modPlugins, x -> x.onConfigManagerAvailable(configManager));
+		dispatch(modPlugins, x -> x.onConfigManagerAvailable(configManager), false);
 	}
 	
 }

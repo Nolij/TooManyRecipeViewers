@@ -144,6 +144,7 @@ dependencies {
 	runtimeOnly("curse.maven:apothic-attributes-898963:6060907")
 	runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
 	runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
+	runtimeOnly("maven.modrinth:c2me-neoforge:0.3.0+alpha.0.47+1.21.1")
 }
 
 tasks.jar {

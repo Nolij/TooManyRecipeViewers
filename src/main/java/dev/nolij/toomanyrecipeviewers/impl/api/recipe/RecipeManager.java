@@ -1,6 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.recipe;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiInfoRecipe;
@@ -37,7 +36,6 @@ import mezz.jei.api.runtime.IIngredientVisibility;
 import mezz.jei.common.Internal;
 import mezz.jei.common.gui.elements.DrawableBlank;
 import mezz.jei.common.util.ErrorUtil;
-import mezz.jei.core.util.Pair;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
 import mezz.jei.library.gui.recipes.RecipeLayout;
@@ -52,13 +50,20 @@ import mezz.jei.library.recipes.collect.RecipeTypeDataMap;
 import mezz.jei.library.util.IngredientSupplierHelper;
 import mezz.jei.library.util.RecipeErrorUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -119,13 +124,13 @@ public class RecipeManager implements IRecipeManager {
 		jeiTypeEMICategoryMap.putAll(vanillaJEITypeEMICategoryMap);
 		
 		Set<ResourceLocation> existingCategories = EmiRecipes.categories.stream().map(EmiRecipeCategory::getId).collect(Collectors.toSet());
-		for (var jeiCategory : jeiRecipeCategories) {
-			var jeiRecipeType = jeiCategory.getRecipeType();
+		for (final var jeiCategory : jeiRecipeCategories) {
+			final var jeiRecipeType = jeiCategory.getRecipeType();
 			jeiTypeCategoryMap.put(jeiRecipeType, jeiCategory);
-			var id = jeiRecipeType.getUid();
+			final var id = jeiRecipeType.getUid();
 			
-			var jeiCatalysts = jeiRecipeCatalysts.get(jeiRecipeType);
-			var emiCatalysts = jeiCatalysts.stream().map(JemiUtil::getStack).toList();
+			final var jeiCatalysts = jeiRecipeCatalysts.get(jeiRecipeType);
+			final var emiCatalysts = jeiCatalysts.stream().map(JemiUtil::getStack).toList();
 			
 			EmiRecipeCategory emiCategory;
 			if (jeiTypeEMICategoryMap.containsKey(jeiRecipeType)) {
@@ -142,7 +147,7 @@ public class RecipeManager implements IRecipeManager {
 			jeiTypeEMICategoryMap.put(jeiRecipeType, emiCategory);
 			jeiCategoryEMICategoryMap.put(jeiCategory, emiCategory);
 			
-			for (var emiCatalyst : emiCatalysts) {
+			for (final var emiCatalyst : emiCatalysts) {
 				if (!emiCatalyst.isEmpty()) {
 					registry.addWorkstation(emiCategory, emiCatalyst);
 				}
@@ -151,23 +156,23 @@ public class RecipeManager implements IRecipeManager {
 		jeiCategoryEMICategoryMap.forEach((k, v) -> emiCategoryJEICategoryMap.put(v, k));
 		
 		this.recipeMaps = new EnumMap<>(RecipeIngredientRole.class);
-		for (RecipeIngredientRole role : RecipeIngredientRole.values()) {
-			final RecipeMap recipeMap = new RecipeMap(ResourceLocationHolderComparator.create(RecipeType::getUid), ingredientManager, role);
+		for (final var role : RecipeIngredientRole.values()) {
+			final var recipeMap = new RecipeMap(ResourceLocationHolderComparator.create(RecipeType::getUid), ingredientManager, role);
 			this.recipeMaps.put(role, recipeMap);
 		}
 		
-//		var categorizedJEIRecipeCatalysts = new ListMultiMap<IRecipeCategory<?>, ITypedIngredient<?>>();
+//		final var categorizedJEIRecipeCatalysts = new ListMultiMap<IRecipeCategory<?>, ITypedIngredient<?>>();
 //		jeiRecipeCatalysts.forEach((key, value) -> categorizedJEIRecipeCatalysts.put(jeiTypeCategoryMap.get(key), value));
 //		recipeTypeDataMap = new RecipeTypeDataMap(jeiRecipeCategories, categorizedJEIRecipeCatalysts.toImmutable());
 		RecipeCatalystBuilder recipeCatalystBuilder = new RecipeCatalystBuilder(this.recipeMaps.get(RecipeIngredientRole.CATALYST));
-		for (IRecipeCategory<?> recipeCategory : jeiRecipeCategories) {
-			RecipeType<?> recipeType = recipeCategory.getRecipeType();
+		for (final var recipeCategory : jeiRecipeCategories) {
+			final var recipeType = recipeCategory.getRecipeType();
 			if (jeiRecipeCatalysts.containsKey(recipeType)) {
-				List<ITypedIngredient<?>> catalysts = jeiRecipeCatalysts.get(recipeType);
+				final var catalysts = jeiRecipeCatalysts.get(recipeType);
 				recipeCatalystBuilder.addCategoryCatalysts(recipeCategory, catalysts);
 			}
 		}
-		ImmutableListMultimap<IRecipeCategory<?>, ITypedIngredient<?>> recipeCategoryCatalystsMap = recipeCatalystBuilder.buildRecipeCategoryCatalysts();
+		final var recipeCategoryCatalystsMap = recipeCatalystBuilder.buildRecipeCategoryCatalysts();
 		this.recipeTypeDataMap = new RecipeTypeDataMap(jeiRecipeCategories, recipeCategoryCatalystsMap);
 		
 		// TODO: replace `InternalRecipeManagerPlugin`
@@ -245,7 +250,6 @@ public class RecipeManager implements IRecipeManager {
 		return new IRecipeCatalystLookup() {
 			private boolean includeHidden;
 			
-			
 			@Override
 			public IRecipeCatalystLookup includeHidden() {
 				this.includeHidden = true;
@@ -270,17 +274,17 @@ public class RecipeManager implements IRecipeManager {
 	public <T> void addRecipes(RecipeType<T> jeiRecipeType, List<T> jeiRecipes) {
 		if (jeiRecipeType == RecipeTypes.INFORMATION) {
 			//noinspection unchecked
-			var jeiInfoRecipes = (List<IJeiIngredientInfoRecipe>) jeiRecipes;
+			final var jeiInfoRecipes = (List<IJeiIngredientInfoRecipe>) jeiRecipes;
 			
-			for (var jeiInfoRecipe : jeiInfoRecipes) {
-				var emiIngredients = jeiInfoRecipe
+			for (final var jeiInfoRecipe : jeiInfoRecipes) {
+				final var emiIngredients = jeiInfoRecipe
 					.getIngredients()
 					.stream()
 					.map(JemiUtil::getStack)
 					.map(EmiIngredient.class::cast)
 					.toList();
 				
-				var lines = jeiInfoRecipe
+				final var lines = jeiInfoRecipe
 					.getDescription()
 					.stream()
 					.map(formattedText -> {
@@ -299,7 +303,7 @@ public class RecipeManager implements IRecipeManager {
 					})
 					.toList();
 				
-				var emiInfoRecipe = new EmiInfoRecipe(emiIngredients, lines, null);
+				final var emiInfoRecipe = new EmiInfoRecipe(emiIngredients, lines, null);
 				registry.addRecipe(emiInfoRecipe);
 				recipeCategoriesVisibleCache = null;
 			}
@@ -316,7 +320,7 @@ public class RecipeManager implements IRecipeManager {
 		final var hiddenRecipes = recipeTypeData.getHiddenRecipes();
 		
 		final var addedRecipes = new ArrayList<T>(jeiRecipes.size());
-		for (T jeiRecipe : jeiRecipes) {
+		for (final var jeiRecipe : jeiRecipes) {
 			if (addRecipe(emiCategory, jeiCategory, jeiRecipe, hiddenRecipes)) {
 				addedRecipes.add(jeiRecipe);
 			}
@@ -330,16 +334,16 @@ public class RecipeManager implements IRecipeManager {
 	
 	@Override
 	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
-		RecipeTypeData<T> recipeTypeData = recipeTypeDataMap.get(recipeType);
-		Set<T> hiddenRecipes = recipeTypeData.getHiddenRecipes();
+		final var recipeTypeData = recipeTypeDataMap.get(recipeType);
+		final var hiddenRecipes = recipeTypeData.getHiddenRecipes();
 		hiddenRecipes.addAll(recipes);
 		recipeCategoriesVisibleCache = null;
 	}
 	
 	@Override
 	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
-		RecipeTypeData<T> recipeTypeData = recipeTypeDataMap.get(recipeType);
-		Set<T> hiddenRecipes = recipeTypeData.getHiddenRecipes();
+		final var recipeTypeData = recipeTypeDataMap.get(recipeType);
+		final var hiddenRecipes = recipeTypeData.getHiddenRecipes();
 		hiddenRecipes.removeAll(recipes);
 		recipeCategoriesVisibleCache = null;
 	}
@@ -363,8 +367,8 @@ public class RecipeManager implements IRecipeManager {
 		ErrorUtil.checkNotNull(recipe, "recipe");
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");
 		
-		RecipeType<T> recipeType = recipeCategory.getRecipeType();
-		Collection<IRecipeCategoryDecorator<T>> decorators = getRecipeCategoryDecorators(recipeType);
+		final var recipeType = recipeCategory.getRecipeType();
+		final var decorators = getRecipeCategoryDecorators(recipeType);
 		
 		final IScalableDrawable recipeBackground;
 		final int borderPadding;
@@ -376,7 +380,8 @@ public class RecipeManager implements IRecipeManager {
 			borderPadding = 0;
 		}
 		
-		return RecipeLayout.create(
+		return 
+			RecipeLayout.create(
 				recipeCategory,
 				decorators,
 				recipe,
@@ -394,8 +399,8 @@ public class RecipeManager implements IRecipeManager {
 		ErrorUtil.checkNotNull(recipe, "recipe");
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");
 		
-		RecipeType<T> recipeType = recipeCategory.getRecipeType();
-		Collection<IRecipeCategoryDecorator<T>> decorators = getRecipeCategoryDecorators(recipeType);
+		final var recipeType = recipeCategory.getRecipeType();
+		final var decorators = getRecipeCategoryDecorators(recipeType);
 		
 		final IScalableDrawable recipeBackground;
 		final int borderPadding;
@@ -407,15 +412,16 @@ public class RecipeManager implements IRecipeManager {
 			borderPadding = 0;
 		}
 		
-		return RecipeLayout.create(
-			recipeCategory,
-			decorators,
-			recipe,
-			focusGroup,
-			ingredientManager,
-			recipeBackground,
-			borderPadding
-		);
+		return 
+			RecipeLayout.create(
+				recipeCategory,
+				decorators,
+				recipe,
+				focusGroup,
+				ingredientManager,
+				recipeBackground,
+				borderPadding
+			);
 	}
 	
 	@Override
@@ -431,8 +437,8 @@ public class RecipeManager implements IRecipeManager {
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");
 		ErrorUtil.checkNotNull(background, "background");
 		
-		RecipeType<T> recipeType = recipeCategory.getRecipeType();
-		Collection<IRecipeCategoryDecorator<T>> decorators = getRecipeCategoryDecorators(recipeType);
+		final var recipeType = recipeCategory.getRecipeType();
+		final var decorators = getRecipeCategoryDecorators(recipeType);
 		return RecipeLayout.create(
 			recipeCategory,
 			decorators,
@@ -446,10 +452,10 @@ public class RecipeManager implements IRecipeManager {
 	
 	@Override
 	public IRecipeSlotDrawable createRecipeSlotDrawable(RecipeIngredientRole role, List<Optional<ITypedIngredient<?>>> ingredients, Set<Integer> focusedIngredients, int ingredientCycleOffset) {
-		RecipeSlotBuilder builder = new RecipeSlotBuilder(ingredientManager, 0, role);
+		final var builder = new RecipeSlotBuilder(ingredientManager, 0, role);
 		builder.addOptionalTypedIngredients(ingredients);
-		CycleTimer cycleTimer = CycleTimer.create(ingredientCycleOffset);
-		Pair<Integer, IRecipeSlotDrawable> result = builder.build(focusedIngredients, cycleTimer);
+		final var cycleTimer = CycleTimer.create(ingredientCycleOffset);
+		final var result = builder.build(focusedIngredients, cycleTimer);
 		return result.second();
 	}
 	
@@ -505,13 +511,13 @@ public class RecipeManager implements IRecipeManager {
 	@Unmodifiable
 	@SuppressWarnings("unchecked")
 	public <T> List<IRecipeCategoryDecorator<T>> getRecipeCategoryDecorators(RecipeType<T> recipeType) {
-		ImmutableList<IRecipeCategoryDecorator<?>> decorators = recipeCategoryDecorators.get(recipeType);
+		final var decorators = recipeCategoryDecorators.get(recipeType);
 		return (List<IRecipeCategoryDecorator<T>>) (Object) decorators;
 	}
 	
 	public boolean isCategoryHidden(IRecipeCategory<?> recipeCategory, IFocusGroup focuses) {
 		// hide the category if it has been explicitly hidden
-		RecipeType<?> recipeType = recipeCategory.getRecipeType();
+		final var recipeType = recipeCategory.getRecipeType();
 		if (hiddenRecipeTypes.contains(recipeType)) {
 			return true;
 		}
@@ -524,12 +530,12 @@ public class RecipeManager implements IRecipeManager {
 		}
 		
 		// hide the category if it has no recipes, or if the recipes have all been hidden
-		Stream<?> visibleRecipes = getRecipesStream(recipeType, focuses, false);
+		final var visibleRecipes = getRecipesStream(recipeType, focuses, false);
 		return visibleRecipes.findAny().isEmpty();
 	}
 	
 	public Stream<IRecipeCategory<?>> getRecipeCategoriesForTypes(Collection<RecipeType<?>> recipeTypes, IFocusGroup focuses, boolean includeHidden) {
-		List<IRecipeCategory<?>> recipeCategories = recipeTypes.stream()
+		final var recipeCategories = recipeTypes.stream()
 			.map(this.recipeTypeDataMap::get)
 			.<IRecipeCategory<?>>map(RecipeTypeData::getRecipeCategory)
 			.toList();
@@ -580,13 +586,13 @@ public class RecipeManager implements IRecipeManager {
 	}
 	
 	public <T> Stream<T> getRecipesStream(RecipeType<T> recipeType, IFocusGroup focuses, boolean includeHidden) {
-		RecipeTypeData<T> recipeTypeData = this.recipeTypeDataMap.get(recipeType);
+		final var recipeTypeData = this.recipeTypeDataMap.get(recipeType);
 		return pluginManager.getRecipes(recipeTypeData, focuses, includeHidden);
 	}
 	
 	public <T> Stream<ITypedIngredient<?>> getRecipeCatalystStream(RecipeType<T> recipeType, boolean includeHidden) {
-		RecipeTypeData<T> recipeTypeData = recipeTypeDataMap.get(recipeType);
-		List<ITypedIngredient<?>> catalysts = recipeTypeData.getRecipeCategoryCatalysts();
+		final var recipeTypeData = recipeTypeDataMap.get(recipeType);
+		final var catalysts = recipeTypeData.getRecipeCategoryCatalysts();
 		if (includeHidden) {
 			return catalysts.stream();
 		}
@@ -595,7 +601,7 @@ public class RecipeManager implements IRecipeManager {
 	}
 	
 	public boolean isRecipeCatalyst(RecipeType<?> recipeType, IFocus<?> focus) {
-		RecipeMap recipeMap = recipeMaps.get(focus.getRole());
+		final var recipeMap = recipeMaps.get(focus.getRole());
 		return recipeMap.isCatalystForRecipeCategory(recipeType, focus.getTypedValue());
 	}
 	

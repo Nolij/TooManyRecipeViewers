@@ -24,10 +24,10 @@ public abstract class ResourceLocationHolderComparator<T> implements Comparator<
 	
 	@Override
 	public int compare(T _left, T _right) {
-		final ResourceLocation left = getResourceLocation(_left);
-		final ResourceLocation right = getResourceLocation(_right);
-		final boolean leftIsVanilla = isVanillaNamespace(left);
-		final boolean rightIsVanilla = isVanillaNamespace(right);
+		final var left = getResourceLocation(_left);
+		final var right = getResourceLocation(_right);
+		final var leftIsVanilla = isVanillaNamespace(left);
+		final var rightIsVanilla = isVanillaNamespace(right);
 		if (leftIsVanilla ^ rightIsVanilla) {
 			if (leftIsVanilla)
 				return -1;

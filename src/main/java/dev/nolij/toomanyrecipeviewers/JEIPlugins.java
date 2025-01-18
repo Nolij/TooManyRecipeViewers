@@ -47,11 +47,11 @@ public final class JEIPlugins {
 	
 	@SuppressWarnings("SameParameterValue")
 	private static <T> List<Class<? extends T>> getInstances(Class<?> annotationClass, Class<T> instanceClass) {
-		final Type annotationType = Type.getType(annotationClass);
+		final var annotationType = Type.getType(annotationClass);
 		
 		final List<Class<? extends T>> result = new ArrayList<>();
-		for (final ModFileScanData scanData : ModList.get().getAllScanData()) {
-			for (ModFileScanData.AnnotationData annotation : scanData.getAnnotations()) {
+		for (final var scanData : ModList.get().getAllScanData()) {
+			for (final var annotation : scanData.getAnnotations()) {
 				if (Objects.equals(annotation.annotationType(), annotationType)) {
 					result.add(Objects.requireNonNull(REFRACTION.getClassOrNull(annotation.memberName())).asSubclass(instanceClass));
 				}

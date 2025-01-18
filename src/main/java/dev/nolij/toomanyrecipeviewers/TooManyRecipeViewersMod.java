@@ -42,7 +42,7 @@ public class TooManyRecipeViewersMod {
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
 		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
 		event.registerReloadListener((ResourceManagerReloadListener) (ResourceManager resourceManager) -> {
-			final JEIRuntimeStorage storage = JEIRuntimeStorage.storage;
+			final var storage = JEIRuntimeStorage.storage;
 			if (storage != null && storage.resourceReloadHandler != null)
 				storage.resourceReloadHandler.onResourceManagerReload(resourceManager);
 		});

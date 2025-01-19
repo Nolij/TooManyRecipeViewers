@@ -138,6 +138,7 @@ public final class EMIPlugin implements EmiPlugin {
 			@Override public void save(@NotNull EditModeConfig editModeConfig) {}
 			@Override public void load(@NotNull EditModeConfig editModeConfig) {}
 		}, storage.ingredientManager);
+		// TODO: use
 		storage.ingredientVisibility = new IngredientVisibility(storage.blacklist, storage.clientToggleState, storage.editModeConfig, storage.ingredientManager);
 		
 		// TODO: use init registry instead?

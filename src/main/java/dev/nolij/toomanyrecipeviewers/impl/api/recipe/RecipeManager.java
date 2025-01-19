@@ -1,14 +1,26 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.recipe;
 
 import com.google.common.collect.ImmutableListMultimap;
+import dev.emi.emi.EmiUtil;
 import dev.emi.emi.api.EmiRegistry;
+import dev.emi.emi.api.recipe.EmiCraftingRecipe;
 import dev.emi.emi.api.recipe.EmiInfoRecipe;
+import dev.emi.emi.api.recipe.EmiPatternCraftingRecipe;
+import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
+import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
+import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.GeneratedSlotWidget;
+import dev.emi.emi.api.widget.SlotWidget;
+import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.JemiCategory;
 import dev.emi.emi.jemi.JemiRecipe;
 import dev.emi.emi.jemi.JemiUtil;
+import dev.emi.emi.recipe.*;
+import dev.emi.emi.recipe.special.EmiAnvilEnchantRecipe;
+import dev.emi.emi.recipe.special.EmiAnvilRepairItemRecipe;
 import dev.emi.emi.registry.EmiRecipes;
 import dev.nolij.toomanyrecipeviewers.JEIPlugins;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
@@ -30,6 +42,9 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.advanced.IRecipeManagerPlugin;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.recipe.category.extensions.IRecipeCategoryDecorator;
+import mezz.jei.api.recipe.vanilla.IJeiAnvilRecipe;
+import mezz.jei.api.recipe.vanilla.IJeiCompostingRecipe;
+import mezz.jei.api.recipe.vanilla.IJeiFuelingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IIngredientVisibility;
@@ -52,6 +67,14 @@ import mezz.jei.library.util.RecipeErrorUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.BlastingRecipe;
+import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
+import net.minecraft.world.item.crafting.SmithingRecipe;
+import net.minecraft.world.item.crafting.SmokingRecipe;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -62,8 +85,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -498,11 +523,61 @@ public class RecipeManager implements IRecipeManager {
 			for (final var recipeMap : recipeMaps.values()) {
 				recipeMap.addRecipe(jeiRecipeType, jeiRecipe, ingredientSupplier);
 			}
-			var emiRecipe = new JemiRecipe<>(emiCategory, jeiCategory, jeiRecipe);
-			registry.addRecipe(emiRecipe);
+			final var jemiRecipe = new JemiRecipe<>(emiCategory, jeiCategory, jeiRecipe);
+			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
+				LOGGER.info("Replacing {} recipe {}...", emiCategory.id, jemiRecipe.originalId);
+				
+				if (emiCategory == VanillaEmiRecipeCategories.CRAFTING) {
+					replaceEMICraftingRecipe(jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.SMELTING) {
+					//noinspection unchecked
+					replaceEMISmeltingRecipe((JemiRecipe<RecipeHolder<SmeltingRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.BLASTING) {
+					//noinspection unchecked
+					replaceEMIBlastingRecipe((JemiRecipe<RecipeHolder<BlastingRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.SMOKING) {
+					//noinspection unchecked
+					replaceEMISmokingRecipe((JemiRecipe<RecipeHolder<SmokingRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.CAMPFIRE_COOKING) {
+					//noinspection unchecked
+					replaceEMICampfireRecipe((JemiRecipe<RecipeHolder<CampfireCookingRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.STONECUTTING) {
+					//noinspection unchecked
+					replaceEMIStonecuttingRecipe((JemiRecipe<RecipeHolder<StonecutterRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.SMITHING) {
+					//noinspection unchecked
+					replaceEMISmithingRecipe((JemiRecipe<RecipeHolder<SmithingRecipe>>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.ANVIL_REPAIRING) {
+					//noinspection unchecked
+					replaceEMIAnvilRecipe((JemiRecipe<IJeiAnvilRecipe>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.BREWING) {
+					replaceEMIBrewingRecipe(jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.FUEL) {
+					//noinspection unchecked
+					replaceEMIFuelRecipe((JemiRecipe<IJeiFuelingRecipe>) jemiRecipe);
+					return true;
+				} else if (emiCategory == VanillaEmiRecipeCategories.COMPOSTING) {
+					//noinspection unchecked
+					replaceEMICompostingRecipe((JemiRecipe<IJeiCompostingRecipe>) jemiRecipe);
+					return true;
+				}
+				
+				LOGGER.warn("Recipe replacement for {} will not render properly!", jemiRecipe.originalId);
+				registry.removeRecipes(jemiRecipe.originalId);
+			}
+			registry.addRecipe(jemiRecipe);
 			return true;
 		} catch (RuntimeException | LinkageError e) {
-			String recipeInfo = RecipeErrorUtil.getInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
+			final var recipeInfo = RecipeErrorUtil.getInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
 			LOGGER.error("Found a broken recipe, failed to addRecipe: {}\n", recipeInfo, e);
 			return false;
 		}
@@ -619,6 +694,179 @@ public class RecipeManager implements IRecipeManager {
 	//endregion
 	
 	//region Additional Methods
+	private <T extends EmiRecipe> void replaceEMIRecipe(Predicate<EmiRecipe> instanceOf, Set<T> replacementRecipes, T replacementRecipe, ResourceLocation originalId) {
+		replacementRecipes.add(replacementRecipe);
+		registry.addRecipe(replacementRecipe);
+		registry.removeRecipes(x ->
+			instanceOf.test(x) &&
+			Objects.equals(x.getId(), originalId) &&
+			!replacementRecipes.contains(x));
+	}
+	
+	// TODO: make sure this isn't a memory leak
+	private final Set<EmiCraftingRecipe> replacementCraftingRecipes = new HashSet<>();
+	private void replaceEMICraftingRecipe(JemiRecipe<?> jemiRecipe) {
+		final EmiCraftingRecipe replacementRecipe;
+		
+		if (jemiRecipe.outputs.size() == 1) {
+			replacementRecipe = new EmiCraftingRecipe(jemiRecipe.inputs, jemiRecipe.outputs.getFirst(), jemiRecipe.id, jemiRecipe.builder.shapeless);
+		} else {
+			replacementRecipe = new EmiPatternCraftingRecipe(jemiRecipe.inputs, EmiStack.EMPTY, jemiRecipe.id, jemiRecipe.builder.shapeless) {
+				// TODO: supportsRecipeTree?
+				
+				@Override
+				public List<EmiStack> getOutputs() {
+					return jemiRecipe.outputs;
+				}
+				
+				@Override
+				public SlotWidget getInputWidget(int slot, int x, int y) {
+					return new SlotWidget(slot <= jemiRecipe.inputs.size() ? jemiRecipe.inputs.get(slot) : EmiStack.EMPTY, x, y);
+				}
+				
+				@Override
+				public SlotWidget getOutputWidget(int x, int y) {
+					return new GeneratedSlotWidget(r -> jemiRecipe.outputs.get(r.nextInt(jemiRecipe.outputs.size())), jemiRecipe.hashCode(), x, y);
+				}
+			};
+		}
+		
+		replaceEMIRecipe(EmiCraftingRecipe.class::isInstance, replacementCraftingRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
+	private <T extends AbstractCookingRecipe> void replaceEMICookingRecipe(JemiRecipe<RecipeHolder<T>> jemiRecipe, EmiRecipeCategory category, int fuelMultiplier, boolean infiniBurn, Set<EmiCookingRecipe> replacementRecipes) {
+		final var replacementRecipe = new EmiCookingRecipe(jemiRecipe.recipe.value(), category, fuelMultiplier, infiniBurn);
+		
+		replaceEMIRecipe(
+			x ->
+				x instanceof EmiCookingRecipe &&
+				x.getCategory() == category,
+			replacementRecipes,
+			replacementRecipe,
+			jemiRecipe.originalId
+		);
+	}
+	
+	private final Set<EmiCookingRecipe> replacementSmeltingRecipes = new HashSet<>();
+	private void replaceEMISmeltingRecipe(JemiRecipe<RecipeHolder<SmeltingRecipe>> jemiRecipe) {
+		replaceEMICookingRecipe(jemiRecipe, VanillaEmiRecipeCategories.SMELTING, 1, false, replacementSmeltingRecipes);
+	}
+	
+	private final Set<EmiCookingRecipe> replacementBlastingRecipes = new HashSet<>();
+	private void replaceEMIBlastingRecipe(JemiRecipe<RecipeHolder<BlastingRecipe>> jemiRecipe) {
+		replaceEMICookingRecipe(jemiRecipe, VanillaEmiRecipeCategories.BLASTING, 2, false, replacementBlastingRecipes);
+	}
+	
+	private final Set<EmiCookingRecipe> replacementSmokingRecipes = new HashSet<>();
+	private void replaceEMISmokingRecipe(JemiRecipe<RecipeHolder<SmokingRecipe>> jemiRecipe) {
+		replaceEMICookingRecipe(jemiRecipe, VanillaEmiRecipeCategories.SMOKING, 2, false, replacementSmokingRecipes);
+	}
+	
+	private final Set<EmiCookingRecipe> replacementCampfireRecipes = new HashSet<>();
+	private void replaceEMICampfireRecipe(JemiRecipe<RecipeHolder<CampfireCookingRecipe>> jemiRecipe) {
+		replaceEMICookingRecipe(jemiRecipe, VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, replacementCampfireRecipes);
+	}
+	
+	private final Set<EmiStonecuttingRecipe> replacementStonecuttingRecipes = new HashSet<>();
+	private void replaceEMIStonecuttingRecipe(JemiRecipe<RecipeHolder<StonecutterRecipe>> jemiRecipe) {
+		final var replacementRecipe = new EmiStonecuttingRecipe(jemiRecipe.recipe.value());
+		
+		replaceEMIRecipe(EmiStonecuttingRecipe.class::isInstance, replacementStonecuttingRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
+	private final Set<EmiSmithingRecipe> replacementSmithingRecipes = new HashSet<>();
+	private void replaceEMISmithingRecipe(JemiRecipe<RecipeHolder<SmithingRecipe>> jemiRecipe) {
+		// TODO: smithing trim recipes?
+		final var replacementRecipe = new EmiSmithingRecipe(jemiRecipe.inputs.get(0), jemiRecipe.inputs.get(1), jemiRecipe.inputs.get(2), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
+		
+		replaceEMIRecipe(EmiSmithingRecipe.class::isInstance, replacementSmithingRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
+	private final Set<EmiRecipe> replacementAnvilRecipes = new HashSet<>();
+	private void replaceEMIAnvilRecipe(JemiRecipe<IJeiAnvilRecipe> jemiRecipe) {
+		final var leftInputs = jemiRecipe.recipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
+		final var rightInputs = jemiRecipe.recipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
+		final var outputs = jemiRecipe.recipe.getOutputs().stream().map(JemiUtil::getStack).toList();
+		final var replacementRecipe = new EmiRecipe() {
+			private final int uniq = EmiUtil.RANDOM.nextInt();
+			
+			@Override
+			public EmiRecipeCategory getCategory() {
+				return VanillaEmiRecipeCategories.ANVIL_REPAIRING;
+			}
+			
+			@Override
+			public @Nullable ResourceLocation getId() {
+				return jemiRecipe.id;
+			}
+			
+			@Override
+			public List<EmiIngredient> getInputs() {
+				return Stream.concat(leftInputs.stream().map(EmiIngredient.class::cast), rightInputs.stream()).toList();
+			}
+			
+			@Override
+			public List<EmiStack> getOutputs() {
+				return outputs;
+			}
+			
+			@Override
+			public boolean supportsRecipeTree() {
+				return false;
+			}
+			
+			@Override
+			public int getDisplayWidth() {
+				return 125;
+			}
+			
+			@Override
+			public int getDisplayHeight() {
+				return 18;
+			}
+			
+			@Override
+			public void addWidgets(WidgetHolder widgets) {
+				widgets.addTexture(EmiTexture.PLUS, 27, 3);
+				widgets.addTexture(EmiTexture.EMPTY_ARROW, 75, 1);
+				widgets.addGeneratedSlot(r -> leftInputs.get(r.nextInt(leftInputs.size())), uniq, 0, 0);
+				widgets.addGeneratedSlot(r -> rightInputs.get(r.nextInt(rightInputs.size())), uniq, 49, 0);
+				widgets.addGeneratedSlot(r -> outputs.get(r.nextInt(outputs.size())), uniq, 107, 0).recipeContext(this);
+			}
+		};
+		
+		replaceEMIRecipe(
+			x -> 
+				x instanceof EmiAnvilRecipe ||
+				(x instanceof EmiAnvilRepairItemRecipe && !(x instanceof EmiGrindstoneRecipe)) ||
+				x instanceof EmiAnvilEnchantRecipe, 
+			replacementAnvilRecipes, 
+			replacementRecipe, 
+			jemiRecipe.originalId
+		);
+	}
+	
+	private final Set<EmiBrewingRecipe> replacementBrewingRecipes = new HashSet<>();
+	private void replaceEMIBrewingRecipe(JemiRecipe<?> jemiRecipe) {
+		final var replacementRecipe = new EmiBrewingRecipe(jemiRecipe.inputs.getFirst().getEmiStacks().getFirst(), jemiRecipe.inputs.getLast(), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
+		
+		replaceEMIRecipe(EmiBrewingRecipe.class::isInstance, replacementBrewingRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
+	private final Set<EmiFuelRecipe> replacementFuelRecipes = new HashSet<>();
+	private void replaceEMIFuelRecipe(JemiRecipe<IJeiFuelingRecipe> jemiRecipe) {
+		final var replacementRecipe = new EmiFuelRecipe(jemiRecipe.getInputs().getFirst(), jemiRecipe.recipe.getBurnTime(), jemiRecipe.id);
+		
+		replaceEMIRecipe(EmiFuelRecipe.class::isInstance, replacementFuelRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
+	private final Set<EmiCompostingRecipe> replacementCompostingRecipes = new HashSet<>();
+	private void replaceEMICompostingRecipe(JemiRecipe<IJeiCompostingRecipe> jemiRecipe) {
+		final var replacementRecipe = new EmiCompostingRecipe(jemiRecipe.inputs.getFirst().getEmiStacks().getFirst(), jemiRecipe.recipe.getChance(), jemiRecipe.id);
+		
+		replaceEMIRecipe(EmiCompostingRecipe.class::isInstance, replacementCompostingRecipes, replacementRecipe, jemiRecipe.originalId);
+	}
+	
 	public IRecipeCategory<?> getRecipeType(EmiRecipeCategory emiCategory) {
 		return emiCategoryJEICategoryMap.get(emiCategory);
 	}

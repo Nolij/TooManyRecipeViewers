@@ -1,6 +1,5 @@
 package dev.nolij.toomanyrecipeviewers;
 
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.EmiEntrypoint;
@@ -25,10 +24,7 @@ import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.library.config.ModIDFormatConfig;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
-import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.ingredients.subtypes.UidContext;
-import mezz.jei.api.recipe.RecipeType;
-import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
@@ -60,10 +56,9 @@ import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.Objects;
 
-import static dev.nolij.toomanyrecipeviewers.JEIRuntimeStorage.*;
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 
 @EmiEntrypoint
 @ApiStatus.Internal
@@ -75,19 +70,20 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		onRuntimeUnavailable();
 		
-		storage = new JEIRuntimeStorage();
+		runtime = new TooManyRecipeViewers();
+		runtime.emiRegistry = registry;
 		
 		registerSubtypes();
-		registerIngredients(registry);
+		registerIngredients();
 		registerModAliases();
 		createJeiHelpers();
-		createRecipeManager(registry);
+		createRecipeManager();
 		registerRecipeTransferHandlers();
-		registerGuiHandlers(registry);
+		registerGuiHandlers();
 		
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
-			return new EmiStackInteraction(storage.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
+			return new EmiStackInteraction(runtime.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
 				.map(IClickableIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
 		
@@ -95,8 +91,8 @@ public final class EMIPlugin implements EmiPlugin {
 	}
 	
 	private void onRuntimeUnavailable() {
-		if (storage != null) {
-			storage = null;
+		if (runtime != null) {
+			runtime = null;
 			Internal.setRuntime(null);
 			
 			JEIPlugins.onRuntimeUnavailable();
@@ -107,82 +103,82 @@ public final class EMIPlugin implements EmiPlugin {
 		final var subtypeRegistration = new SubtypeRegistration();
 		JEIPlugins.registerItemSubtypes(subtypeRegistration);
 		JEIPlugins.registerFluidSubtypes(subtypeRegistration, fluidHelper);
-		storage.subtypeManager = new SubtypeManager(subtypeRegistration.getInterpreters());
-		storage.stackHelper = new StackHelper(storage.subtypeManager);
+		runtime.subtypeManager = new SubtypeManager(subtypeRegistration.getInterpreters());
+		runtime.stackHelper = new StackHelper(runtime.subtypeManager);
 	}
 	
 	private boolean hasSubtype(IIngredientTypeWithSubtypes<?, ?> type, Object ingredient) {
 		@SuppressWarnings("unchecked")
 		final var castedType = (IIngredientTypeWithSubtypes<Object, Object>) type;
-		return storage.subtypeManager.hasSubtypes(castedType, ingredient);
+		return runtime.subtypeManager.hasSubtypes(castedType, ingredient);
 	}
 	
-	private void registerIngredients(EmiRegistry registry) {
-		storage.colorHelper = new ColorHelper(new ColorNameConfig());
-		final var ingredientManagerBuilder = new IngredientManagerBuilder(storage.subtypeManager, storage.colorHelper);
+	private void registerIngredients() {
+		runtime.colorHelper = new ColorHelper(new ColorNameConfig());
+		final var ingredientManagerBuilder = new IngredientManagerBuilder(runtime.subtypeManager, runtime.colorHelper);
 		JEIPlugins.registerIngredients(ingredientManagerBuilder);
 		JEIPlugins.registerExtraIngredients(ingredientManagerBuilder);
 		JEIPlugins.registerIngredientAliases(ingredientManagerBuilder);
-		storage.ingredientManager = ingredientManagerBuilder.build();
+		runtime.ingredientManager = ingredientManagerBuilder.build();
 		
-		storage.guiHelper = new GuiHelper(storage.ingredientManager);
-		storage.focusFactory = new FocusFactory(storage.ingredientManager);
-		storage.codecHelper = new CodecHelper(storage.ingredientManager, storage.focusFactory);
-		storage.vanillaRecipeFactory = new VanillaRecipeFactory(storage.ingredientManager);
+		runtime.guiHelper = new GuiHelper(runtime.ingredientManager);
+		runtime.focusFactory = new FocusFactory(runtime.ingredientManager);
+		runtime.codecHelper = new CodecHelper(runtime.ingredientManager, runtime.focusFactory);
+		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(runtime.ingredientManager);
 		
-		storage.blacklist = new IngredientBlacklistInternal();
-		storage.ingredientManager.registerIngredientListener(storage.blacklist);
-		storage.clientToggleState = new ClientToggleState();
-		storage.editModeConfig = new EditModeConfig(new EditModeConfig.ISerializer() {
+		runtime.blacklist = new IngredientBlacklistInternal();
+		runtime.ingredientManager.registerIngredientListener(runtime.blacklist);
+		runtime.clientToggleState = new ClientToggleState();
+		runtime.editModeConfig = new EditModeConfig(new EditModeConfig.ISerializer() {
 			@Override public void initialize(@NotNull EditModeConfig editModeConfig) {}
 			@Override public void save(@NotNull EditModeConfig editModeConfig) {}
 			@Override public void load(@NotNull EditModeConfig editModeConfig) {}
-		}, storage.ingredientManager);
+		}, runtime.ingredientManager);
 		// TODO: use
-		storage.ingredientVisibility = new IngredientVisibility(storage.blacklist, storage.clientToggleState, storage.editModeConfig, storage.ingredientManager);
+		runtime.ingredientVisibility = new IngredientVisibility(runtime.blacklist, runtime.clientToggleState, runtime.editModeConfig, runtime.ingredientManager);
 		
 		// TODO: use init registry instead?
 		//noinspection deprecation
-		registry.addIngredientSerializer(JemiStack.class, new JemiStackSerializer(storage.ingredientManager));
+		runtime.emiRegistry.addIngredientSerializer(JemiStack.class, new JemiStackSerializer(runtime.ingredientManager));
 		
-		for (final var ingredientType : storage.ingredientManager.getRegisteredIngredientTypes()) {
+		for (final var ingredientType : runtime.ingredientManager.getRegisteredIngredientTypes()) {
 			if (ingredientType == VanillaTypes.ITEM_STACK ||
 				ingredientType == fluidHelper.getFluidIngredientType())
 				continue;
 			
-			for (final var ingredient : storage.ingredientManager.getAllIngredients(ingredientType)) {
+			for (final var ingredient : runtime.ingredientManager.getAllIngredients(ingredientType)) {
 				final var stack = JemiUtil.getStack(ingredientType, ingredient);
 				if (!stack.isEmpty()) {
-					registry.addEmiStack(stack);
+					runtime.emiRegistry.addEmiStack(stack);
 				}
 			}
 		}
 		
-		registerItemStackDefaultComparison(registry);
-		registerFluidDefaultComparison(registry);
-		registerOtherJeiIngredientTypeComparisons(registry);
+		registerItemStackDefaultComparison();
+		registerFluidDefaultComparison();
+		registerOtherJeiIngredientTypeComparisons();
 	}
 	
-	private void registerItemStackDefaultComparison(EmiRegistry registry) {
+	private void registerItemStackDefaultComparison() {
 		for (final var item : EmiPort.getItemRegistry()) {
 			if (hasSubtype(VanillaTypes.ITEM_STACK, item.getDefaultInstance())) {
 				//noinspection removal
-				registry.setDefaultComparison(item, Comparison.compareData(stack ->
-					storage.subtypeManager.getSubtypeInfo(stack.getItemStack(), UidContext.Recipe)));
+				runtime.emiRegistry.setDefaultComparison(item, Comparison.compareData(stack ->
+					runtime.subtypeManager.getSubtypeInfo(stack.getItemStack(), UidContext.Recipe)));
 			}
 		}
 	}
 	
-	private void registerFluidDefaultComparison(EmiRegistry registry) {
+	private void registerFluidDefaultComparison() {
 		for (final var fluid : EmiPort.getFluidRegistry()) {
 			//noinspection unchecked
 			final var type = (IIngredientTypeWithSubtypes<Object, Object>) JemiUtil.getFluidType();
 			//noinspection deprecation
 			if (hasSubtype(type, fluidHelper.create(fluid.builtInRegistryHolder(), 1000))) {
-				registry.setDefaultComparison(fluid, Comparison.compareData(stack -> {
+				runtime.emiRegistry.setDefaultComparison(fluid, Comparison.compareData(stack -> {
 					final var typed = JemiUtil.getTyped(stack).orElse(null);
 					if (typed != null) {
-						return storage.subtypeManager.getSubtypeInfo(type, typed.getIngredient(), UidContext.Recipe);
+						return runtime.subtypeManager.getSubtypeInfo(type, typed.getIngredient(), UidContext.Recipe);
 					}
 					return null;
 				}));
@@ -190,23 +186,23 @@ public final class EMIPlugin implements EmiPlugin {
 		}
 	}
 	
-	private void registerOtherJeiIngredientTypeComparisons(EmiRegistry registry) {
-		final var jeiIngredientTypes = Lists.newArrayList(storage.ingredientManager.getRegisteredIngredientTypes());
+	private void registerOtherJeiIngredientTypeComparisons() {
+		final var jeiIngredientTypes = Lists.newArrayList(runtime.ingredientManager.getRegisteredIngredientTypes());
 		for (final var _jeiIngredientType : jeiIngredientTypes) {
 			if (_jeiIngredientType == VanillaTypes.ITEM_STACK || _jeiIngredientType == JemiUtil.getFluidType()) {
 				continue;
 			}
 			//noinspection rawtypes
 			if (_jeiIngredientType instanceof final IIngredientTypeWithSubtypes jeiIngredientType) {
-				final var jeiIngredients = Lists.newArrayList(storage.ingredientManager.getAllIngredients(_jeiIngredientType));
+				final var jeiIngredients = Lists.newArrayList(runtime.ingredientManager.getAllIngredients(_jeiIngredientType));
 				for (final var jeiIngredient : jeiIngredients) {
 					try {
 						if (hasSubtype(jeiIngredientType, jeiIngredient)) {
 							//noinspection unchecked
-							registry.setDefaultComparison(jeiIngredientType.getBase(jeiIngredient), Comparison.compareData(stack -> {
+							runtime.emiRegistry.setDefaultComparison(jeiIngredientType.getBase(jeiIngredient), Comparison.compareData(stack -> {
 								if (stack instanceof final JemiStack<?> jemi) {
 									//noinspection unchecked
-									return storage.subtypeManager.getSubtypeInfo(jeiIngredientType, jemi.ingredient, UidContext.Recipe);
+									return runtime.subtypeManager.getSubtypeInfo(jeiIngredientType, jemi.ingredient, UidContext.Recipe);
 								}
 								return null;
 							}));
@@ -223,97 +219,92 @@ public final class EMIPlugin implements EmiPlugin {
 	private void registerModAliases() {
 		final var modInfoRegistration = new ModInfoRegistration();
 		JEIPlugins.registerModInfo(modInfoRegistration);
-		storage.modAliases = modInfoRegistration.getModAliases();
-		storage.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), storage.ingredientManager, storage.modAliases);
+		runtime.modAliases = modInfoRegistration.getModAliases();
+		runtime.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), runtime.ingredientManager, runtime.modAliases);
 	}
 	
 	private void createJeiHelpers() {
-		storage.jeiHelpers = new JeiHelpers(
-			storage.guiHelper,
-			storage.stackHelper,
-			storage.modIdHelper,
-			storage.focusFactory,
-			storage.colorHelper,
-			storage.ingredientManager,
-			storage.vanillaRecipeFactory,
-			storage.codecHelper,
-			storage.ingredientVisibility
+		runtime.jeiHelpers = new JeiHelpers(
+			runtime.guiHelper,
+			runtime.stackHelper,
+			runtime.modIdHelper,
+			runtime.focusFactory,
+			runtime.colorHelper,
+			runtime.ingredientManager,
+			runtime.vanillaRecipeFactory,
+			runtime.codecHelper,
+			runtime.ingredientVisibility
 		);
 	}
 	
-	private void createRecipeManager(EmiRegistry registry) {
-		final var recipeCategories = registerRecipeCategories();
+	private void createRecipeManager() {
+		registerRecipeCategories();
 		
-		final var recipeCatalysts = registerRecipeCatalysts();
+		registerRecipeCatalysts();
 		
-		storage.recipeManager = new RecipeManager(
-			registry,
-			recipeCategories,
-			recipeCatalysts,
-			storage.ingredientManager,
-			storage.jeiHelpers.getIngredientVisibility()
-		);
-		final var recipeManagerPluginHelper = new RecipeManagerPluginHelper(storage.recipeManager);
-		final var advancedRegistration = new AdvancedRegistration(storage.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
+		runtime.recipeManager = new RecipeManager(runtime);
+		final var recipeManagerPluginHelper = new RecipeManagerPluginHelper(runtime.recipeManager);
+		final var advancedRegistration = new AdvancedRegistration(runtime.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
 		JEIPlugins.registerAdvanced(advancedRegistration);
 		
-		storage.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
-		storage.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
+		runtime.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
+		runtime.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
 		
-		final var recipeRegistration = new RecipeRegistration(storage.jeiHelpers, storage.ingredientManager, storage.recipeManager);
+		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);
 		
-		storage.recipeManager.compact();
+		runtime.recipeManager.compact();
+		runtime.recipeManager.lock();
 	}
 	
-	private @NotNull List<IRecipeCategory<?>> registerRecipeCategories() {
-		final var recipeCategoryRegistration = new RecipeCategoryRegistration(storage.jeiHelpers);
+	private void registerRecipeCategories() {
+		final var recipeCategoryRegistration = new RecipeCategoryRegistration(runtime.jeiHelpers);
 		JEIPlugins.registerCategories(recipeCategoryRegistration);
 		
-		storage.craftingCategory = JEIPlugins.vanillaPlugin.getCraftingCategory()
+		runtime.craftingCategory = JEIPlugins.vanillaPlugin.getCraftingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
-		storage.smithingCategory = JEIPlugins.vanillaPlugin.getSmithingCategory()
+		runtime.smithingCategory = JEIPlugins.vanillaPlugin.getSmithingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
 		final var vanillaCategoryExtensionRegistration =
 			new VanillaCategoryExtensionRegistration(
-				storage.craftingCategory,
-				storage.smithingCategory,
-				storage.jeiHelpers
+				runtime.craftingCategory,
+				runtime.smithingCategory,
+				runtime.jeiHelpers
 			);
 		JEIPlugins.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration);
 		
-		return recipeCategoryRegistration.getRecipeCategories();
+		runtime.recipeCategories = recipeCategoryRegistration.getRecipeCategories();
 	}
 	
-	private @NotNull ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> registerRecipeCatalysts() {
-		final var recipeCatalystRegistration = new RecipeCatalystRegistration(storage.ingredientManager, storage.jeiHelpers);
+	private void registerRecipeCatalysts() {
+		final var recipeCatalystRegistration = new RecipeCatalystRegistration(runtime.ingredientManager, runtime.jeiHelpers);
 		JEIPlugins.registerRecipeCatalysts(recipeCatalystRegistration);
-		return recipeCatalystRegistration.getRecipeCatalysts();
+		runtime.recipeCatalysts = recipeCatalystRegistration.getRecipeCatalysts();
 	}
 	
 	private void registerRecipeTransferHandlers() {
-		final var stackHelper = storage.stackHelper;
-		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper, storage.craftingCategory);
-		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, storage.jeiHelpers, Internal.getServerConnection());
+		final var stackHelper = runtime.stackHelper;
+		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper, runtime.craftingCategory);
+		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, runtime.jeiHelpers, Internal.getServerConnection());
 		JEIPlugins.registerRecipeTransferHandlers(recipeTransferRegistration);
-		storage.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();
+		runtime.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();
 		
 		EmiRecipeFiller.extraHandlers = (handler, recipe) -> {
-			final var category = storage.recipeManager.getRecipeType(recipe.getCategory());
-			if (category != null) {
-				return storage.recipeTransferManager.getRecipeTransferHandler(handler, category).map(JemiRecipeHandler::new).orElse(null);
+			final var jeiCategory = runtime.recipeCategory(recipe.getCategory()).getJEICategory();
+			if (jeiCategory != null) {
+				return runtime.recipeTransferManager.getRecipeTransferHandler(handler, jeiCategory).map(JemiRecipeHandler::new).orElse(null);
 			}
 			return null;
 		};
 	}
 	
-	private void registerGuiHandlers(EmiRegistry registry) {
-		final var guiHandlerRegistration = new GuiHandlerRegistration(storage.jeiHelpers);
+	private void registerGuiHandlers() {
+		final var guiHandlerRegistration = new GuiHandlerRegistration(runtime.jeiHelpers);
 		JEIPlugins.registerGuiHandlers(guiHandlerRegistration);
-		storage.screenHelper = guiHandlerRegistration.createGuiScreenHelper(storage.ingredientManager);
+		runtime.screenHelper = guiHandlerRegistration.createGuiScreenHelper(runtime.ingredientManager);
 		
-		registry.addGenericExclusionArea((screen, consumer) -> {
-			final var exclusions = storage.screenHelper.getGuiExclusionAreas(screen).filter(Objects::nonNull).toList();
+		runtime.emiRegistry.addGenericExclusionArea((screen, consumer) -> {
+			final var exclusions = runtime.screenHelper.getGuiExclusionAreas(screen).filter(Objects::nonNull).toList();
 			for (final var exclusion : exclusions) {
 				consumer.accept(new Bounds(exclusion.getX(), exclusion.getY(), exclusion.getWidth(), exclusion.getHeight()));
 			}
@@ -324,21 +315,21 @@ public final class EMIPlugin implements EmiPlugin {
 		final var runtimeRegistration = registerRuntime();
 		
 		final var eventHandlers = JeiGuiStarter.start(runtimeRegistration);
-		storage.resourceReloadHandler = eventHandlers.resourceReloadHandler();
+		runtime.resourceReloadHandler = eventHandlers.resourceReloadHandler();
 		
-		storage.jeiRuntime = new JEIRuntime(runtimeRegistration, jeiKeyMappings, jeiConfigManager);
-		Internal.setRuntime(storage.jeiRuntime);
-		JEIPlugins.onRuntimeAvailable(storage.jeiRuntime);
+		runtime.jeiRuntime = new JEIRuntime(runtimeRegistration, jeiKeyMappings, jeiConfigManager);
+		Internal.setRuntime(runtime.jeiRuntime);
+		JEIPlugins.onRuntimeAvailable(runtime.jeiRuntime);
 	}
 	
 	private @NotNull RuntimeRegistration registerRuntime() {
 		final var runtimeRegistration = new RuntimeRegistration(
-			storage.recipeManager,
-			storage.jeiHelpers,
-			storage.editModeConfig,
-			storage.ingredientManager,
-			storage.recipeTransferManager,
-			storage.screenHelper
+			runtime.recipeManager,
+			runtime.jeiHelpers,
+			runtime.editModeConfig,
+			runtime.ingredientManager,
+			runtime.recipeTransferManager,
+			runtime.screenHelper
 		);
 		
 		JEIPlugins.registerRuntime(runtimeRegistration);

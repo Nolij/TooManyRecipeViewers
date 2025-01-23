@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 import java.lang.invoke.MethodHandles;
 import java.util.stream.Collectors;
 
-import static dev.nolij.toomanyrecipeviewers.JEIRuntimeStorage.*;
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 
 @Mod(value = MOD_ID, dist = Dist.CLIENT)
@@ -42,9 +42,9 @@ public class TooManyRecipeViewersMod {
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
 		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
 		event.registerReloadListener((ResourceManagerReloadListener) (ResourceManager resourceManager) -> {
-			final var storage = JEIRuntimeStorage.storage;
-			if (storage != null && storage.resourceReloadHandler != null)
-				storage.resourceReloadHandler.onResourceManagerReload(resourceManager);
+			final var runtime = TooManyRecipeViewers.runtime;
+			if (runtime != null && runtime.resourceReloadHandler != null)
+				runtime.resourceReloadHandler.onResourceManagerReload(resourceManager);
 		});
 	}
 	

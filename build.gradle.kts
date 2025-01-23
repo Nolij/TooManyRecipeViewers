@@ -89,6 +89,10 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 	isPreserveFileTimestamps = false
 	isReproducibleFileOrder = true
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	
+	// TODO: yell at wyt to fix Unimined
+	includeEmptyDirs = false
+	exclude("assets/minecraft/textures/**")
 }
 
 tasks.withType<GenerateModuleMetadata> {

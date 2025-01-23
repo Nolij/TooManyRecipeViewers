@@ -152,6 +152,7 @@ dependencies {
 	runtimeOnly("maven.modrinth:sophisticated-core:1.21.1-1.1.3.836")
 	runtimeOnly("maven.modrinth:sophisticated-storage:1.21.1-1.2.6.1038")
 	runtimeOnly("maven.modrinth:sophisticated-backpacks:1.21.1-3.22.5.1173")
+	runtimeOnly("curse.maven:moderately-enough-effect-descriptions-meed-918638:6100615")
 }
 
 tasks.jar {

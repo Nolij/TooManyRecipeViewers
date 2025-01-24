@@ -60,7 +60,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -123,34 +122,16 @@ public class RecipeManager implements IRecipeManager {
 		this.ingredientManager = runtime.ingredientManager;
 		this.ingredientVisibility = runtime.ingredientVisibility;
 		
-		final var registeredJEIRecipeTypes = new HashMap<>(vanillaJEITypeEMICategoryMap);
-		final var existingCategories = new HashMap<ResourceLocation, EmiRecipeCategory>();
-		EmiRecipes.categories.forEach(x -> existingCategories.put(x.getId(), x));
 		for (final var jeiCategory : jeiRecipeCategories) {
 			final var jeiRecipeType = jeiCategory.getRecipeType();
-			final var id = jeiRecipeType.getUid();
 			
 			final var jeiCatalysts = runtime.recipeCatalysts.get(jeiRecipeType);
 			final var emiCatalysts = jeiCatalysts.stream().map(JemiUtil::getStack).toList();
 			
-			final EmiRecipeCategory emiCategory;
-			var addWorkstations = true;
-			if (registeredJEIRecipeTypes.containsKey(jeiRecipeType)) {
-				emiCategory = registeredJEIRecipeTypes.get(jeiRecipeType);
-			} else if (existingCategories.containsKey(id)) {
-				emiCategory = existingCategories.get(id);
-				addWorkstations = false;
-			} else {
-				emiCategory = new JemiCategory(jeiCategory);
+			final var category = runtime.recipeCategory(jeiCategory);
+			final var emiCategory = category.getEMICategory();
+			if (emiCategory instanceof JemiCategory)
 				registry.addCategory(emiCategory);
-			}
-			
-			registeredJEIRecipeTypes.put(jeiRecipeType, emiCategory);
-			//noinspection unchecked,rawtypes
-			runtime.recipeCategory((IRecipeCategory) jeiCategory, (RecipeType) jeiRecipeType, emiCategory);
-			
-			if (!addWorkstations)
-				continue;
 			
 			for (final var emiCatalyst : emiCatalysts) {
 				if (!emiCatalyst.isEmpty()) {
@@ -502,25 +483,27 @@ public class RecipeManager implements IRecipeManager {
 			for (final var recipeMap : recipeMaps.values()) {
 				recipeMap.addRecipe(jeiRecipeType, jeiRecipe, ingredientSupplier);
 			}
-			final var emiRecipe = runtime.recipe(runtime.recipeCategory(jeiCategory), jeiRecipe).getEMIRecipe();
 			
+			final var recipe = runtime.recipe(runtime.recipeCategory(emiCategory), jeiRecipe);
+			final var emiRecipe = recipe.getEMIRecipe();
+			replacementRecipes.add(emiRecipe);
+			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 				if (emiRecipe instanceof JemiRecipe<?> jemiRecipe) {
 					LOGGER.warn("Recipe replacement for {} will not render properly!", jemiRecipe.originalId);
 					registry.removeRecipes(jemiRecipe.originalId);
 				} else {
 					final var id = emiRecipe.getId();
-					replacementRecipes.add(emiRecipe);
+					final var originalId = recipe.getOriginalID();
 					registry.addRecipe(emiRecipe);
 					registry.removeRecipes(x ->
 						x instanceof EmiRecipe &&
-							Objects.equals(x.getId(), id) &&
-							!replacementRecipes.contains(x));
+						(Objects.equals(x.getId(), id) || Objects.equals(x.getId(), originalId)) &&
+						!replacementRecipes.contains(x));
 					return true;
 				}
 			}
 			
-			registry.addRecipe(emiRecipe);
 			return true;
 		} catch (RuntimeException | LinkageError e) {
 			final var recipeInfo = RecipeErrorUtil.getInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);

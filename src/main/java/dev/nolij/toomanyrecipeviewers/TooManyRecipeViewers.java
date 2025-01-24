@@ -15,6 +15,7 @@ import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.GeneratedSlotWidget;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
+import dev.emi.emi.jemi.JemiCategory;
 import dev.emi.emi.jemi.JemiRecipe;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.recipe.EmiBrewingRecipe;
@@ -76,13 +77,15 @@ import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -119,9 +122,9 @@ public final class TooManyRecipeViewers {
 	//endregion
 	
 	//region Interop
-	//region RecipeCategory	
-	private final HashMap<RecipeType<?>, RecipeCategory<?>> jeiRecipeTypeMap = new HashMap<>();
-	private final HashMap<EmiRecipeCategory, RecipeCategory<?>> emiCategoryMap = new HashMap<>();
+	//region RecipeCategory
+	private final Map<RecipeType<?>, RecipeCategory<?>> jeiRecipeTypeMap = Collections.synchronizedMap(new HashMap<>());
+	private final Map<EmiRecipeCategory, RecipeCategory<?>> emiCategoryMap = Collections.synchronizedMap(new HashMap<>());
 	
 	public <T> RecipeCategory<T> recipeCategory(
 		@Nullable IRecipeCategory<T> jeiCategory,
@@ -181,53 +184,53 @@ public final class TooManyRecipeViewers {
 		
 		private RecipeCategory() {}
 		
-		public @Nullable IRecipeCategory<T> getJEICategory() {
+		public synchronized @Nullable IRecipeCategory<T> getJEICategory() {
 			if (jeiCategory == null) {
-				if (emiCategory != null)
-					return null;
-				else if (jeiRecipeType != null)
+				if (jeiRecipeType != null || emiCategory == null)
 					throw new IllegalStateException();
-				else
-					throw new IllegalStateException();
+				
+				return null;
 			}
 			
 			return jeiCategory;
 		}
 		
-		public @NotNull RecipeType<T> getJEIRecipeType() {
+		public synchronized @Nullable RecipeType<T> getJEIRecipeType() {
 			if (jeiRecipeType == null) {
 				if (jeiCategory != null) {
 					jeiRecipeType = jeiCategory.getRecipeType();
 					jeiRecipeTypeMap.put(jeiRecipeType, this);
-				} else if (emiCategory != null) {
-					throw new NotImplementedException();
-				} else {
+				} else if (emiCategory == null) {
 					throw new IllegalStateException();
+				} else {
+					return null;
 				}
 			}
 			
 			return jeiRecipeType;
 		}
 		
-		public @NotNull EmiRecipeCategory getEMICategory() {
+		public synchronized @NotNull EmiRecipeCategory getEMICategory() {
 			if (emiCategory == null) {
-				if (jeiCategory != null) {
-					throw new NotImplementedException();
-				} else if (jeiRecipeType != null) {
-					throw new NotImplementedException();
-				} else {
+				if (jeiCategory == null || jeiRecipeType == null)
 					throw new IllegalStateException();
+				
+				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
+					emiCategory = RecipeManager.vanillaJEITypeEMICategoryMap.get(jeiRecipeType);
+				} else {
+					emiCategory = new JemiCategory(jeiCategory);
 				}
+				emiCategoryMap.put(emiCategory, this);
 			}
 			
-			return emiCategory;
+			return Objects.requireNonNull(emiCategory);
 		}
 		
 	}
 	//endregion
 	//region Recipe
-	private final HashMap<Object, Recipe<?>> jeiRecipeMap = new HashMap<>();
-	private final HashMap<EmiRecipe, Recipe<?>> emiRecipeMap = new HashMap<>();
+	private final Map<Object, Recipe<?>> jeiRecipeMap = Collections.synchronizedMap(new HashMap<>());
+	private final Map<EmiRecipe, Recipe<?>> emiRecipeMap = Collections.synchronizedMap(new HashMap<>());
 	
 	public <T> Recipe<T> recipe(@NotNull RecipeCategory<T> recipeCategory, @Nullable T jeiRecipe, @Nullable EmiRecipe emiRecipe) {
 		if (recipeManager == null)
@@ -276,30 +279,41 @@ public final class TooManyRecipeViewers {
 		private @Nullable T jeiRecipe;
 		private @Nullable EmiRecipe emiRecipe;
 		
+		private @Nullable ResourceLocation originalId = null;
+		
 		private Recipe(@NotNull RecipeCategory<T> recipeCategory) {
 			this.recipeCategory = recipeCategory;
 		}
 		
-		public @Nullable T getJEIRecipe() {
+		public synchronized @Nullable T getJEIRecipe() {
 			if (jeiRecipe == null) {
 				if (emiRecipe == null)
 					throw new IllegalStateException();
 				
+//				//noinspection unchecked
+//				jeiRecipe = (T) emiRecipe.getBackingRecipe();
 				return null;
 			}
 			
 			return jeiRecipe;
 		}
 		
-		public @NotNull EmiRecipe getEMIRecipe() {
+		public synchronized @Nullable ResourceLocation getOriginalID() {
+			return originalId;
+		}
+		
+		public synchronized @NotNull EmiRecipe getEMIRecipe() {
 			if (emiRecipe == null) {
 				if (jeiRecipe == null)
 					throw new IllegalStateException();
 				
 				final var jeiCategory = recipeCategory.getJEICategory();
+				if (jeiCategory == null)
+					throw new IllegalStateException();
 				final var jeiRecipeType = recipeCategory.getJEIRecipeType();
 				final var emiCategory = recipeCategory.getEMICategory();
 				final var jemiRecipe = new JemiRecipe<T>(emiCategory, jeiCategory, jeiRecipe);
+				originalId = jemiRecipe.originalId;
 				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					if (emiCategory == VanillaEmiRecipeCategories.CRAFTING) {
 						//noinspection unchecked
@@ -340,6 +354,8 @@ public final class TooManyRecipeViewers {
 				} else {
 					emiRecipe = jemiRecipe;
 				}
+				
+				emiRecipeMap.put(emiRecipe, this);
 			}
 			
 			return emiRecipe;

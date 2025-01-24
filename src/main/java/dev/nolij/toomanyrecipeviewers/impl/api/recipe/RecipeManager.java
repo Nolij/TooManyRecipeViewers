@@ -146,8 +146,8 @@ public class RecipeManager implements IRecipeManager {
 			}
 			
 			registeredJEIRecipeTypes.put(jeiRecipeType, emiCategory);
-			//noinspection unchecked
-			runtime.recipeCategory((IRecipeCategory<Object>) jeiCategory, (RecipeType<Object>) jeiRecipeType, emiCategory);
+			//noinspection unchecked,rawtypes
+			runtime.recipeCategory((IRecipeCategory) jeiCategory, (RecipeType) jeiRecipeType, emiCategory);
 			
 			if (!addWorkstations)
 				continue;
@@ -241,8 +241,7 @@ public class RecipeManager implements IRecipeManager {
 	
 	@Override
 	public <T> IRecipeCategory<T> getRecipeCategory(RecipeType<T> recipeType) {
-		//noinspection unchecked
-		return (IRecipeCategory<T>) runtime.recipeCategory(recipeType).getJEICategory();
+		return runtime.recipeCategory(recipeType).getJEICategory();
 	}
 	
 	@Override

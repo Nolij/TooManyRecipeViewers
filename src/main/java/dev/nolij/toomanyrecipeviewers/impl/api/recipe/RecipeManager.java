@@ -487,12 +487,7 @@ public class RecipeManager implements IRecipeManager {
 			final var recipe = runtime.recipe(runtime.recipeCategory(emiCategory), jeiRecipe);
 			final var emiRecipe = recipe.getEMIRecipe();
 			registry.addRecipe(emiRecipe);
-			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
-				if (replacedRecipeIDs.contains(recipe.getOriginalID())) {
-					LOGGER.warn("{} was already replaced! Skipping...", recipe.getOriginalID());
-					return true;
-				}
-				
+			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && recipe.getOriginalID() != null) {
 				if (emiRecipe instanceof JemiRecipe<?> jemiRecipe)
 					LOGGER.warn("Recipe replacement for {} will not render properly!", jemiRecipe.originalId);
 				

@@ -459,8 +459,8 @@ public class RecipeManager implements IRecipeManager {
 	//endregion
 	
 	//region RecipeManagerInternal
+	private final Set<ResourceLocation> replacedRecipeIDs = new HashSet<>();
 	private final Set<EmiRecipe> replacementRecipes = new HashSet<>();
-	
 	private <T> boolean addRecipe(EmiRecipeCategory emiCategory, IRecipeCategory<T> jeiCategory, T jeiRecipe, Set<T> hiddenRecipes) {
 		final var jeiRecipeType = jeiCategory.getRecipeType();
 		if (hiddenRecipes.contains(jeiRecipe)) {
@@ -486,22 +486,18 @@ public class RecipeManager implements IRecipeManager {
 			
 			final var recipe = runtime.recipe(runtime.recipeCategory(emiCategory), jeiRecipe);
 			final var emiRecipe = recipe.getEMIRecipe();
-			replacementRecipes.add(emiRecipe);
 			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
-				if (emiRecipe instanceof JemiRecipe<?> jemiRecipe) {
-					LOGGER.warn("Recipe replacement for {} will not render properly!", jemiRecipe.originalId);
-					registry.removeRecipes(jemiRecipe.originalId);
-				} else {
-					final var id = emiRecipe.getId();
-					final var originalId = recipe.getOriginalID();
-					registry.addRecipe(emiRecipe);
-					registry.removeRecipes(x ->
-						x instanceof EmiRecipe &&
-						(Objects.equals(x.getId(), id) || Objects.equals(x.getId(), originalId)) &&
-						!replacementRecipes.contains(x));
+				if (replacedRecipeIDs.contains(recipe.getOriginalID())) {
+					LOGGER.warn("{} was already replaced! Skipping...", recipe.getOriginalID());
 					return true;
 				}
+				
+				if (emiRecipe instanceof JemiRecipe<?> jemiRecipe)
+					LOGGER.warn("Recipe replacement for {} will not render properly!", jemiRecipe.originalId);
+				
+				replacementRecipes.add(emiRecipe);
+				replacedRecipeIDs.add(recipe.getOriginalID());
 			}
 			
 			return true;
@@ -639,6 +635,9 @@ public class RecipeManager implements IRecipeManager {
 	
 	public void lock() {
 		locked = true;
+		registry.removeRecipes(x ->
+			replacedRecipeIDs.contains(x.getId()) &&
+			!replacementRecipes.contains(x));
 	}
 	//endregion
 	

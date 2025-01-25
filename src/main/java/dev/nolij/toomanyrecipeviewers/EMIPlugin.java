@@ -253,7 +253,6 @@ public final class EMIPlugin implements EmiPlugin {
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);
 		
-		runtime.recipeManager.compact();
 		runtime.recipeManager.lock();
 	}
 	

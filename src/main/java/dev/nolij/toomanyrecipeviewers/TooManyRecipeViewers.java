@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import dev.emi.emi.EmiUtil;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiCraftingRecipe;
+import dev.emi.emi.api.recipe.EmiInfoRecipe;
 import dev.emi.emi.api.recipe.EmiPatternCraftingRecipe;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
@@ -45,6 +46,7 @@ import mezz.jei.api.recipe.vanilla.IJeiAnvilRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiBrewingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiCompostingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiFuelingRecipe;
+import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.recipe.vanilla.IVanillaRecipeFactory;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IEditModeConfig;
@@ -67,6 +69,8 @@ import mezz.jei.library.plugins.vanilla.anvil.SmithingRecipeCategory;
 import mezz.jei.library.plugins.vanilla.crafting.CraftingRecipeCategory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.neoforge.platform.FluidHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.crafting.BlastingRecipe;
@@ -264,12 +268,11 @@ public final class TooManyRecipeViewers {
 		return result;
 	}
 	
-	public <T> Recipe<T> recipe(@NotNull RecipeCategory<T> recipeCategory, @Nullable T jeiRecipe) {
-		return recipe(recipeCategory, jeiRecipe, null);
-	}
-	
-	public <T> Recipe<T> recipe(@NotNull RecipeCategory<T> recipeCategory, @Nullable EmiRecipe emiRecipe) {
-		return recipe(recipeCategory, null, emiRecipe);
+	public Recipe<?> recipe(@NotNull RecipeCategory<?> recipeCategory, @Nullable Object recipe) {
+		if (recipe instanceof EmiRecipe)
+			return recipe((RecipeCategory<?>) recipeCategory, null, (EmiRecipe) recipe);
+		//noinspection unchecked,rawtypes
+		return recipe((RecipeCategory) recipeCategory, recipe, null);
 	}
 	
 	public class Recipe<T> {
@@ -315,7 +318,9 @@ public final class TooManyRecipeViewers {
 				final var jemiRecipe = new JemiRecipe<T>(emiCategory, jeiCategory, jeiRecipe);
 				originalId = jemiRecipe.originalId;
 				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
-					if (emiCategory == VanillaEmiRecipeCategories.CRAFTING) {
+					if (emiCategory == VanillaEmiRecipeCategories.INFO) {
+						emiRecipe = convertEMIInfoRecipe((IJeiIngredientInfoRecipe) jeiRecipe);
+					} else if (emiCategory == VanillaEmiRecipeCategories.CRAFTING) {
 						//noinspection unchecked
 						emiRecipe = convertEMICraftingRecipe((JemiRecipe<RecipeHolder<CraftingRecipe>>) jemiRecipe);
 					} else if (emiCategory == VanillaEmiRecipeCategories.SMELTING) {
@@ -359,6 +364,36 @@ public final class TooManyRecipeViewers {
 			}
 			
 			return emiRecipe;
+		}
+		
+		private static @NotNull EmiInfoRecipe convertEMIInfoRecipe(IJeiIngredientInfoRecipe jeiRecipe) {
+			final var emiIngredients = jeiRecipe
+				.getIngredients()
+				.stream()
+				.map(JemiUtil::getStack)
+				.map(EmiIngredient.class::cast)
+				.toList();
+			
+			final var lines = jeiRecipe
+				.getDescription()
+				.stream()
+				.map(formattedText -> {
+					if (formattedText instanceof Component component)
+						return component;
+					
+					var result = Component.literal("");
+					
+					formattedText.visit((style, string) -> {
+						result.append(Component.literal(string).withStyle(style));
+						
+						return Optional.empty();
+					}, Style.EMPTY);
+					
+					return result;
+				})
+				.toList();
+			
+			return new EmiInfoRecipe(emiIngredients, lines, null);
 		}
 		
 		private static @NotNull EmiCraftingRecipe convertEMICraftingRecipe(JemiRecipe<RecipeHolder<CraftingRecipe>> jemiRecipe) {

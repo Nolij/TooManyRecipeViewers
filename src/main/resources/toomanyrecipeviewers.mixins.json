@@ -4,7 +4,8 @@
 	"package": "dev.nolij.toomanyrecipeviewers.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"EmiAgnosMixin"
+		"EmiAgnosMixin",
+		"VanillaPluginMixin"
 	],
 	"client": [],
 	"injectors": {

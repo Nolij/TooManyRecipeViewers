@@ -164,6 +164,13 @@ tasks.shadowJar {
 	val excluded = listOf<String>(
 		"mezz/jei/gui/plugins/**",
 		"mezz/jei/library/plugins/debug/**",
+		"mezz/jei/library/recipes/collect/**",
+		"mezz/jei/library/recipes/InternalRecipeManagerPlugin.class",
+		"mezz/jei/library/recipes/PluginManager.class",
+		"mezz/jei/library/recipes/RecipeCatalystBuilder.class",
+		"mezz/jei/library/recipes/RecipeCatalystLookup.class",
+		"mezz/jei/library/recipes/RecipeCategoriesLookup.class",
+		"mezz/jei/library/recipes/RecipeLookup.class",
 		"mezz/jei/library/recipes/RecipeManager.class",
 		"mezz/jei/library/recipes/RecipeManagerInternal.class",
 		"mezz/jei/**/package-info.*"

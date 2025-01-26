@@ -322,6 +322,7 @@ public final class TooManyRecipeViewers {
 						.withPrefix("/")
 						.withSuffix("/%x".formatted(Objects.hash(jemiRecipe.inputs, jemiRecipe.outputs, jemiRecipe.catalysts)));
 				}
+				
 				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					if (emiCategory == VanillaEmiRecipeCategories.INFO) {
 						emiRecipe = convertEMIInfoRecipe((IJeiIngredientInfoRecipe) jeiRecipe);
@@ -347,17 +348,14 @@ public final class TooManyRecipeViewers {
 						//noinspection unchecked
 						emiRecipe = convertEMISmithingRecipe((JemiRecipe<RecipeHolder<SmithingRecipe>>) jemiRecipe);
 					} else if (emiCategory == VanillaEmiRecipeCategories.ANVIL_REPAIRING) {
-						//noinspection unchecked
-						emiRecipe = convertEMIAnvilRecipe((JemiRecipe<IJeiAnvilRecipe>) jemiRecipe);
+						emiRecipe = convertEMIAnvilRecipe((IJeiAnvilRecipe) jeiRecipe);
 					} else if (emiCategory == VanillaEmiRecipeCategories.BREWING) {
-						//noinspection unchecked
-						emiRecipe = convertEMIBrewingRecipe((JemiRecipe<IJeiBrewingRecipe>) jemiRecipe);
+						emiRecipe = convertEMIBrewingRecipe((IJeiBrewingRecipe) jeiRecipe);
 					} else if (emiCategory == VanillaEmiRecipeCategories.FUEL) {
 						//noinspection unchecked
 						emiRecipe = convertEMIFuelRecipe((JemiRecipe<IJeiFuelingRecipe>) jemiRecipe);
 					} else if (emiCategory == VanillaEmiRecipeCategories.COMPOSTING) {
-						//noinspection unchecked
-						emiRecipe = convertEMICompostingRecipe((JemiRecipe<IJeiCompostingRecipe>) jemiRecipe);
+						emiRecipe = convertEMICompostingRecipe((IJeiCompostingRecipe) jeiRecipe);
 					} else {
 						emiRecipe = jemiRecipe;
 					}
@@ -427,23 +425,48 @@ public final class TooManyRecipeViewers {
 		}
 		
 		private static @NotNull EmiCookingRecipe convertEMISmeltingRecipe(JemiRecipe<RecipeHolder<SmeltingRecipe>> jemiRecipe) {
-			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false);
+			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false) {
+				@Override
+				public ResourceLocation getId() {
+					return jemiRecipe.getId();
+				}
+			};
 		}
 		
 		private static @NotNull EmiCookingRecipe convertEMIBlastingRecipe(JemiRecipe<RecipeHolder<BlastingRecipe>> jemiRecipe) {
-			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false);
+			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false) {
+				@Override
+				public ResourceLocation getId() {
+					return jemiRecipe.getId();
+				}
+			};
 		}
 		
 		private static @NotNull EmiCookingRecipe convertEMISmokingRecipe(JemiRecipe<RecipeHolder<SmokingRecipe>> jemiRecipe) {
-			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false);
+			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false) {
+				@Override
+				public ResourceLocation getId() {
+					return jemiRecipe.getId();
+				}
+			};
 		}
 		
 		private static @NotNull EmiCookingRecipe convertEMICampfireRecipe(JemiRecipe<RecipeHolder<CampfireCookingRecipe>> jemiRecipe) {
-			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true);
+			return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true) {
+				@Override
+				public ResourceLocation getId() {
+					return jemiRecipe.getId();
+				}
+			};
 		}
 		
 		private static @NotNull EmiStonecuttingRecipe convertEMIStonecuttingRecipe(JemiRecipe<RecipeHolder<StonecutterRecipe>> jemiRecipe) {
-			return new EmiStonecuttingRecipe(jemiRecipe.recipe.value());
+			return new EmiStonecuttingRecipe(jemiRecipe.recipe.value()) {
+				@Override
+				public ResourceLocation getId() {
+					return jemiRecipe.getId();
+				}
+			};
 		}
 		
 		private static @NotNull EmiSmithingRecipe convertEMISmithingRecipe(JemiRecipe<RecipeHolder<SmithingRecipe>> jemiRecipe) {
@@ -452,10 +475,11 @@ public final class TooManyRecipeViewers {
 			return new EmiSmithingRecipe(jemiRecipe.inputs.get(0), jemiRecipe.inputs.get(1), jemiRecipe.inputs.get(2), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
 		}
 		
-		private static @NotNull EmiRecipe convertEMIAnvilRecipe(JemiRecipe<IJeiAnvilRecipe> jemiRecipe) {
-			final var leftInputs = jemiRecipe.recipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
-			final var rightInputs = jemiRecipe.recipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
-			final var outputs = jemiRecipe.recipe.getOutputs().stream().map(JemiUtil::getStack).toList();
+		private static @NotNull EmiRecipe convertEMIAnvilRecipe(IJeiAnvilRecipe recipe) {
+			final var id = recipe.getUid() != null ? recipe.getUid().withPrefix("/") : null;
+			final var leftInputs = recipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
+			final var rightInputs = recipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
+			final var outputs = recipe.getOutputs().stream().map(JemiUtil::getStack).toList();
 			return new EmiRecipe() {
 				private final int uniq = EmiUtil.RANDOM.nextInt();
 				
@@ -466,7 +490,7 @@ public final class TooManyRecipeViewers {
 				
 				@Override
 				public @Nullable ResourceLocation getId() {
-					return jemiRecipe.id;
+					return id;
 				}
 				
 				@Override
@@ -508,16 +532,21 @@ public final class TooManyRecipeViewers {
 			};
 		}
 		
-		private static @NotNull EmiBrewingRecipe convertEMIBrewingRecipe(JemiRecipe<IJeiBrewingRecipe> jemiRecipe) {
-			return new EmiBrewingRecipe(jemiRecipe.inputs.getFirst().getEmiStacks().getFirst(), jemiRecipe.inputs.getLast(), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
+		private static @NotNull EmiBrewingRecipe convertEMIBrewingRecipe(IJeiBrewingRecipe jeiRecipe) {
+			return new EmiBrewingRecipe(
+				JemiUtil.getStack(jeiRecipe.getPotionInputs().getFirst()), 
+				JemiUtil.getStack(jeiRecipe.getIngredients().getFirst()), 
+				JemiUtil.getStack(jeiRecipe.getPotionOutput()), 
+				Objects.requireNonNull(jeiRecipe.getUid()).withPrefix("/"));
 		}
 		
 		private static @NotNull EmiFuelRecipe convertEMIFuelRecipe(JemiRecipe<IJeiFuelingRecipe> jemiRecipe) {
-			return new EmiFuelRecipe(jemiRecipe.getInputs().getFirst(), jemiRecipe.recipe.getBurnTime(), jemiRecipe.id);
+			return new EmiFuelRecipe(jemiRecipe.inputs.getFirst(), jemiRecipe.recipe.getBurnTime(), jemiRecipe.id);
 		}
 		
-		private static @NotNull EmiCompostingRecipe convertEMICompostingRecipe(JemiRecipe<IJeiCompostingRecipe> jemiRecipe) {
-			return new EmiCompostingRecipe(jemiRecipe.inputs.getFirst().getEmiStacks().getFirst(), jemiRecipe.recipe.getChance(), jemiRecipe.id);
+		private static @NotNull EmiCompostingRecipe convertEMICompostingRecipe(IJeiCompostingRecipe jeiRecipe) {
+			// TODO: support multiple inputs?
+			return new EmiCompostingRecipe(JemiUtil.getStack(jeiRecipe.getInputs().getFirst()), jeiRecipe.getChance(), jeiRecipe.getUid().withPrefix("/"));
 		}
 		
 	}

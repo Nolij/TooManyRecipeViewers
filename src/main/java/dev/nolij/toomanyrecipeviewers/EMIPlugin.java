@@ -240,7 +240,6 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void createRecipeManager() {
 		registerRecipeCategories();
-		
 		registerRecipeCatalysts();
 		
 		runtime.recipeManager = new RecipeManager(runtime);

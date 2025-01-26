@@ -288,6 +288,10 @@ public final class TooManyRecipeViewers {
 			this.recipeCategory = recipeCategory;
 		}
 		
+		public @Nullable ResourceLocation getOriginalID() {
+			return originalId;
+		}
+		
 		public synchronized @Nullable T getJEIRecipe() {
 			if (jeiRecipe == null) {
 				if (emiRecipe == null)
@@ -301,22 +305,21 @@ public final class TooManyRecipeViewers {
 			return jeiRecipe;
 		}
 		
-		public synchronized @Nullable ResourceLocation getOriginalID() {
-			return originalId;
-		}
-		
 		public synchronized @NotNull EmiRecipe getEMIRecipe() {
 			if (emiRecipe == null) {
 				if (jeiRecipe == null)
 					throw new IllegalStateException();
 				
-				final var jeiCategory = recipeCategory.getJEICategory();
-				if (jeiCategory == null)
-					throw new IllegalStateException();
-				final var jeiRecipeType = recipeCategory.getJEIRecipeType();
+				final var jeiCategory = Objects.requireNonNull(recipeCategory.getJEICategory());
+				final var jeiRecipeType = Objects.requireNonNull(recipeCategory.getJEIRecipeType());
 				final var emiCategory = recipeCategory.getEMICategory();
 				final var jemiRecipe = new JemiRecipe<T>(emiCategory, jeiCategory, jeiRecipe);
-				originalId = jemiRecipe.originalId;
+				if (jemiRecipe.originalId != null) {
+					originalId = jemiRecipe.originalId;
+				} else {
+					final var typeId = jeiRecipeType.getUid();
+					jemiRecipe.id = typeId.withSuffix("/%x".formatted(Objects.hash(jemiRecipe.inputs, jemiRecipe.outputs, jemiRecipe.catalysts)));
+				}
 				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					if (emiCategory == VanillaEmiRecipeCategories.INFO) {
 						emiRecipe = convertEMIInfoRecipe((IJeiIngredientInfoRecipe) jeiRecipe);

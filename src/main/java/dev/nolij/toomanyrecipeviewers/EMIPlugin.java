@@ -18,6 +18,7 @@ import dev.emi.emi.registry.EmiRecipeFiller;
 import dev.emi.emi.runtime.EmiReloadLog;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.advanced.RecipeManagerPluginHelper;
+import dev.nolij.toomanyrecipeviewers.impl.api.registration.IngredientAliasRegistration;
 import dev.nolij.toomanyrecipeviewers.impl.api.registration.RecipeRegistration;
 import dev.nolij.toomanyrecipeviewers.impl.api.registration.RuntimeRegistration;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
@@ -118,7 +119,7 @@ public final class EMIPlugin implements EmiPlugin {
 		final var ingredientManagerBuilder = new IngredientManagerBuilder(runtime.subtypeManager, runtime.colorHelper);
 		JEIPlugins.registerIngredients(ingredientManagerBuilder);
 		JEIPlugins.registerExtraIngredients(ingredientManagerBuilder);
-		JEIPlugins.registerIngredientAliases(ingredientManagerBuilder);
+		JEIPlugins.registerIngredientAliases(new IngredientAliasRegistration());
 		runtime.ingredientManager = ingredientManagerBuilder.build();
 		
 		runtime.guiHelper = new GuiHelper(runtime.ingredientManager);

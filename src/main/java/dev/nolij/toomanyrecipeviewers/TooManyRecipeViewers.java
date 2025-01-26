@@ -318,7 +318,9 @@ public final class TooManyRecipeViewers {
 					originalId = jemiRecipe.originalId;
 				} else {
 					final var typeId = jeiRecipeType.getUid();
-					jemiRecipe.id = typeId.withSuffix("/%x".formatted(Objects.hash(jemiRecipe.inputs, jemiRecipe.outputs, jemiRecipe.catalysts)));
+					jemiRecipe.id = typeId
+						.withPrefix("/")
+						.withSuffix("/%x".formatted(Objects.hash(jemiRecipe.inputs, jemiRecipe.outputs, jemiRecipe.catalysts)));
 				}
 				if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					if (emiCategory == VanillaEmiRecipeCategories.INFO) {

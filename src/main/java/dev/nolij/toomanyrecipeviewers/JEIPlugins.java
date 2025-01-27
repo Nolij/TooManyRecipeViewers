@@ -36,8 +36,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
-import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
-import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.REFRACTION;
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.*;
 
 public final class JEIPlugins {
 	

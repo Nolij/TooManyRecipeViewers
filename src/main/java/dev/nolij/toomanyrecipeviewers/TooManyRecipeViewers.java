@@ -44,7 +44,6 @@ import mezz.jei.library.plugins.vanilla.crafting.CraftingRecipeCategory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.neoforge.platform.FluidHelper;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;

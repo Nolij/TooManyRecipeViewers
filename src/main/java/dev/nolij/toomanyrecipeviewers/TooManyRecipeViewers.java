@@ -60,6 +60,7 @@ public final class TooManyRecipeViewers {
 	public volatile SubtypeManager subtypeManager = null;
 	public volatile IStackHelper stackHelper = null;
 	public volatile IColorHelper colorHelper = null;
+	public volatile IngredientAliasRegistration ingredientAliasRegistration = null;
 	public volatile IIngredientManager ingredientManager = null;
 	public volatile GuiHelper guiHelper = null;
 	public volatile IFocusFactory focusFactory = null;

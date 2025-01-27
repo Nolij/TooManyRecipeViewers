@@ -1,25 +1,45 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.registration;
 
+import com.mojang.datafixers.util.Pair;
+import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.jemi.JemiUtil;
-import dev.emi.emi.search.EmiSearch;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.registration.IIngredientAliasRegistration;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class IngredientAliasRegistration implements IIngredientAliasRegistration {
 	
+	private boolean locked = false;
+	private final List<Pair<EmiStack, String>> aliases = new ArrayList<>();
+	
+	public List<Pair<EmiStack, String>> getAliasesAndLock() {
+		if (locked)
+			throw new IllegalStateException();
+		
+		locked = true;
+		return aliases;
+	}
+	
 	@Override
 	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
+		if (locked)
+			throw new IllegalStateException();
+		
 		final var stack = JemiUtil.getStack(type, ingredient);
-		EmiSearch.aliases.add(stack, alias);
+		aliases.add(Pair.of(stack, alias));
 	}
 	
 	@Override
 	public <I> void addAlias(ITypedIngredient<I> typedIngredient, String alias) {
+		if (locked)
+			throw new IllegalStateException();
+		
 		final var stack = JemiUtil.getStack(typedIngredient);
-		EmiSearch.aliases.add(stack, alias);
+		aliases.add(Pair.of(stack, alias));
 	}
 	
 	@Override

@@ -118,7 +118,8 @@ public final class EMIPlugin implements EmiPlugin {
 		final var ingredientManagerBuilder = new IngredientManagerBuilder(runtime.subtypeManager, runtime.colorHelper);
 		JEIPlugins.registerIngredients(ingredientManagerBuilder);
 		JEIPlugins.registerExtraIngredients(ingredientManagerBuilder);
-		JEIPlugins.registerIngredientAliases(new IngredientAliasRegistration());
+		runtime.ingredientAliasRegistration = new IngredientAliasRegistration();
+		JEIPlugins.registerIngredientAliases(runtime.ingredientAliasRegistration);
 		runtime.ingredientManager = ingredientManagerBuilder.build();
 		
 		runtime.guiHelper = new GuiHelper(runtime.ingredientManager);

@@ -5,8 +5,6 @@ import dev.nolij.libnolij.refraction.Refraction;
 import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
 import dev.nolij.toomanyrecipeviewers.impl.common.network.ConnectionToServer;
 import mezz.jei.common.Internal;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -41,11 +39,6 @@ public class TooManyRecipeViewersMod {
 	
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
 		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
-		event.registerReloadListener((ResourceManagerReloadListener) (ResourceManager resourceManager) -> {
-			final var runtime = TooManyRecipeViewers.runtime;
-			if (runtime != null && runtime.resourceReloadHandler != null)
-				runtime.resourceReloadHandler.onResourceManagerReload(resourceManager);
-		});
 	}
 	
 }

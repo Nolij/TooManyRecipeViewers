@@ -79,7 +79,6 @@ public final class TooManyRecipeViewers {
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;
-	public volatile ResourceManagerReloadListener resourceReloadHandler = null;
 	public volatile JEIRuntime jeiRuntime = null;
 	//endregion
 	

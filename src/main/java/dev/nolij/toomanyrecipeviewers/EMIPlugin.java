@@ -31,7 +31,6 @@ import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
 import mezz.jei.common.config.ClientToggleState;
 import mezz.jei.common.util.StackHelper;
-import mezz.jei.gui.startup.JeiGuiStarter;
 import mezz.jei.library.color.ColorHelper;
 import mezz.jei.library.config.ColorNameConfig;
 import mezz.jei.library.config.EditModeConfig;
@@ -312,9 +311,6 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void onRuntimeAvailable() {
 		final var runtimeRegistration = registerRuntime();
-		
-		final var eventHandlers = JeiGuiStarter.start(runtimeRegistration);
-		runtime.resourceReloadHandler = eventHandlers.resourceReloadHandler();
 		
 		runtime.jeiRuntime = new JEIRuntime(runtimeRegistration, jeiKeyMappings, jeiConfigManager);
 		Internal.setRuntime(runtime.jeiRuntime);

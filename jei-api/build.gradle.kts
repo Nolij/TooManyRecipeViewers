@@ -203,7 +203,7 @@ tasks.shadowJar {
 	)
 	val excluded = listOf(
 		"mezz/jei/gui/plugins/**",
-		"mezz/jei/**/package-info.java"
+		"mezz/jei/**/package-info.*"
 	)
 	
 	inputs.property("included", included.sorted().fold("") { out, value -> "${out}${value};" })

@@ -4,6 +4,7 @@ import dev.emi.emi.jemi.runtime.JemiBookmarkOverlay;
 import dev.emi.emi.jemi.runtime.JemiIngredientFilter;
 import dev.emi.emi.jemi.runtime.JemiIngredientListOverlay;
 import dev.emi.emi.jemi.runtime.JemiRecipesGui;
+import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;
@@ -17,6 +18,8 @@ import mezz.jei.api.runtime.IRecipesGui;
 import mezz.jei.api.runtime.IScreenHelper;
 import org.jetbrains.annotations.NotNull;
 
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+
 public class RuntimeRegistration implements IRuntimeRegistration {
 	
 	private final IRecipeManager recipeManager;
@@ -26,45 +29,38 @@ public class RuntimeRegistration implements IRuntimeRegistration {
 	private final IRecipeTransferManager recipeTransferManager;
 	private final IScreenHelper screenHelper;
 	
-	public RuntimeRegistration(
-		IRecipeManager recipeManager,
-		IJeiHelpers jeiHelpers,
-		IEditModeConfig editModeConfig,
-		IIngredientManager ingredientManager,
-		IRecipeTransferManager recipeTransferManager,
-		IScreenHelper screenHelper
-	) {
-		this.recipeManager = recipeManager;
-		this.jeiHelpers = jeiHelpers;
-		this.editModeConfig = editModeConfig;
-		this.ingredientManager = ingredientManager;
-		this.recipeTransferManager = recipeTransferManager;
-		this.screenHelper = screenHelper;
+	public RuntimeRegistration(TooManyRecipeViewers runtime) {
+		this.recipeManager = runtime.recipeManager;
+		this.jeiHelpers = runtime.jeiHelpers;
+		this.editModeConfig = runtime.editModeConfig;
+		this.ingredientManager = runtime.ingredientManager;
+		this.recipeTransferManager = runtime.recipeTransferManager;
+		this.screenHelper = runtime.screenHelper;
 	}
 	
-	private IIngredientListOverlay ingredientListOverlay = new JemiIngredientListOverlay();
-	private IBookmarkOverlay bookmarkOverlay = new JemiBookmarkOverlay();
-	private IRecipesGui recipesGui = new JemiRecipesGui();
-	private IIngredientFilter ingredientFilter = new JemiIngredientFilter();
+	private final IIngredientListOverlay ingredientListOverlay = new JemiIngredientListOverlay();
+	private final IBookmarkOverlay bookmarkOverlay = new JemiBookmarkOverlay();
+	private final IRecipesGui recipesGui = new JemiRecipesGui();
+	private final IIngredientFilter ingredientFilter = new JemiIngredientFilter();
 	
 	@Override
 	public void setIngredientListOverlay(@NotNull IIngredientListOverlay ingredientListOverlay) {
-		this.ingredientListOverlay = ingredientListOverlay;
+		LOGGER.error(new UnsupportedOperationException());
 	}
 	
 	@Override
 	public void setBookmarkOverlay(@NotNull IBookmarkOverlay bookmarkOverlay) {
-		this.bookmarkOverlay = bookmarkOverlay;
+		LOGGER.error(new UnsupportedOperationException());
 	}
 	
 	@Override
 	public void setRecipesGui(@NotNull IRecipesGui recipesGui) {
-		this.recipesGui = recipesGui;
+		LOGGER.error(new UnsupportedOperationException());
 	}
 	
 	@Override
 	public void setIngredientFilter(@NotNull IIngredientFilter ingredientFilter) {
-		this.ingredientFilter = ingredientFilter;
+		LOGGER.error(new UnsupportedOperationException());
 	}
 	
 	@Override

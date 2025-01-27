@@ -318,14 +318,7 @@ public final class EMIPlugin implements EmiPlugin {
 	}
 	
 	private @NotNull RuntimeRegistration registerRuntime() {
-		final var runtimeRegistration = new RuntimeRegistration(
-			runtime.recipeManager,
-			runtime.jeiHelpers,
-			runtime.editModeConfig,
-			runtime.ingredientManager,
-			runtime.recipeTransferManager,
-			runtime.screenHelper
-		);
+		final var runtimeRegistration = new RuntimeRegistration(runtime);
 		
 		JEIPlugins.registerRuntime(runtimeRegistration);
 		

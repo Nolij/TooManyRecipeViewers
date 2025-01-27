@@ -67,14 +67,7 @@ import mezz.jei.library.util.RecipeErrorUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.BlastingRecipe;
-import net.minecraft.world.item.crafting.CampfireCookingRecipe;
-import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.SmeltingRecipe;
-import net.minecraft.world.item.crafting.SmithingRecipe;
-import net.minecraft.world.item.crafting.SmokingRecipe;
-import net.minecraft.world.item.crafting.StonecutterRecipe;
+import net.minecraft.world.item.crafting.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -886,40 +879,36 @@ public class RecipeManager implements IRecipeManager {
 		}
 	}
 	
+	private static class EMICookingRecipeWithCustomID extends EmiCookingRecipe {
+		
+		private final ResourceLocation id;
+		
+		public EMICookingRecipeWithCustomID(AbstractCookingRecipe recipe, EmiRecipeCategory category, int fuelMultiplier, boolean infiniBurn, ResourceLocation id) {
+			super(recipe, category, fuelMultiplier, infiniBurn);
+			this.id = id;
+		}
+		
+		@Override
+		public ResourceLocation getId() {
+			return id;
+		}
+		
+	}
+	
 	private static @NotNull EmiCookingRecipe convertEMISmeltingRecipe(JemiRecipe<RecipeHolder<SmeltingRecipe>> jemiRecipe) {
-		return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false) {
-			@Override
-			public ResourceLocation getId() {
-				return jemiRecipe.getId();
-			}
-		};
+		return new EMICookingRecipeWithCustomID(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false, jemiRecipe.getId());
 	}
 	
 	private static @NotNull EmiCookingRecipe convertEMIBlastingRecipe(JemiRecipe<RecipeHolder<BlastingRecipe>> jemiRecipe) {
-		return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false) {
-			@Override
-			public ResourceLocation getId() {
-				return jemiRecipe.getId();
-			}
-		};
+		return new EMICookingRecipeWithCustomID(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false, jemiRecipe.getId());
 	}
 	
 	private static @NotNull EmiCookingRecipe convertEMISmokingRecipe(JemiRecipe<RecipeHolder<SmokingRecipe>> jemiRecipe) {
-		return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false) {
-			@Override
-			public ResourceLocation getId() {
-				return jemiRecipe.getId();
-			}
-		};
+		return new EMICookingRecipeWithCustomID(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false, jemiRecipe.getId());
 	}
 	
 	private static @NotNull EmiCookingRecipe convertEMICampfireRecipe(JemiRecipe<RecipeHolder<CampfireCookingRecipe>> jemiRecipe) {
-		return new EmiCookingRecipe(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true) {
-			@Override
-			public ResourceLocation getId() {
-				return jemiRecipe.getId();
-			}
-		};
+		return new EMICookingRecipeWithCustomID(jemiRecipe.recipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, jemiRecipe.getId());
 	}
 	
 	private static @NotNull EmiStonecuttingRecipe convertEMIStonecuttingRecipe(JemiRecipe<RecipeHolder<StonecutterRecipe>> jemiRecipe) {

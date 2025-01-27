@@ -17,7 +17,7 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 public class EmiSearchMixin {
 	
 	@Inject(method = "bake", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/searchtree/SuffixArray;generate()V", ordinal = 3, remap = true))
-	private static void tmrv$bake$SuffixArray$generate$4(CallbackInfo ci, @Local(ordinal = 3) SuffixArray<EmiStack> emiAliases) {
+	private static void tmrv$bake$SuffixArray$generate$3(CallbackInfo ci, @Local(ordinal = 3) SuffixArray<EmiStack> emiAliases) {
 		final var ingredientAliasRegistration = TooManyRecipeViewers.runtime.ingredientAliasRegistration;
 		if (ingredientAliasRegistration == null) {
 			LOGGER.warn("Failed to register ingredient aliases from JEI plugins!");

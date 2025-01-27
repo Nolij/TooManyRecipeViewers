@@ -54,7 +54,7 @@ public class ClientConfig implements IClientConfig {
 	
 	@Override
 	public boolean getShowHiddenIngredients() {
-		return false;
+		return true;
 	}
 	
 	@Override

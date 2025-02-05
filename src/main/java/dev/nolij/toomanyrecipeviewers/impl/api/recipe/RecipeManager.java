@@ -797,7 +797,8 @@ public class RecipeManager implements IRecipeManager {
 							//noinspection unchecked
 							emiRecipe = convertEMISmithingRecipe((JemiRecipe<RecipeHolder<SmithingRecipe>>) jemiRecipe);
 						} else if (emiCategory == VanillaEmiRecipeCategories.ANVIL_REPAIRING) {
-							emiRecipe = convertEMIAnvilRecipe((IJeiAnvilRecipe) jeiRecipe);
+							//noinspection unchecked
+							emiRecipe = convertEMIAnvilRecipe((JemiRecipe<IJeiAnvilRecipe>) jemiRecipe);
 						} else if (emiCategory == VanillaEmiRecipeCategories.BREWING) {
 							emiRecipe = convertEMIBrewingRecipe((IJeiBrewingRecipe) jeiRecipe);
 						} else if (emiCategory == VanillaEmiRecipeCategories.FUEL) {
@@ -927,8 +928,9 @@ public class RecipeManager implements IRecipeManager {
 		return new EmiSmithingRecipe(jemiRecipe.inputs.get(0), jemiRecipe.inputs.get(1), jemiRecipe.inputs.get(2), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
 	}
 	
-	private static @NotNull EmiRecipe convertEMIAnvilRecipe(IJeiAnvilRecipe recipe) {
-		final var id = recipe.getUid() != null ? recipe.getUid().withPrefix("/") : null;
+	private static @NotNull EmiRecipe convertEMIAnvilRecipe(JemiRecipe<IJeiAnvilRecipe> jemiRecipe) {
+		final var recipe = jemiRecipe.recipe;
+		final var id = recipe.getUid() != null ? recipe.getUid().withPrefix("/") : jemiRecipe.getId();
 		final var leftInputs = recipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
 		final var rightInputs = recipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
 		final var outputs = recipe.getOutputs().stream().map(JemiUtil::getStack).toList();
@@ -978,7 +980,7 @@ public class RecipeManager implements IRecipeManager {
 				else widgets.addGeneratedSlot(r -> leftInputs.get(r.nextInt(leftInputs.size())), uniq, 0, 0);
 				if (rightInputs.size() == 1) widgets.addSlot(rightInputs.getFirst(), 49, 0);
 				else widgets.addGeneratedSlot(r -> rightInputs.get(r.nextInt(rightInputs.size())), uniq, 49, 0);
-				if (outputs.size() == 1) widgets.addSlot(outputs.getFirst(), 107, 0);
+				if (outputs.size() == 1) widgets.addSlot(outputs.getFirst(), 107, 0).recipeContext(this);
 				else widgets.addGeneratedSlot(r -> outputs.get(r.nextInt(outputs.size())), uniq, 107, 0).recipeContext(this);
 			}
 		};

@@ -761,6 +761,7 @@ public class RecipeManager implements IRecipeManager {
 					final var jeiCategory = Objects.requireNonNull(getJEICategory());
 					final var jeiRecipeType = Objects.requireNonNull(getJEIRecipeType());
 					final var emiCategory = getEMICategory();
+					// TODO: avoid constructing JemiRecipe unless it's needed
 					final var jemiRecipe = new JemiRecipe<T>(emiCategory, jeiCategory, jeiRecipe);
 					if (jemiRecipe.originalId != null) {
 						originalId = jemiRecipe.originalId;
@@ -771,7 +772,7 @@ public class RecipeManager implements IRecipeManager {
 							.withSuffix("/%x".formatted(Objects.hash(jemiRecipe.inputs, jemiRecipe.outputs, jemiRecipe.catalysts)));
 					}
 					
-					if (RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
+					if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 						if (emiCategory == VanillaEmiRecipeCategories.INFO) {
 							emiRecipe = convertEMIInfoRecipe((IJeiIngredientInfoRecipe) jeiRecipe);
 						} else if (emiCategory == VanillaEmiRecipeCategories.CRAFTING) {
@@ -823,7 +824,7 @@ public class RecipeManager implements IRecipeManager {
 	}
 	//endregion
 	
-	//region Recipe Converters	
+	//region Recipe Converters
 	private static @NotNull EmiInfoRecipe convertEMIInfoRecipe(IJeiIngredientInfoRecipe jeiRecipe) {
 		final var emiIngredients = jeiRecipe
 			.getIngredients()

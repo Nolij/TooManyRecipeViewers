@@ -82,8 +82,8 @@ public final class JEIPlugins {
 		pluginClasses.remove(JeiInternalPlugin.class);
 		pluginClasses.addLast(JeiInternalPlugin.class);
 		
-		final ArrayList<IModPlugin> plugins = new ArrayList<>();
-		for (final Class<? extends IModPlugin> pluginClass : pluginClasses) {
+		final var plugins = new ArrayList<IModPlugin>();
+		for (final var pluginClass : pluginClasses) {
 			final IModPlugin plugin = pluginClass.getDeclaredConstructor().newInstance();
 			final ResourceLocation id = plugin.getPluginUid();
 			

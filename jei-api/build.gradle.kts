@@ -154,6 +154,7 @@ tasks.shadowJar {
 		"mezz/jei/common/network/packets/*.class",
 		"mezz/jei/common/network/I*.class",
 		"mezz/jei/common/platform/*.class",
+		"mezz/jei/common/transfer/RecipeTransferErrorInternal.class",
 		"mezz/jei/common/util/ErrorUtil.class",
 		"mezz/jei/common/util/ExpandNewLineTextAcceptor.class",
 		"mezz/jei/common/util/Immutable*2i.class",

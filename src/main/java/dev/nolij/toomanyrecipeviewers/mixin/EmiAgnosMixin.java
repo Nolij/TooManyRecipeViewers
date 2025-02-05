@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.emi.emi.platform.EmiAgnos;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(EmiAgnos.class)
+@Mixin(value = EmiAgnos.class, remap = false)
 public class EmiAgnosMixin {
 	
 	@WrapMethod(method = "isModLoaded")

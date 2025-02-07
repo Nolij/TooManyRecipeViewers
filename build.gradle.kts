@@ -190,7 +190,7 @@ val sourcesJar by tasks.registering(Jar::class) {
 		rename { "${it}_${"mod_id"()}" }
 	}
 
-	sourceSets.forEach {
+	listOf(rootProject.sourceSets, project(":jei-api").sourceSets).flatten().forEach {
 		from(it.allSource) { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
 	}
 }

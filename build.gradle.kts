@@ -47,7 +47,6 @@ repositories {
 	maven("https://maven.blamejared.com")
 	maven("https://maven.taumc.org/releases")
 	maven("https://maven.terraformersmc.com/")
-	maven("https://maven.blamejared.com/")
 	maven("https://maven.parchmentmc.org")
 }
 

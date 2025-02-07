@@ -112,11 +112,7 @@ tasks.jar {
 	enabled = false
 }
 
-tasks.shadowJar {
-	from("LICENSE") {
-		rename { "${it}_jei"}
-	}
-	
+tasks.shadowJar {	
 	configurations = emptyList()
 	archiveClassifier = ""
 	
@@ -125,6 +121,7 @@ tasks.shadowJar {
 	}
 	
 	val included = listOf(
+		"LICENSE_jei",
 //		"assets/jei/**",
 		"assets/jei/atlases/gui.json",
 		"assets/jei/textures/jei/atlas/gui/**",

@@ -184,9 +184,6 @@ tasks.shadowJar {
 		rename { "${it}_${"mod_id"()}" }
 	}
 
-	exclude("*.xcf")
-	exclude("LICENSE_libnolij")
-
 	configurations = listOf(shade)
 	archiveClassifier = ""
 

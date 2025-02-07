@@ -258,7 +258,7 @@ afterEvaluate {
 			tagName = tau.versioning.releaseTag.get()
 		}
 
-		if (dryRun.get() || tau.versioning.release.get()) {
+		if (dryRun.get() || tau.versioning.releaseChannel.get() == ReleaseChannel.RELEASE) {
 			curseforge {
 				val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
 				accessToken = cfAccessToken

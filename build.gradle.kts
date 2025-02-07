@@ -1,4 +1,18 @@
+import kotlinx.serialization.encodeToString
+import me.modmuss50.mpp.HttpUtils
+import me.modmuss50.mpp.PublishModTask
+import me.modmuss50.mpp.ReleaseType
+import me.modmuss50.mpp.platforms.discord.DiscordAPI
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import org.eclipse.jgit.lib.Ref
+import org.taumc.gradle.compression.DeflateAlgorithm
+import org.taumc.gradle.compression.task.AdvzipTask
+import org.taumc.gradle.versioning.ReleaseChannel
 import xyz.wagyourtail.unimined.api.unimined
+import java.nio.file.Files
 
 plugins {
 	id("java")
@@ -7,6 +21,9 @@ plugins {
 	id("xyz.wagyourtail.unimined")
 	id("com.github.gmazzo.buildconfig")
 	id("org.taumc.gradle.versioning")
+	id("org.taumc.gradle.compression")
+	id("me.modmuss50.mod-publish-plugin")
+	id("org.ajoberstar.grgit")
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
@@ -189,6 +206,147 @@ tasks.shadowJar {
 	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")
 }
 
+val compressJar = tau.compression.compress<AdvzipTask>(tasks.shadowJar, "compressJar") {
+	level = DeflateAlgorithm.EXTRA
+	throwIfNotInstalled = tau.versioning.release.get()
+}
+
 tasks.assemble {
-	dependsOn(tasks.shadowJar, sourcesJar)
+	dependsOn(compressJar, sourcesJar)
+}
+
+afterEvaluate {
+	publishing {
+		repositories {
+			if (!System.getenv("local_maven_url").isNullOrEmpty())
+				maven(System.getenv("local_maven_url"))
+		}
+
+		publications {
+			create<MavenPublication>("mod_id"()) {
+				artifact(tasks.shadowJar.get().archiveFile)
+				artifact(sourcesJar)
+			}
+		}
+	}
+
+	tasks.withType<AbstractPublishToMaven> {
+		dependsOn(compressJar, sourcesJar)
+	}
+
+	fun getChangelog(): String {
+		return file("CHANGELOG.md").readText()
+	}
+
+	publishMods {
+		file = compressJar.archiveFile
+		additionalFiles.from(sourcesJar.get().archiveFile)
+		type = if (tau.versioning.releaseChannel.get() == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
+		displayName = tau.versioning.version.get()
+		version = tau.versioning.version.get()
+		changelog = getChangelog()
+
+		modLoaders.addAll("neoforge")
+		dryRun = !tau.versioning.release.get()
+
+		val branchName = grgit.branch.current().name!!
+
+		github {
+			accessToken = providers.environmentVariable("GITHUB_TOKEN")
+			repository = "Nolij/TooManyRecipeViewers"
+			commitish = branchName
+			tagName = tau.versioning.releaseTag.get()
+		}
+
+		curseforge {
+			val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+			accessToken = cfAccessToken
+			projectId = "1194921"
+			projectSlug = "tmrv"
+
+			minecraftVersions.add("1.21.1")
+		}
+
+		discord {
+			webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK").orElse("")
+
+			username = "TooManyRecipeViewers Releases"
+
+			avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
+
+			content = changelog.map { changelog ->
+				"# TooManyRecipeViewers ${tau.versioning.version.get()} has been released!\nChangelog: ```md\n${changelog}\n```"
+			}
+
+			setPlatforms(platforms["github"], platforms["curseforge"])
+		}
+	}
+
+	tasks.withType<PublishModTask> {
+		dependsOn(compressJar, sourcesJar)
+	}
+
+	tasks.publishMods {
+		if (!publishMods.dryRun.get() && tau.versioning.releaseChannel.get() == ReleaseChannel.DEV_BUILD) {
+			doLast {
+				val http = HttpUtils()
+
+				val currentTag: Ref? = tau.versioning.releaseTags.get().getOrNull(0)
+				val buildChangeLog =
+					grgit.log {
+						if (currentTag != null)
+							excludes = listOf(currentTag.name)
+						includes = listOf("HEAD")
+					}.joinToString("\n") { commit ->
+						val id = commit.abbreviatedId
+						val message = commit.fullMessage.substringBefore('\n').trim()
+						val author = commit.author.name
+						"- [${id}] $message (${author})"
+					}
+
+				val compareStart = currentTag?.name ?: grgit.log().minBy { it.dateTime }.id
+				val compareEnd = tau.versioning.releaseTag.get()
+				val compareLink = "https://github.com/Nolij/TooManyRecipeViewers/compare/${compareStart}...${compareEnd}"
+
+				val webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+				val releaseChangeLog = getChangelog()
+				val file = publishMods.file.asFile.get()
+
+				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.version.get()}]" +
+						"(<https://github.com/Nolij/TooManyRecipeViewers/releases/tag/${tau.versioning.releaseTag}>) has been released!\n" +
+						"Changes since last build: <${compareLink}>"
+
+				if (buildChangeLog.isNotBlank())
+					content += " ```\n${buildChangeLog}\n```"
+				content += "\nChanges since last release: ```md\n${releaseChangeLog}\n```"
+
+				val webhook = DiscordAPI.Webhook(
+					content,
+					"TooManyRecipeViewers Test Builds",
+					"https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
+				)
+
+				val bodyBuilder = MultipartBody.Builder()
+					.setType(MultipartBody.FORM)
+					.addFormDataPart("payload_json", http.json.encodeToString(webhook))
+					.addFormDataPart("files[0]", file.name, file.asRequestBody("application/java-archive".toMediaTypeOrNull()))
+
+				var fileIndex = 1
+				for (additionalFile in publishMods.additionalFiles) {
+					bodyBuilder.addFormDataPart(
+						"files[${fileIndex++}]",
+						additionalFile.name,
+						additionalFile.asRequestBody(Files.probeContentType(additionalFile.toPath()).toMediaTypeOrNull())
+					)
+				}
+
+				val requestBuilder = Request.Builder()
+					.url(webhookUrl.get())
+					.post(bodyBuilder.build())
+					.header("Content-Type", "multipart/form-data")
+
+				http.httpClient.newCall(requestBuilder.build()).execute().close()
+			}
+		}
+	}
 }

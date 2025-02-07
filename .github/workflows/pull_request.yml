@@ -1,0 +1,27 @@
+name: pull_request
+on: [ pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Packages
+        run: sudo apt-get install -y advancecomp
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY_PR }}
+          cache-read-only: true
+      - name: :build
+        run: ./gradlew build --no-daemon
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: toomanyrecipeviewers
+          path: |
+            **/toomanyrecipeviewers-*.jar

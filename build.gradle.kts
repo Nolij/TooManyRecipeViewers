@@ -258,27 +258,29 @@ afterEvaluate {
 			tagName = tau.versioning.releaseTag.get()
 		}
 
-		curseforge {
-			val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-			accessToken = cfAccessToken
-			projectId = "1194921"
-			projectSlug = "tmrv"
+		if (dryRun.get() || tau.versioning.release.get()) {
+			curseforge {
+				val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+				accessToken = cfAccessToken
+				projectId = "1194921"
+				projectSlug = "tmrv"
 
-			minecraftVersions.add("1.21.1")
-		}
-
-		discord {
-			webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK").orElse("")
-
-			username = "TooManyRecipeViewers Releases"
-
-			avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
-
-			content = changelog.map { changelog ->
-				"# TooManyRecipeViewers ${tau.versioning.version.get()} has been released!\nChangelog: ```md\n${changelog}\n```"
+				minecraftVersions.add("1.21.1")
 			}
 
-			setPlatforms(platforms["github"], platforms["curseforge"])
+			discord {
+				webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK").orElse("")
+
+				username = "TooManyRecipeViewers Releases"
+
+				avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
+
+				content = changelog.map { changelog ->
+					"# TooManyRecipeViewers ${tau.versioning.version.get()} has been released!\nChangelog: ```md\n${changelog}\n```"
+				}
+
+				setPlatforms(platforms["github"], platforms["curseforge"])
+			}
 		}
 	}
 

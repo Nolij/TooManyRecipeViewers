@@ -5,15 +5,15 @@ plugins {
 }
 
 repositories {
-	mavenCentral()
-	maven("https://maven.wagyourtail.xyz/releases")
-	maven("https://maven.wagyourtail.xyz/snapshots")
 	gradlePluginPortal {
 		content {
 			excludeGroup("org.apache.logging.log4j")
 		}
 	}
-	mavenLocal()
+	mavenCentral()
+	maven("https://maven.wagyourtail.xyz/releases")
+	maven("https://maven.wagyourtail.xyz/snapshots")
+	maven("https://maven.taumc.org/releases")
 }
 
 kotlin {
@@ -39,4 +39,5 @@ dependencies {
 	plugin(id = "com.gradleup.shadow", version = "shadow_version"())
 	plugin(id = "xyz.wagyourtail.unimined", version = "unimined_version"())
 	plugin(id = "com.github.gmazzo.buildconfig", version = "buildconfig_version"())
+	plugin(id = "org.taumc.gradle.versioning", version = "taugradle_version"())
 }

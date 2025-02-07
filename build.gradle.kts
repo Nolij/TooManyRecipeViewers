@@ -6,9 +6,15 @@ plugins {
 	id("com.gradleup.shadow")
 	id("xyz.wagyourtail.unimined")
 	id("com.github.gmazzo.buildconfig")
+	id("org.taumc.gradle.versioning")
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
+
+rootProject.group = "maven_group"()
+rootProject.version = "${tau.versioning.get("mod_version"())}+jei.${"jei_version"()}"
+
+println("TooManyRecipeViewers version: ${rootProject.version}")
 
 buildConfig {
 	className("TooManyRecipeViewersConstants")
@@ -18,9 +24,6 @@ buildConfig {
 
 	buildConfigField("MOD_ID", "mod_id"())
 }
-
-rootProject.group = "maven_group"()
-rootProject.version = "${"mod_version"()}+jei.${"jei_version"()}"
 
 base {
 	archivesName = "mod_id"()

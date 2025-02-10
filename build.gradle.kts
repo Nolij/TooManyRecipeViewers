@@ -29,7 +29,7 @@ plugins {
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
 
 rootProject.group = "maven_group"()
-rootProject.version = "${tau.versioning.get("mod_version"())}+jei.${"jei_version"()}"
+rootProject.version = tau.versioning.version("mod_version"(), rootProject.properties["release_channel"], "jei.${"jei_version"()}")
 
 println("TooManyRecipeViewers version: ${rootProject.version}")
 
@@ -210,7 +210,7 @@ tasks.shadowJar {
 
 val compressJar = tau.compression.compress<AdvzipTask>(tasks.shadowJar, "compressJar") {
 	level = DeflateAlgorithm.EXTRA
-	throwIfNotInstalled = tau.versioning.release.get()
+	throwIfNotInstalled = tau.versioning.isRelease
 }
 
 tasks.assemble {
@@ -243,13 +243,13 @@ afterEvaluate {
 	publishMods {
 		file = compressJar.archiveFile
 		additionalFiles.from(sourcesJar.get().archiveFile)
-		type = if (tau.versioning.releaseChannel.get() == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
-		displayName = tau.versioning.version.get()
-		version = tau.versioning.version.get()
+		type = if (tau.versioning.releaseChannel == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
+		displayName = tau.versioning.version
+		version = tau.versioning.version
 		changelog = getChangelog()
 
 		modLoaders.addAll("neoforge")
-		dryRun = !tau.versioning.release.get()
+		dryRun = !tau.versioning.isRelease
 
 		val branchName = grgit.branch.current().name!!
 
@@ -257,10 +257,10 @@ afterEvaluate {
 			accessToken = providers.environmentVariable("GITHUB_TOKEN")
 			repository = "Nolij/TooManyRecipeViewers"
 			commitish = branchName
-			tagName = tau.versioning.releaseTag.get()
+			tagName = tau.versioning.releaseTag
 		}
 
-		if (dryRun.get() || tau.versioning.releaseChannel.get() == ReleaseChannel.RELEASE) {
+		if (dryRun.get() || tau.versioning.releaseChannel == ReleaseChannel.RELEASE) {
 			curseforge {
 				val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
 				accessToken = cfAccessToken
@@ -278,7 +278,7 @@ afterEvaluate {
 				avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
 
 				content = changelog.map { changelog ->
-					"# TooManyRecipeViewers ${tau.versioning.version.get()} has been released!\nChangelog: ```md\n${changelog}\n```"
+					"# TooManyRecipeViewers ${tau.versioning.version} has been released!\nChangelog: ```md\n${changelog}\n```"
 				}
 
 				setPlatforms(platforms["github"], platforms["curseforge"])
@@ -291,11 +291,11 @@ afterEvaluate {
 	}
 
 	tasks.publishMods {
-		if (!publishMods.dryRun.get() && tau.versioning.releaseChannel.get() == ReleaseChannel.DEV_BUILD) {
-			doLast {
+		doLast {
+			if (!publishMods.dryRun.get() && tau.versioning.releaseChannel != ReleaseChannel.RELEASE) {
 				val http = HttpUtils()
 
-				val currentTag: Ref? = tau.versioning.releaseTags.get().getOrNull(0)
+				val currentTag: Ref? = tau.versioning.releaseTags.firstOrNull()
 				val buildChangeLog =
 					grgit.log {
 						if (currentTag != null)
@@ -309,14 +309,14 @@ afterEvaluate {
 					}
 
 				val compareStart = currentTag?.name ?: grgit.log().minBy { it.dateTime }.id
-				val compareEnd = tau.versioning.releaseTag.get()
+				val compareEnd = tau.versioning.releaseTag
 				val compareLink = "https://github.com/Nolij/TooManyRecipeViewers/compare/${compareStart}...${compareEnd}"
 
 				val webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
 				val releaseChangeLog = getChangelog()
 				val file = publishMods.file.asFile.get()
 
-				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.version.get()}]" +
+				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.version}]" +
 						"(<https://github.com/Nolij/TooManyRecipeViewers/releases/tag/${tau.versioning.releaseTag}>) has been released!\n" +
 						"Changes since last build: <${compareLink}>"
 
@@ -349,7 +349,12 @@ afterEvaluate {
 					.post(bodyBuilder.build())
 					.header("Content-Type", "multipart/form-data")
 
-				http.httpClient.newCall(requestBuilder.build()).execute().close()
+				val request = requestBuilder.build()
+				val call = http.httpClient.newCall(request)
+				val response = call.execute()
+				if (!response.isSuccessful)
+					error(response.toString())
+				response.close()
 			}
 		}
 	}

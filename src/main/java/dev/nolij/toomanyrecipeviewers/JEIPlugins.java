@@ -188,7 +188,8 @@ public final class JEIPlugins {
 	}
 	
 	public static void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-		dispatch(allPlugins, x -> x.onRuntimeAvailable(jeiRuntime), false);
+		// TODO: run off main thread after replacing IngredientManager
+		dispatch(allPlugins, x -> x.onRuntimeAvailable(jeiRuntime), true);
 	}
 	
 	public static void onRuntimeUnavailable() {

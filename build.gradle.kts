@@ -275,7 +275,7 @@ afterEvaluate {
 
 				username = "TooManyRecipeViewers Releases"
 
-				avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
+				avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
 
 				content = changelog.map { changelog ->
 					"# TooManyRecipeViewers ${tau.versioning.version} has been released!\nChangelog: ```md\n${changelog}\n```"
@@ -327,7 +327,7 @@ afterEvaluate {
 				val webhook = DiscordAPI.Webhook(
 					content,
 					"TooManyRecipeViewers Test Builds",
-					"https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/resources/icon.png"
+					"https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
 				)
 
 				val bodyBuilder = MultipartBody.Builder()

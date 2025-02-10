@@ -175,6 +175,8 @@ dependencies {
 	runtimeOnly("maven.modrinth:geckolib:oNBe6h9g")
 	runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
 	runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
+	runtimeOnly("curse.maven:polymorph-388800:5995380")
+	runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
 }
 
 tasks.jar {

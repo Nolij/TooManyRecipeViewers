@@ -70,6 +70,8 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		onRuntimeUnavailable();
 		
+		JEIPlugins.resetLoadTimes();
+		
 		runtime = new TooManyRecipeViewers();
 		runtime.emiRegistry = registry;
 		
@@ -88,6 +90,8 @@ public final class EMIPlugin implements EmiPlugin {
 		});
 		
 		onRuntimeAvailable();
+		
+		JEIPlugins.logLoadTimes();
 	}
 	
 	private void onRuntimeUnavailable() {

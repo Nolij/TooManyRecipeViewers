@@ -29,7 +29,10 @@ import net.neoforged.fml.ModList;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -108,6 +111,23 @@ public final class JEIPlugins {
 				.orElseThrow();
 	}
 	
+	private static final Map<IModPlugin, Long> loadTimes = new HashMap<>();
+	private static long loadTime = 0L;
+	
+	public static void resetLoadTimes() {
+		loadTimes.clear();
+		loadTime = 0L;
+	}
+	
+	public static void logLoadTimes() {
+		loadTimes
+			.entrySet()
+			.stream()
+			.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+			.forEach(x -> LOGGER.info("[{}] Loaded in {}ms", x.getKey().getPluginUid(), x.getValue()));
+		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
+	}
+	
 	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
 		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
 		
@@ -115,20 +135,25 @@ public final class JEIPlugins {
 		for (final var plugin : plugins) {
 			final var pluginId = plugin.getPluginUid();
 			final var pluginTimestamp = System.currentTimeMillis();
+			long dispatchTime;
 			try {
 				if (onMainThread) {
 					Minecraft.getInstance().executeBlocking(() -> dispatcher.accept(plugin));
 				} else {
 					dispatcher.accept(plugin);
 				}
+				dispatchTime = System.currentTimeMillis() - pluginTimestamp;
+//				LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, dispatchTime);
 			} catch (Throwable t) {
-				LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, System.currentTimeMillis() - pluginTimestamp, t);
+				dispatchTime = System.currentTimeMillis() - pluginTimestamp;
+				LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);
 			}
-			LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, System.currentTimeMillis() - pluginTimestamp);
+			loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
 		}
 		
 		final var totalDispatchTime = System.currentTimeMillis() - timestamp;
-		LOGGER.info("{} took {}ms total", callerMethod, totalDispatchTime);
+		LOGGER.info("{} took {}ms", callerMethod, totalDispatchTime);
+		loadTime += totalDispatchTime;
 	}
 	
 	public static void registerItemSubtypes(ISubtypeRegistration registration) {

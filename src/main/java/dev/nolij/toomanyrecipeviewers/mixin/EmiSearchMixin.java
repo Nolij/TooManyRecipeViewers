@@ -18,6 +18,8 @@ public class EmiSearchMixin {
 	
 	@Inject(method = "bake", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/searchtree/SuffixArray;generate()V", remap = true, ordinal = 3))
 	private static void tmrv$bake$SuffixArray$generate$3(CallbackInfo ci, @Local(ordinal = 3) SuffixArray<EmiStack> emiAliases) {
+		final var timestamp = System.currentTimeMillis();
+		
 		final var ingredientAliasRegistration = TooManyRecipeViewers.runtime.ingredientAliasRegistration;
 		if (ingredientAliasRegistration == null) {
 			LOGGER.warn("Failed to register ingredient aliases from JEI plugins!");
@@ -32,7 +34,7 @@ public class EmiSearchMixin {
 			final var alias = I18n.get(pair.getSecond()).toLowerCase();
 			emiAliases.add(pair.getFirst(), alias);
 		}
-		LOGGER.info("Registered {} ingredient aliases from JEI plugins", jeiAliases.size());
+		LOGGER.info("Registered {} ingredient aliases from JEI plugins in {}ms", jeiAliases.size(), System.currentTimeMillis() - timestamp);
 	}
 	
 }

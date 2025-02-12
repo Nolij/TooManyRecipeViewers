@@ -1,7 +1,6 @@
 plugins {
 	id("java")
 	id("com.gradleup.shadow")
-	id("xyz.wagyourtail.unimined")
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
@@ -85,23 +84,6 @@ tasks.withType<GenerateModuleMetadata> {
 val shade: Configuration by configurations.creating {
 	configurations.compileClasspath.get().extendsFrom(this)
 	configurations.runtimeClasspath.get().extendsFrom(this)
-}
-
-unimined.minecraft {
-	version("minecraft_version"())
-	
-	runs.off = true
-
-	neoForge {
-		loader("neoforge_version"())
-	}
-
-	mappings {
-		mojmap()
-		parchment(mcVersion = "minecraft_version"(), version = "parchment_version"())
-	}
-
-	defaultRemapJar = false
 }
 
 dependencies {

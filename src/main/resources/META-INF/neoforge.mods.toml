@@ -1,6 +1,6 @@
 modLoader = "javafml"
 loaderVersion = "[1,)"
-license = "All Rights Reserved"
+license = "OSL-3.0"
 issueTrackerURL = "${issue_url}"
 
 [[mods]]

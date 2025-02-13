@@ -33,6 +33,7 @@ import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
 import mezz.jei.api.gui.drawable.IScalableDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
+//? if >=1.21.1
 import mezz.jei.api.ingredients.IIngredientSupplier;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -60,6 +61,7 @@ import mezz.jei.common.util.ErrorUtil;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
 import mezz.jei.library.gui.recipes.RecipeLayout;
+//? if >=1.21.1
 import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
 import mezz.jei.library.gui.recipes.layout.builder.RecipeSlotBuilder;
 import mezz.jei.library.util.IngredientSupplierHelper;
@@ -262,9 +264,10 @@ public class RecipeManager implements IRecipeManager {
 	
 	@Override
 	public void unhideRecipeCategory(RecipeType<?> recipeType) {}
-	
+
+	//? if >=1.21.1 {
 	@Override
-	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
+	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError (IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
 		ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
 		ErrorUtil.checkNotNull(recipe, "recipe");
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");
@@ -294,6 +297,7 @@ public class RecipeManager implements IRecipeManager {
 			)
 			.orElseGet(() -> new RecipeLayoutDrawableErrored<>(recipeCategory, recipe, recipeBackground, borderPadding));
 	}
+	//?}
 	
 	@Override
 	public <T> Optional<IRecipeLayoutDrawable<T>> createRecipeLayoutDrawable(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
@@ -303,7 +307,8 @@ public class RecipeManager implements IRecipeManager {
 		
 		final var recipeType = recipeCategory.getRecipeType();
 		final var decorators = getRecipeCategoryDecorators(recipeType);
-		
+
+		//? if >=1.21.1 {
 		final IScalableDrawable recipeBackground;
 		final int borderPadding;
 		if (recipeCategory.needsRecipeBorder()) {
@@ -313,6 +318,7 @@ public class RecipeManager implements IRecipeManager {
 			recipeBackground = DrawableBlank.EMPTY;
 			borderPadding = 0;
 		}
+		//?}
 		
 		return 
 			RecipeLayout.create(
@@ -320,9 +326,11 @@ public class RecipeManager implements IRecipeManager {
 				decorators,
 				recipe,
 				focusGroup,
-				ingredientManager,
-				recipeBackground,
+				ingredientManager
+				//? if >=1.21.1 {
+				,recipeBackground,
 				borderPadding
+				//?}
 			);
 	}
 	
@@ -360,11 +368,13 @@ public class RecipeManager implements IRecipeManager {
 		final var result = builder.build(focusedIngredients, cycleTimer);
 		return result.second();
 	}
-	
+
+	//? if >=1.21.1 {
 	@Override
 	public <T> IIngredientSupplier getRecipeIngredients(IRecipeCategory<T> jeiCategory, T recipe) {
 		return IngredientSupplierHelper.getIngredientSupplier(recipe, jeiCategory, ingredientManager);
 	}
+	//?}
 	
 	@Override
 	public <T> Optional<RecipeType<T>> getRecipeType(ResourceLocation recipeUid, Class<? extends T> recipeClass) {
@@ -477,7 +487,7 @@ public class RecipeManager implements IRecipeManager {
 		final var workstations = EmiApi.getRecipeManager().getWorkstations(emiCategory);
 		final var catalysts = workstations
 			.stream()
-			.map(x -> JemiUtil.getTyped(x.getEmiStacks().getFirst()))
+			.map(x -> JemiUtil.getTyped(x.getEmiStacks().get(0)))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.map((Function<ITypedIngredient<?>, ITypedIngredient<?>>) x -> x);
@@ -495,7 +505,7 @@ public class RecipeManager implements IRecipeManager {
 		final var emiCategory = category.getEMICategory();
 		
 		final var emiStack = JemiUtil.getStack(focus.getTypedValue());
-		final var normalizedEMIStack = emiStack.getEmiStacks().getFirst();
+		final var normalizedEMIStack = emiStack.getEmiStacks().get(0);
 		
 		return EmiApi.getRecipeManager().getWorkstations(emiCategory).contains(normalizedEMIStack);
 	}
@@ -523,7 +533,7 @@ public class RecipeManager implements IRecipeManager {
 	private List<EmiRecipe> getRecipes(IFocus<?> focus) {
 		final var jeiIngredient = focus.getTypedValue();
 		final var emiIngredient = JemiUtil.getStack(jeiIngredient);
-		final var normalizedEMIStack = emiIngredient.getEmiStacks().getFirst();
+		final var normalizedEMIStack = emiIngredient.getEmiStacks().get(0);
 		
 		return switch (focus.getRole()) {
 			case INPUT -> EmiApi.getRecipeManager().getRecipesByInput(normalizedEMIStack);
@@ -858,7 +868,7 @@ public class RecipeManager implements IRecipeManager {
 	
 	private static @NotNull EmiCraftingRecipe convertEMICraftingRecipe(JemiRecipe<RecipeHolder<CraftingRecipe>> jemiRecipe) {
 		if (jemiRecipe.outputs.size() == 1) {
-			return new EmiCraftingRecipe(jemiRecipe.inputs, jemiRecipe.outputs.getFirst(), jemiRecipe.id, jemiRecipe.builder.shapeless);
+			return new EmiCraftingRecipe(jemiRecipe.inputs, jemiRecipe.outputs.get(0), jemiRecipe.id, jemiRecipe.builder.shapeless);
 		} else {
 			return new EmiPatternCraftingRecipe(jemiRecipe.inputs, EmiStack.EMPTY, jemiRecipe.id, jemiRecipe.builder.shapeless) {
 				// TODO: supportsRecipeTree?
@@ -925,12 +935,12 @@ public class RecipeManager implements IRecipeManager {
 	private static @NotNull EmiSmithingRecipe convertEMISmithingRecipe(JemiRecipe<RecipeHolder<SmithingRecipe>> jemiRecipe) {
 		// TODO: smithing trim recipes?
 		// TODO: IExtendableSmithingRecipeCategory?
-		return new EmiSmithingRecipe(jemiRecipe.inputs.get(0), jemiRecipe.inputs.get(1), jemiRecipe.inputs.get(2), jemiRecipe.outputs.getFirst(), jemiRecipe.id);
+		return new EmiSmithingRecipe(jemiRecipe.inputs.get(0), jemiRecipe.inputs.get(1), jemiRecipe.inputs.get(2), jemiRecipe.outputs.get(0), jemiRecipe.id);
 	}
 	
-	private static @NotNull EmiRecipe convertEMIAnvilRecipe(JemiRecipe<IJeiAnvilRecipe> jemiRecipe) {
-		final var recipe = jemiRecipe.recipe;
-		final var id = recipe.getUid() != null ? recipe.getUid().withPrefix("/") : jemiRecipe.getId();
+	private static @NotNull EmiRecipe convertEMIAnvilRecipe(JemiRecipe<IJeiAnvilRecipe> anvilRecipe) {
+		final var recipe = anvilRecipe.recipe;
+		final var id = recipe.getUid() != null ? recipe.getUid().withPrefix("/") : anvilRecipe.getId();
 		final var leftInputs = recipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
 		final var rightInputs = recipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
 		final var outputs = recipe.getOutputs().stream().map(JemiUtil::getStack).toList();
@@ -976,11 +986,11 @@ public class RecipeManager implements IRecipeManager {
 			public void addWidgets(WidgetHolder widgets) {
 				widgets.addTexture(EmiTexture.PLUS, 27, 3);
 				widgets.addTexture(EmiTexture.EMPTY_ARROW, 75, 1);
-				if (leftInputs.size() == 1) widgets.addSlot(leftInputs.getFirst(), 0, 0);
+				if (leftInputs.size() == 1) widgets.addSlot(leftInputs.get(0), 0, 0);
 				else widgets.addGeneratedSlot(r -> leftInputs.get(r.nextInt(leftInputs.size())), uniq, 0, 0);
-				if (rightInputs.size() == 1) widgets.addSlot(rightInputs.getFirst(), 49, 0);
+				if (rightInputs.size() == 1) widgets.addSlot(rightInputs.get(0), 49, 0);
 				else widgets.addGeneratedSlot(r -> rightInputs.get(r.nextInt(rightInputs.size())), uniq, 49, 0);
-				if (outputs.size() == 1) widgets.addSlot(outputs.getFirst(), 107, 0).recipeContext(this);
+				if (outputs.size() == 1) widgets.addSlot(outputs.get(0), 107, 0).recipeContext(this);
 				else widgets.addGeneratedSlot(r -> outputs.get(r.nextInt(outputs.size())), uniq, 107, 0).recipeContext(this);
 			}
 		};
@@ -988,19 +998,19 @@ public class RecipeManager implements IRecipeManager {
 	
 	private static @NotNull EmiBrewingRecipe convertEMIBrewingRecipe(IJeiBrewingRecipe jeiRecipe) {
 		return new EmiBrewingRecipe(
-			JemiUtil.getStack(jeiRecipe.getPotionInputs().getFirst()),
-			JemiUtil.getStack(jeiRecipe.getIngredients().getFirst()),
+			JemiUtil.getStack(jeiRecipe.getPotionInputs().get(0)),
+			JemiUtil.getStack(jeiRecipe.getIngredients().get(0)),
 			JemiUtil.getStack(jeiRecipe.getPotionOutput()),
 			Objects.requireNonNull(jeiRecipe.getUid()).withPrefix("/"));
 	}
 	
-	private static @NotNull EmiFuelRecipe convertEMIFuelRecipe(JemiRecipe<IJeiFuelingRecipe> jemiRecipe) {
-		return new EmiFuelRecipe(jemiRecipe.inputs.getFirst(), jemiRecipe.recipe.getBurnTime(), jemiRecipe.id);
+	private static @NotNull EmiFuelRecipe convertEMIFuelRecipe(JemiRecipe<IJeiFuelingRecipe> fuelingRecipe) {
+		return new EmiFuelRecipe(fuelingRecipe.inputs.get(0), fuelingRecipe.recipe.getBurnTime(), fuelingRecipe.id);
 	}
 	
 	private static @NotNull EmiCompostingRecipe convertEMICompostingRecipe(IJeiCompostingRecipe jeiRecipe) {
 		// TODO: support multiple inputs?
-		return new EmiCompostingRecipe(JemiUtil.getStack(jeiRecipe.getInputs().getFirst()), jeiRecipe.getChance(), jeiRecipe.getUid().withPrefix("/"));
+		return new EmiCompostingRecipe(JemiUtil.getStack(jeiRecipe.getInputs().get(0)), jeiRecipe.getChance(), jeiRecipe.getUid().withPrefix("/"));
 	}
 	//endregion
 	//endregion

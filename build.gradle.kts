@@ -11,8 +11,11 @@ import org.eclipse.jgit.lib.Ref
 import org.taumc.gradle.compression.DeflateAlgorithm
 import org.taumc.gradle.compression.task.AdvzipTask
 import org.taumc.gradle.versioning.ReleaseChannel
+import xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask
 import xyz.wagyourtail.unimined.api.unimined
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 plugins {
 	id("java")
@@ -26,12 +29,12 @@ plugins {
 	id("org.ajoberstar.grgit")
 }
 
-operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
+operator fun String.invoke(): String = project.properties[this] as? String ?: error("Property $this not found")
 
-rootProject.group = "maven_group"()
-rootProject.version = tau.versioning.version("mod_version"(), rootProject.properties["release_channel"], "jei.${"jei_version"()}")
+project.group = "maven_group"()
+project.version = tau.versioning.version("mod_version"(), rootProject.properties["release_channel"], "jei.${"jei_version"()}")
 
-println("TooManyRecipeViewers version: ${rootProject.version}")
+println("TooManyRecipeViewers version: ${project.version}")
 
 buildConfig {
 	className("TooManyRecipeViewersConstants")
@@ -74,13 +77,17 @@ dependencies {
 	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
 }
 
+val minecraftVersion = MinecraftVersion.fromName(project.name)
+val modloader = ModLoader.fromProjectName(project.name)
+
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
 		options.encoding = "UTF-8"
-		sourceCompatibility = "21"
-		options.release = 21
+		val desiredJavaVersion = if(stonecutter.eval(stonecutter.current.version, ">=1.20.5")) (21) else (17)
+		sourceCompatibility = "$desiredJavaVersion"
+		options.release = desiredJavaVersion
 		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = JavaLanguageVersion.of(21)
+			languageVersion = JavaLanguageVersion.of(desiredJavaVersion)
 		}
 		options.compilerArgs.addAll(arrayOf("-Xplugin:Manifold no-bootstrap"))
 		options.forkOptions.jvmArgs?.add("-XX:+EnableDynamicAgentLoading")
@@ -89,18 +96,28 @@ tasks.withType<JavaCompile> {
 
 tasks.processResources {
 	inputs.file(rootDir.resolve("gradle.properties"))
-	inputs.property("version", rootProject.version)
+	inputs.property("version", project.version)
 
 	filteringCharset = "UTF-8"
 
 	val props = mutableMapOf<String, String>()
-	props.putAll(rootProject.properties
+	props.putAll(project.properties
 		.filterValues { value -> value is String }
 		.mapValues { entry -> entry.value as String })
-	props["mod_version"] = rootProject.version as String
+	props["mod_version"] = project.version as String
+	props["modloader"] = modloader.id
 
 	filesMatching(listOf("fabric.mod.json", "mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml")) {
 		expand(props)
+	}
+
+	doLast {
+		if (modloader == ModLoader.FORGE || (modloader == ModLoader.NEOFORGE && stonecutter.eval(minecraftVersion, "<1.20.5"))) {
+			fileTree(mapOf("dir" to tasks.processResources.get().outputs.files.asPath, "include" to "META-INF/neoforge.mods.toml")).onEach { file ->
+				Files.copy(file.toPath(), Path.of(outputs.files.asPath).resolve("META-INF/mods.toml"), StandardCopyOption.REPLACE_EXISTING)
+				file.delete()
+			}
+		}
 	}
 }
 
@@ -124,59 +141,73 @@ val shade: Configuration by configurations.creating {
 }
 
 unimined.minecraft {
-	version("minecraft_version"())
+	version(minecraftVersion)
 
-	neoForge {
-		loader("neoforge_version"())
-		mixinConfig("toomanyrecipeviewers.mixins.json")
+	if (modloader == ModLoader.NEOFORGE) {
+		neoForge {
+			loader("neoforge_version"())
+			mixinConfig("toomanyrecipeviewers.mixins.json")
+		}
+	} else if (modloader == ModLoader.FORGE) {
+		minecraftForge {
+			loader("forge_version"())
+			mixinConfig("toomanyrecipeviewers.mixins.json")
+		}
 	}
 
 	mappings {
 		mojmap()
-		parchment(mcVersion = "minecraft_version"(), version = "parchment_version"())
+		parchment(mcVersion = minecraftVersion, version = "parchment_version"())
 	}
-
-	defaultRemapJar = false
 }
 
 dependencies {
 	val minecraftLibraries by configurations.getting
 	minecraftLibraries.isTransitive = true
 	
-	shade("dev.nolij:libnolij:${"libnolij_version"()}")
-	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
+	shade("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
+	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
 	
-	implementation("dev.emi:emi-neoforge:${"emi_version"()}")
-	
-	shade(project(":jei-api"))
-	
+	"modImplementation"("dev.emi:emi-${modloader.id}:${"emi_version"()}")
+
+	shade(project(stonecutter.node.sibling("jei-api")!!.project.path, configuration = "jeiApiJar"))
+
+	if (modloader == ModLoader.FORGE) {
+		compileOnly("io.github.llamalad7:mixinextras-common:${"mixinextras_version"()}")
+		"include"("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
+		implementation("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
+	}
+
 	// for testing purposes
-	runtimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
-	runtimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
-	runtimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
-	runtimeOnly("maven.modrinth:mekanism:10.7.8.70")
-	runtimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
-	runtimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
-	runtimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
-	runtimeOnly("maven.modrinth:mekanism_extra:1.21.1-1.0.5")
-	runtimeOnly("curse.maven:mekanism-weapons-929829:5906398")
-	runtimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
-	runtimeOnly("maven.modrinth:actually-additions:1.3.12")
-	runtimeOnly("curse.maven:placebo-283644:6068449")
-	runtimeOnly("curse.maven:apotheosis-313970:6078226")
-	runtimeOnly("curse.maven:apothic-attributes-898963:6060907")
-	runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
-	runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
-	runtimeOnly("maven.modrinth:c2me-neoforge:0.3.0+alpha.0.47+1.21.1")
-	runtimeOnly("maven.modrinth:sophisticated-core:1.21.1-1.1.3.836")
-	runtimeOnly("maven.modrinth:sophisticated-storage:1.21.1-1.2.6.1038")
-	runtimeOnly("maven.modrinth:sophisticated-backpacks:1.21.1-3.22.5.1173")
-	runtimeOnly("curse.maven:moderately-enough-effect-descriptions-meed-918638:6100615")
-	runtimeOnly("maven.modrinth:geckolib:oNBe6h9g")
-	runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
-	runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
-	runtimeOnly("curse.maven:polymorph-388800:5995380")
-	runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
+
+	if (minecraftVersion == "1.21.1") {
+		runtimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
+		runtimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
+		runtimeOnly("maven.modrinth:just-enough-effect-descriptions-jeed:m7gSD9ey")
+		runtimeOnly("maven.modrinth:mekanism:10.7.8.70")
+		runtimeOnly("maven.modrinth:mekanism-generators:10.7.8.70")
+		runtimeOnly("maven.modrinth:mekanism-additions:10.7.8.70")
+		runtimeOnly("maven.modrinth:mekanism-tools:10.7.8.70")
+		runtimeOnly("maven.modrinth:mekanism_extra:1.21.1-1.0.5")
+		runtimeOnly("curse.maven:mekanism-weapons-929829:5906398")
+		runtimeOnly("maven.modrinth:just-enough-mekanism-multiblocks:7.2")
+		runtimeOnly("maven.modrinth:actually-additions:1.3.12")
+		runtimeOnly("curse.maven:placebo-283644:6068449")
+		runtimeOnly("curse.maven:apotheosis-313970:6078226")
+		runtimeOnly("curse.maven:apothic-attributes-898963:6060907")
+		runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
+		runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
+		runtimeOnly("maven.modrinth:c2me-neoforge:0.3.0+alpha.0.47+1.21.1")
+		runtimeOnly("maven.modrinth:sophisticated-core:1.21.1-1.1.3.836")
+		runtimeOnly("maven.modrinth:sophisticated-storage:1.21.1-1.2.6.1038")
+		runtimeOnly("maven.modrinth:sophisticated-backpacks:1.21.1-3.22.5.1173")
+		runtimeOnly("curse.maven:moderately-enough-effect-descriptions-meed-918638:6100615")
+		runtimeOnly("maven.modrinth:geckolib:oNBe6h9g")
+		runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
+		runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
+		runtimeOnly("curse.maven:polymorph-388800:5995380")
+		runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
+	}
 }
 
 tasks.jar {
@@ -191,10 +222,6 @@ val sourcesJar by tasks.registering(Jar::class) {
 	from("LICENSE") {
 		rename { "${it}_${"mod_id"()}" }
 	}
-
-	listOf(rootProject.sourceSets, project(":jei-api").sourceSets).flatten().forEach {
-		from(it.allSource) { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
-	}
 }
 
 tasks.shadowJar {
@@ -203,12 +230,16 @@ tasks.shadowJar {
 	}
 
 	configurations = listOf(shade)
-	archiveClassifier = ""
+	archiveClassifier = "unremapped"
 
 	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")
 }
 
-val compressJar = tau.compression.compress<AdvzipTask>(tasks.shadowJar, "compressJar") {
+tasks.named<RemapJarTask>("remapJar") {
+	inputFile.set(tasks.shadowJar.get().archiveFile)
+}
+
+val compressJar = tau.compression.compress<AdvzipTask>(tasks.getByName("remapJar") as AbstractArchiveTask, "compressJar") {
 	level = DeflateAlgorithm.EXTRA
 	throwIfNotInstalled = tau.versioning.isRelease
 }
@@ -237,7 +268,7 @@ afterEvaluate {
 	}
 
 	fun getChangelog(): String {
-		return file("CHANGELOG.md").readText()
+		return rootProject.file("CHANGELOG.md").readText()
 	}
 
 	publishMods {

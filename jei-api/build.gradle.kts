@@ -1,12 +1,26 @@
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.util.*
+
 plugins {
 	id("java")
 	id("com.gradleup.shadow")
 }
 
-operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
+val localPropertiesFile = rootDir.resolve("versions/${stonecutter.current.project}/gradle.properties")
+if (localPropertiesFile.exists()) {
+	val localProperties = Properties()
+	localProperties.load(localPropertiesFile.inputStream())
+	localProperties.forEach { (k, v) -> if (k is String) project.extra.set(k, v) }
+}
+
+val minecraftVersion = MinecraftVersion.fromName(project.name)
+val modloader = ModLoader.fromProjectName(project.name)
+
+operator fun String.invoke(): String = project.properties[this] as? String ?: error("Property $this not found")
 
 project.group = ""
-project.version = "jei_version"()
 
 base {
 	archivesName = "jei-api"
@@ -44,10 +58,11 @@ dependencies {
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
 		options.encoding = "UTF-8"
-		sourceCompatibility = "21"
-		options.release = 21
+		val desiredJavaVersion = if(stonecutter.eval(stonecutter.current.version, ">=1.20.5")) (21) else (17)
+		sourceCompatibility = "$desiredJavaVersion"
+		options.release = desiredJavaVersion
 		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = JavaLanguageVersion.of(21)
+			languageVersion = JavaLanguageVersion.of(desiredJavaVersion)
 		}
 		options.compilerArgs.addAll(arrayOf("-Xplugin:Manifold no-bootstrap"))
 		options.forkOptions.jvmArgs?.add("-XX:+EnableDynamicAgentLoading")
@@ -56,18 +71,27 @@ tasks.withType<JavaCompile> {
 
 tasks.processResources {
 	inputs.file(rootDir.resolve("gradle.properties"))
-	inputs.property("version", rootProject.version)
+	inputs.property("version", project.version)
 
 	filteringCharset = "UTF-8"
 
 	val props = mutableMapOf<String, String>()
-	props.putAll(rootProject.properties
+	props.putAll(project.properties
 		.filterValues { value -> value is String }
 		.mapValues { entry -> entry.value as String })
-	props["mod_version"] = rootProject.version as String
+	props["mod_version"] = project.version as String
 
 	filesMatching(listOf("fabric.mod.json", "mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml")) {
 		expand(props)
+	}
+
+	doLast {
+		if (modloader == ModLoader.FORGE || (modloader == ModLoader.NEOFORGE && stonecutter.eval(minecraftVersion, "<1.20.5"))) {
+			fileTree(mapOf("dir" to tasks.processResources.get().outputs.files.asPath, "include" to "META-INF/neoforge.mods.toml")).onEach { file ->
+				Files.copy(file.toPath(), Path.of(outputs.files.asPath).resolve("META-INF/mods.toml"), StandardCopyOption.REPLACE_EXISTING)
+				file.delete()
+			}
+		}
 	}
 }
 
@@ -87,7 +111,8 @@ val shade: Configuration by configurations.creating {
 }
 
 dependencies {
-	shade("mezz.jei:jei-${"minecraft_version"()}-neoforge:${"jei_version"()}")
+	compileOnly("net.minecraftforge:javafmllanguage:1.20.1-47.2.0")
+	shade("mezz.jei:jei-${minecraftVersion}-${modloader.id}:${"jei_version"()}")
 }
 
 tasks.jar {
@@ -109,6 +134,7 @@ tasks.shadowJar {
 		"assets/jei/textures/jei/atlas/gui/**",
 		"META-INF/accesstransformer.cfg",
 		"META-INF/neoforge.mods.toml",
+		"META-INF/mods.toml",
 		"mezz/jei/api/**",
 		"mezz/jei/common/codecs/**/*.class", //
 		"mezz/jei/common/config/BookmarkTooltipFeature.class",
@@ -138,6 +164,8 @@ tasks.shadowJar {
 		"mezz/jei/common/util/ErrorUtil.class",
 		"mezz/jei/common/util/ExpandNewLineTextAcceptor.class",
 		"mezz/jei/common/util/Immutable*2i.class",
+		"mezz/jei/common/util/HorizontalAlignment.class",
+		"mezz/jei/common/util/VerticalAlignment.class",
 		"mezz/jei/common/util/NavigationVisibility.class",
 		"mezz/jei/common/util/RegistryUtil.class",
 		"mezz/jei/common/util/SafeIngredientUtil.class",
@@ -170,12 +198,15 @@ tasks.shadowJar {
 		"mezz/jei/library/plugins/vanilla/**/*.class",
 		"mezz/jei/library/render/**/*.class",
 		"mezz/jei/library/recipes/CraftingExtensionHelper*.class",
+		"mezz/jei/library/recipes/ExtendableRecipeCategoryHelper*.class",
 		"mezz/jei/library/recipes/RecipeTransferManager.class",
 		"mezz/jei/library/recipes/UniversalRecipeTransferHandlerAdapter.class",
 		"mezz/jei/library/runtime/**/*.class",
 		"mezz/jei/library/transfer/**/*.class",
 		"mezz/jei/library/util/**/*.class",
 		"mezz/jei/neoforge/platform/**/*.class",
+		"mezz/jei/forge/platform/**/*.class",
+		"mezz/jei/forge/ingredients/**/*.class",
 	)
 	val excluded = listOf(
 		"mezz/jei/gui/plugins/**",
@@ -192,6 +223,15 @@ tasks.assemble {
 	dependsOn(tasks.shadowJar)
 }
 
-rootProject.tasks.compileJava {
-	dependsOn(tasks.shadowJar)
+configurations {
+	create("jeiApiJar") {
+		isCanBeConsumed = true
+		isCanBeResolved = false
+	}
+}
+
+
+
+artifacts {
+	add("jeiApiJar", tasks.shadowJar)
 }

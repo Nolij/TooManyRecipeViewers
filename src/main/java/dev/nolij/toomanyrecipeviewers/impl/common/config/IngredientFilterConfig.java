@@ -44,11 +44,13 @@ public class IngredientFilterConfig implements IIngredientFilterConfig {
 	public boolean getSearchModIds() {
 		return false;
 	}
-	
+
+	//? if >=1.21.1 {
 	@Override
 	public boolean getSearchModAliases() {
 		return false;
 	}
+	//?}
 	
 	@Override
 	public boolean getSearchIngredientAliases() {

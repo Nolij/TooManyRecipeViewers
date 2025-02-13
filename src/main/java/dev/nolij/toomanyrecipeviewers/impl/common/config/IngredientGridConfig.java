@@ -1,7 +1,12 @@
 package dev.nolij.toomanyrecipeviewers.impl.common.config;
 
+//? if >=1.21.1 {
 import mezz.jei.api.gui.placement.HorizontalAlignment;
 import mezz.jei.api.gui.placement.VerticalAlignment;
+//?} else {
+/*import mezz.jei.common.util.HorizontalAlignment;
+import mezz.jei.common.util.VerticalAlignment;
+*///?}
 import mezz.jei.common.config.IIngredientGridConfig;
 import mezz.jei.common.util.NavigationVisibility;
 

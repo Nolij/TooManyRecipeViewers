@@ -316,7 +316,7 @@ afterEvaluate {
 				val releaseChangeLog = getChangelog()
 				val file = publishMods.file.asFile.get()
 
-				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.version}]" +
+				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.versionNoMetadata}]" +
 						"(<https://github.com/Nolij/TooManyRecipeViewers/releases/tag/${tau.versioning.releaseTag}>) has been released!\n" +
 						"Changes since last build: <${compareLink}>"
 

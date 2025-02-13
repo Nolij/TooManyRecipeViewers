@@ -104,9 +104,7 @@ tasks.shadowJar {
 	
 	val included = listOf(
 		"LICENSE_jei",
-//		"assets/jei/**",
-		"assets/jei/atlases/gui.json",
-		"assets/jei/textures/jei/atlas/gui/**",
+		"assets/jei/**",
 		"META-INF/accesstransformer.cfg",
 		"META-INF/neoforge.mods.toml",
 		"mezz/jei/api/**",

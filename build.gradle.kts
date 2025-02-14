@@ -163,18 +163,26 @@ unimined.minecraft {
 
 dependencies {
 	val minecraftLibraries by configurations.getting
+	val modImplementation by configurations.getting
+	val include by configurations.getting
+
 	minecraftLibraries.isTransitive = true
-	
-	shade("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
-	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
-	
-	"modImplementation"("dev.emi:emi-${modloader.id}:${"emi_version"()}")
+
+	if (stonecutter.eval(stonecutter.current.version, ">=1.20.5")) {
+		shade("dev.nolij:libnolij:${"libnolij_version"()}")
+		minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
+	} else {
+		shade("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
+		minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
+	}
+
+	modImplementation("dev.emi:emi-${modloader.id}:${"emi_version"()}")
 
 	shade(project(stonecutter.node.sibling("jei-api")!!.project.path, configuration = "jeiApiJar"))
 
 	if (modloader == ModLoader.FORGE) {
 		compileOnly("io.github.llamalad7:mixinextras-common:${"mixinextras_version"()}")
-		"include"("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
+		include("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
 		implementation("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
 	}
 

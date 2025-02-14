@@ -283,7 +283,7 @@ afterEvaluate {
 		file = compressJar.archiveFile
 		additionalFiles.from(sourcesJar.get().archiveFile)
 		type = if (tau.versioning.releaseChannel == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
-		displayName = tau.versioning.version
+		displayName = tau.versioning.versionNoMetadata
 		version = tau.versioning.version
 		changelog = getChangelog()
 
@@ -307,6 +307,9 @@ afterEvaluate {
 				projectSlug = "tmrv"
 
 				minecraftVersions.add("1.21.1")
+				
+				requires("emi")
+				incompatible("jei")
 			}
 
 			discord {
@@ -355,7 +358,7 @@ afterEvaluate {
 				val releaseChangeLog = getChangelog()
 				val file = publishMods.file.asFile.get()
 
-				var content = "# [TooManyRecipeViewers Test Build ${tau.versioning.version}]" +
+				var content = "# [TooManyRecipeViewers Test Build ${publishMods.displayName.get()}]" +
 						"(<https://github.com/Nolij/TooManyRecipeViewers/releases/tag/${tau.versioning.releaseTag}>) has been released!\n" +
 						"Changes since last build: <${compareLink}>"
 

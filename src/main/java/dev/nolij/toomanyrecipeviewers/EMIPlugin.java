@@ -93,6 +93,8 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		onRuntimeAvailable();
 		
+		runtime.recipeManager.lock();
+		
 		JEIPlugins.logLoadTimes();
 	}
 	
@@ -142,7 +144,7 @@ public final class EMIPlugin implements EmiPlugin {
 			@Override public void save(@NotNull EditModeConfig editModeConfig) {}
 			@Override public void load(@NotNull EditModeConfig editModeConfig) {}
 		}, runtime.ingredientManager);
-		// TODO: use
+		// TODO: use?
 		runtime.ingredientVisibility = new IngredientVisibility(runtime.blacklist, runtime.clientToggleState, runtime.editModeConfig, runtime.ingredientManager);
 		
 		// TODO: use init registry instead?
@@ -262,8 +264,6 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);
-		
-		runtime.recipeManager.lock();
 	}
 	
 	private void registerRecipeCategories() {

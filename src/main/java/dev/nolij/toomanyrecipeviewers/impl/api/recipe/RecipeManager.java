@@ -114,8 +114,6 @@ public class RecipeManager implements IRecipeManager {
 		vanillaEMICategoryJEIRecipeTypeMap = vanillaEMICategoryJEIRecipeClassMapBuilder.build();
 	}
 	
-	private final TooManyRecipeViewers runtime;
-	
 	private final EmiRegistry registry;
 	private final @Unmodifiable List<IRecipeCategory<?>> jeiRecipeCategories;
 	private final IIngredientManager ingredientManager;
@@ -126,7 +124,6 @@ public class RecipeManager implements IRecipeManager {
 	private volatile boolean locked = false;
 	
 	public RecipeManager(TooManyRecipeViewers runtime) {
-		this.runtime = runtime;
 		this.registry = runtime.emiRegistry;
 		this.jeiRecipeCategories = runtime.recipeCategories;
 		this.ingredientManager = runtime.ingredientManager;
@@ -570,20 +567,6 @@ public class RecipeManager implements IRecipeManager {
 	
 	private <T> Stream<T> getRecipes(Category<T> category, IFocusGroup focusGroup) {
 		return focusGroup.getAllFocuses().stream().flatMap(x -> getRecipes(category, x)).distinct();
-	}
-	
-	private <T> Stream<T> getRecipes(Category<T> category) {
-		final var jeiCategory = category.getJEICategory();
-		if (jeiCategory == null)
-			return Stream.empty();
-		final var emiCategory = category.getEMICategory();
-		final var emiRecipes = EmiApi.getRecipeManager().getRecipes(emiCategory);
-		
-		return emiRecipes
-			.stream()
-			.map(x -> category.recipe(x).getJEIRecipe())
-			.filter(Objects::nonNull)
-			.filter(jeiCategory.getRecipeType().getRecipeClass()::isInstance);
 	}
 	
 	public Stream<RecipeType<?>> getAllRecipeTypes() {

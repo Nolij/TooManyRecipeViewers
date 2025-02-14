@@ -268,6 +268,9 @@ afterEvaluate {
 				projectSlug = "tmrv"
 
 				minecraftVersions.add("1.21.1")
+				
+				requires("emi")
+				incompatible("jei")
 			}
 
 			discord {

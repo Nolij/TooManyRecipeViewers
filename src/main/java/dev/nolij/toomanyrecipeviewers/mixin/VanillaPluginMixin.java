@@ -15,8 +15,12 @@ import java.util.List;
 @Mixin(value = VanillaPlugin.class, remap = false)
 public class VanillaPluginMixin {
 	
-	@Redirect(method = "registerIngredients", at = @At(value = "INVOKE", target = "Lmezz/jei/library/plugins/vanilla/ingredients/ItemStackListFactory;create(Lmezz/jei/common/util/StackHelper;Lmezz/jei/library/plugins/vanilla/ingredients/ItemStackHelper;)Ljava/util/List;"))
-	public List<ItemStack> tmrv$registerIngredients$ItemStackListFactory$create(StackHelper stackHelper, ItemStackHelper itemStackHelper) {
+	@Redirect(method = "registerIngredients", at = @At(value = "INVOKE", target =
+			"Lmezz/jei/library/plugins/vanilla/ingredients/ItemStackListFactory;create(Lmezz/jei/common/util/StackHelper;"
+			//? if >=1.21.1
+			+ "Lmezz/jei/library/plugins/vanilla/ingredients/ItemStackHelper;"
+			+ ")Ljava/util/List;"))
+	public List<ItemStack> tmrv$registerIngredients$ItemStackListFactory$create(StackHelper stackHelper/*? if >=1.21.1 {*/, ItemStackHelper itemStackHelper/*?}*/) {
 		return EmiStackList.stacks
 			.stream()
 			.map(EmiStack::getItemStack)

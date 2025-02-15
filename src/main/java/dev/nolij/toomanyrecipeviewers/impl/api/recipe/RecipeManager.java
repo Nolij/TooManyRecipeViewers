@@ -87,7 +87,7 @@ import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
-public class RecipeManager implements IRecipeManager {
+public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILockable {
 	
 	public static final Map<RecipeType<?>, EmiRecipeCategory> vanillaJEITypeEMICategoryMap =
 		ImmutableMap.<RecipeType<?>, EmiRecipeCategory>builder()
@@ -122,6 +122,7 @@ public class RecipeManager implements IRecipeManager {
 	private volatile boolean locked = false;
 	
 	public RecipeManager(TooManyRecipeViewers runtime) {
+		runtime.lockAfterRegistration(this);
 		this.registry = runtime.emiRegistry;
 		this.jeiRecipeCategories = runtime.recipeCategories;
 		this.ingredientManager = runtime.ingredientManager;
@@ -563,7 +564,11 @@ public class RecipeManager implements IRecipeManager {
 		return jeiRecipeCategories.stream().map(IRecipeCategory::getRecipeType);
 	}
 	
-	public void lock() {
+	@Override
+	public synchronized void lock() throws IllegalStateException {
+		if (locked)
+			throw new IllegalStateException();
+		
 		locked = true;
 		registry.removeRecipes(x ->
 			replacedRecipeIDs.contains(x.getId()) &&

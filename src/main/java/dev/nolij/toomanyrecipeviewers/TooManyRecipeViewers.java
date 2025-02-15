@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
-import dev.nolij.toomanyrecipeviewers.impl.api.registration.IngredientAliasRegistration;
+import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIKeyMappings;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.config.JEIConfigManager;
@@ -46,6 +46,8 @@ import mezz.jei.neoforge.platform.FluidHelper;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -81,6 +83,28 @@ public final class TooManyRecipeViewers {
 	public volatile IScreenHelper screenHelper = null;
 	public volatile JEIRuntime jeiRuntime = null;
 	//endregion
+	
+	public interface ILockable {
+		void lock() throws IllegalStateException;
+	}
+	
+	private volatile boolean registrationLocked = false;
+	private final List<ILockable> lockAfterRegistration = Collections.synchronizedList(new ArrayList<>());
+	
+	public synchronized void lockAfterRegistration(ILockable lockable) throws IllegalStateException {
+		if (registrationLocked)
+			throw new IllegalStateException();
+		
+		lockAfterRegistration.add(lockable);
+	}
+	
+	public synchronized void lockRegistration() throws IllegalStateException {
+		if (registrationLocked)
+			throw new IllegalStateException();
+		registrationLocked = true;
+		
+		lockAfterRegistration.forEach(ILockable::lock);
+	}
 	
 	//region Static Storage
 	public static final JEIConfigManager jeiConfigManager = new JEIConfigManager();

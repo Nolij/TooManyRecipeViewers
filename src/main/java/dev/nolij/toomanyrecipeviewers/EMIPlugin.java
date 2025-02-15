@@ -3,6 +3,7 @@ package dev.nolij.toomanyrecipeviewers;
 import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.EmiEntrypoint;
+import dev.emi.emi.api.EmiInitRegistry;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
@@ -65,35 +66,38 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 public final class EMIPlugin implements EmiPlugin {
 	
 	@Override
-	public void register(EmiRegistry registry) {
-		registry.addGenericDragDropHandler(new JemiDragDropHandler());
-		
+	public void initialize(EmiInitRegistry registry) {
 		onRuntimeUnavailable();
 		
 		JEIPlugins.resetLoadTimes();
 		
 		runtime = new TooManyRecipeViewers();
-		runtime.emiRegistry = registry;
 		
 		registerSubtypes();
+	}
+	
+	@Override
+	public void register(EmiRegistry registry) {
+		runtime.emiRegistry = registry;
+		
 		registerIngredients();
 		registerModAliases();
 		createJeiHelpers();
 		createRecipeManager();
 		registerRecipeTransferHandlers();
 		registerGuiHandlers();
+		onRuntimeAvailable();
+		
+		JEIPlugins.logLoadTimes();
+		
+		runtime.lockRegistration();
 		
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
 			return new EmiStackInteraction(runtime.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
 				.map(IClickableIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
-		
-		onRuntimeAvailable();
-		
-		runtime.recipeManager.lock();
-		
-		JEIPlugins.logLoadTimes();
+		registry.addGenericDragDropHandler(new JemiDragDropHandler());
 	}
 	
 	private void onRuntimeUnavailable() {

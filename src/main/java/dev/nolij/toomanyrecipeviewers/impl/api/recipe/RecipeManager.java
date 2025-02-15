@@ -249,17 +249,43 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 	}
 	
-	@Override
-	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {}
+	private final Set<EmiRecipe> hiddenRecipes = new HashSet<>();
 	
 	@Override
-	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {}
+	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
+		if (locked)
+			throw new IllegalStateException();
+		
+		final var category = category(recipeType);
+		recipes.stream().map(category::recipe).map(Category.Recipe::getEMIRecipe).forEach(hiddenRecipes::add);
+	}
 	
 	@Override
-	public void hideRecipeCategory(RecipeType<?> recipeType) {}
+	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
+		if (locked)
+			throw new IllegalStateException();
+		
+		final var category = category(recipeType);
+		recipes.stream().map(category::recipe).map(Category.Recipe::getEMIRecipe).forEach(hiddenRecipes::remove);
+	}
+	
+	private final Set<EmiRecipeCategory> hiddenCategories = new HashSet<>();
 	
 	@Override
-	public void unhideRecipeCategory(RecipeType<?> recipeType) {}
+	public void hideRecipeCategory(RecipeType<?> recipeType) {
+		if (locked)
+			throw new IllegalStateException();
+		
+		hiddenCategories.add(category(recipeType).getEMICategory());
+	}
+	
+	@Override
+	public void unhideRecipeCategory(RecipeType<?> recipeType) {
+		if (locked)
+			throw new IllegalStateException();
+		
+		hiddenCategories.remove(category(recipeType).getEMICategory());
+	}
 	
 	@Override
 	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
@@ -571,8 +597,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		locked = true;
 		registry.removeRecipes(x ->
-			replacedRecipeIDs.contains(x.getId()) &&
-			!replacementRecipes.contains(x));
+			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) || 
+			hiddenRecipes.contains(x) ||
+			hiddenCategories.contains(x.getCategory()));
 	}
 	//endregion
 	

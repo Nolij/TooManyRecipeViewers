@@ -98,6 +98,14 @@ public final class EMIPlugin implements EmiPlugin {
 				.map(IClickableIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
+		registry.removeEmiStacks(emiStack -> {
+			try {
+				final var jeiIngredient = JemiUtil.getTyped(emiStack);
+				if (jeiIngredient.isPresent())
+					return !runtime.ingredientVisibility.isIngredientVisible(jeiIngredient.get());
+			} catch (Throwable ignored) {}
+			return false;
+		});
 	}
 	
 	private void onRuntimeUnavailable() {

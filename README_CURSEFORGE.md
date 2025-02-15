@@ -47,10 +47,6 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 # Known API Limitations
 
-### Hidden Ingredients, Recipes, & Recipe Categories/Types
-
-The JEI API supports hiding ingredients, recipes, and recipe categories/types. EMI has no such concept of this. This is the only area where TMRV intentionally does not support a feature that JEMI does support (NOTE: I have not tested how effective JEMI's support of this feature is). JEI plugins marking something as "hidden" will simply be silently ignored by TMRV.
-
 ### Recipe Manager Plugins
 
 The JEI API supports "Recipe Manager Plugins". These plugins allow mods to control their own recipe registries and handle recipe lookups themselves. These will not be supported. They are an outdated concept that very few plugins still use, and they aren't possible to properly support without very invasive EMI mixins - something I do not intend to use in this project.

@@ -610,21 +610,21 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		if (result.emiCategory == null && emiCategory != null)
 			result.emiCategory = emiCategory;
 		
-		if (jeiRecipeType != null)
+		if (jeiRecipeType != null && !jeiRecipeTypeMap.containsKey(jeiRecipeType))
 			jeiRecipeTypeMap.put(jeiRecipeType, result);
-		if (emiCategory != null)
+		if (emiCategory != null && !emiCategoryMap.containsKey(emiCategory))
 			emiCategoryMap.put(emiCategory, result);
 		
 		return result;
 	}
 	
-	public <T> Category<T> category(IRecipeCategory<T> jeiCategory) {
+	public <T> Category<T> category(@NotNull IRecipeCategory<T> jeiCategory) {
 		return category(jeiCategory, null, null);
 	}
-	public <T> Category<T> category(RecipeType<T> jeiRecipeType) {
+	public <T> Category<T> category(@NotNull RecipeType<T> jeiRecipeType) {
 		return category(null, jeiRecipeType, null);
 	}
-	public <T> Category<T> category(EmiRecipeCategory emiCategory) {
+	public <T> Category<T> category(@NotNull EmiRecipeCategory emiCategory) {
 		return category(null, null, emiCategory);
 	}
 	
@@ -750,7 +750,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					final var jeiRecipeType = Objects.requireNonNull(getJEIRecipeType());
 					final var emiCategory = getEMICategory();
 					// TODO: avoid constructing JemiRecipe unless it's needed
-					final var jemiRecipe = new JemiRecipe<T>(emiCategory, jeiCategory, jeiRecipe);
+					final var jemiRecipe = new JemiRecipe<>(emiCategory, jeiCategory, jeiRecipe);
 					if (jemiRecipe.originalId != null) {
 						originalId = jemiRecipe.originalId;
 					} else {

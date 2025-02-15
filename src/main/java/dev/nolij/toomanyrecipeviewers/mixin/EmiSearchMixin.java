@@ -20,13 +20,13 @@ public class EmiSearchMixin {
 	private static void tmrv$bake$SuffixArray$generate$3(CallbackInfo ci, @Local(ordinal = 3) SuffixArray<EmiStack> emiAliases) {
 		final var timestamp = System.currentTimeMillis();
 		
-		final var ingredientAliasRegistration = TooManyRecipeViewers.runtime.ingredientAliasRegistration;
-		if (ingredientAliasRegistration == null) {
+		final var ingredientManager = TooManyRecipeViewers.runtime.ingredientManager;
+		if (ingredientManager == null) {
 			LOGGER.warn("Failed to register ingredient aliases from JEI plugins!");
 			return;
 		}
 		
-		final var jeiAliases = ingredientAliasRegistration.getAliasesAndLock();
+		final var jeiAliases = ingredientManager.getAliasesAndLock();
 		for (final var pair : jeiAliases) {
 			if (!I18n.exists(pair.getSecond()))
 				LOGGER.warn("Untranslated alias {}", pair.getSecond());

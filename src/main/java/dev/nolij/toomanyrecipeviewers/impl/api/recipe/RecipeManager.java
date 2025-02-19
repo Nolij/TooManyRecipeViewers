@@ -88,6 +88,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -260,24 +261,34 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 	}
 	
+	private final Set<EmiRecipe> hiddenRecipes = Collections.synchronizedSet(new HashSet<>());
 	private final Set<ResourceLocation> hiddenRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	
-	@Override
-	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
+	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<EmiRecipe> recipeConsumer, Consumer<ResourceLocation> idConsumer) {
 		if (locked)
 			throw new IllegalStateException();
 		
 		final var category = category(recipeType);
-		recipes.stream().map(category::recipe).map(Category.Recipe::getID).forEach(hiddenRecipeIDs::add);
+		final var recipes = jeiRecipes.stream().map(category::recipe).toList();
+		recipes.stream()
+			.map(Category.Recipe::getEMIRecipe)
+			.filter(Objects::nonNull)
+			.forEach(recipeConsumer);
+		recipes.stream()
+			.filter(x -> x.getEMIRecipe() == null)
+			.map(Category.Recipe::getID)
+			.filter(Objects::nonNull)
+			.forEach(idConsumer);
 	}
 	
 	@Override
-	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> recipes) {
-		if (locked)
-			throw new IllegalStateException();
-		
-		final var category = category(recipeType);
-		recipes.stream().map(category::recipe).map(Category.Recipe::getID).forEach(hiddenRecipeIDs::remove);
+	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::add, hiddenRecipeIDs::add);
+	}
+	
+	@Override
+	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::remove, hiddenRecipeIDs::remove);
 	}
 	
 	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new HashSet<>());
@@ -439,8 +450,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 		
 		try {
-			final var recipe = category(category.getEMICategory()).recipe(jeiRecipe);
-			final var emiRecipe = recipe.getEMIRecipe();
+			final var recipe = category.recipe(jeiRecipe);
+			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && recipe.getOriginalID() != null) {
 				if (emiRecipe instanceof JemiRecipe<?>)
@@ -608,12 +619,13 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		locked = true;
 		registry.removeRecipes(x ->
-			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) || 
-			hiddenRecipeIDs.contains(x.getId()) ||
+			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
+			hiddenRecipes.contains(x) || hiddenRecipeIDs.contains(x.getId()) ||
 			hiddenCategories.contains(x.getCategory()));
 		
 		replacedRecipeIDs.clear();
 		replacementRecipes.clear();
+		hiddenRecipes.clear();
 		hiddenRecipeIDs.clear();
 		hiddenCategories.clear();
 	}
@@ -705,10 +717,10 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			return jeiRecipeType;
 		}
 		
-		public synchronized @NotNull EmiRecipeCategory getEMICategory() {
+		public synchronized @Nullable EmiRecipeCategory getEMICategory() {
 			if (emiCategory == null) {
 				if (jeiCategory == null || jeiRecipeType == null)
-					throw new IllegalStateException();
+					return null;
 				
 				if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					emiCategory = vanillaJEITypeEMICategoryMap.get(jeiRecipeType);
@@ -802,7 +814,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private @Nullable ResourceLocation generateID() {
 				if (jeiRecipeType != null && extractJEIRecipeData()) {
 					final var typeID = jeiRecipeType.getUid();
-					return ResourceLocation.fromNamespaceAndPath(MOD_ID, "/tmrv_autogen_v0/%s/%x".formatted(EmiUtil.subId(typeID), Objects.requireNonNull(recipeLayoutBuilder).hashCode()));
+					return ResourceLocation.fromNamespaceAndPath(MOD_ID, "/tmrv_autogen_v0/%s/%x".formatted(EmiUtil.subId(typeID), Objects.requireNonNull(recipeLayoutBuilder).hashIngredients()));
 				}
 				
 				return null;
@@ -843,10 +855,10 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				return jeiRecipe;
 			}
 			
-			public synchronized @NotNull EmiRecipe getEMIRecipe() {
+			public synchronized @Nullable EmiRecipe getEMIRecipe() {
 				if (emiRecipe == null) {
 					if (jeiRecipe == null)
-						throw new IllegalStateException();
+						return null;
 					
 					getOriginalID();
 					getID();

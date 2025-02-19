@@ -177,6 +177,10 @@ dependencies {
 	runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
 	runtimeOnly("curse.maven:polymorph-388800:5995380")
 	runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
+	runtimeOnly("curse.maven:laserio-626839:5730007")
+	runtimeOnly("curse.maven:chipped-456956:5813117")
+	runtimeOnly("curse.maven:resourceful-lib-570073:5793500")
+	runtimeOnly("curse.maven:athena-841890:5629395")
 }
 
 tasks.jar {

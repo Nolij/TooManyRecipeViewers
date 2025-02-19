@@ -22,7 +22,7 @@ That being said, TMRV has two primary advantages over JEMI:
 
 TMRV has better coverage of JEI's API than JEMI does (with one exception - see [Known API Limitations](#known-api-limitations)). As of writing, this includes:
 
-- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe)
+- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe) (NOTE: there's no way of doing this 100% consistently, meaning sometimes generated recipe IDs will change. I decided that being able to bookmark recipes temporarily was better than not being able to bookmark them at all)
 - Better conversion of built-in recipe types (JEMI only supports crafting and info recipe types; TMRV supports all built-in JEI recipe types)
 - Ingredient/search aliases
 
@@ -46,6 +46,14 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 |           | <span style="color:green">-7642ms</span> (<span style="color:green">-13580ms</span> before world load, <span style="color:red">+5938ms</span> after world load) | <span style="color:red">+7642ms</span> (<span style="color:red">+13580ms</span> before world load, <span style="color:green">-5938ms</span> after world load) |
 
 # Known API Limitations
+
+### Scroll Widget
+
+Neither TMRV nor JEMI currently render this JEI widget properly. This limitation will eventually be addressed, but for now, recipes using it (such as Chipped's Workbench) will not render properly.
+
+### JEI Config Files
+
+`.minecraft/config/jei/blacklist.json` is the only JEI config file that TMRV even reads. This file _should_ work fine for vanilla ingredient types and for modded ingredient types added by a JEI plugin (this does not include mods that support both JEI and EMI natively, such as Mekanism). This is meant to be a stop-gap for packs switching over from JEI. JEMI had a similar flaw. EMI has its own config for hiding ingredients - please use that instead. All other JEI config files are completely ignored by TMRV, and there are no plans to support them.
 
 ### Recipe Manager Plugins
 

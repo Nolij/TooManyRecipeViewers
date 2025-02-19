@@ -7,7 +7,6 @@
 		"EmiAgnosMixin",
 		"EmiReloadManager$ReloadWorkerMixin",
 		"FullTypedItemStackMixin",
-		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
 		"TypedIngredientMixin",
 		"TypedItemStackMixin"

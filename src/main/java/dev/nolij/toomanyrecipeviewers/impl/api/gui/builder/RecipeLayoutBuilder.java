@@ -1,5 +1,6 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.gui.builder;
 
+import dev.nolij.toomanyrecipeviewers.util.IJEITypedIngredient;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
@@ -7,9 +8,7 @@ import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IIngredientManager;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	
@@ -57,13 +56,18 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	}
 	
 	@Override
-	public void createFocusLink(IIngredientAcceptor<?>... iIngredientAcceptors) {
+	public void createFocusLink(IIngredientAcceptor<?>... ingredientAcceptors) {
 		
 	}
 	
-	@Override
-	public int hashCode() {
-		return Objects.hash(inputs, catalysts, outputs);
+	public int hashIngredients() {
+		//noinspection unchecked,rawtypes
+		return Objects.hash(
+			IJEITypedIngredient.hashIngredients((Collection) inputs),
+			IJEITypedIngredient.hashIngredients((Collection) catalysts),
+			IJEITypedIngredient.hashIngredients((Collection) outputs),
+			shapeless
+		);
 	}
 	
 }

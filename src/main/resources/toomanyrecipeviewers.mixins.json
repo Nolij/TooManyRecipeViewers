@@ -6,6 +6,11 @@
 	"mixins": [
 		"EmiAgnosMixin",
 		"EmiReloadManager$ReloadWorkerMixin",
+		"FullTypedItemStackMixin",
+		"NormalizedTypedItemMixin",
+		"NormalizedTypedItemStackMixin",
+		"TypedIngredientMixin",
+		"TypedItemStackMixin",
 		"EmiSearchMixin",
 		"VanillaPluginMixin"
 	],

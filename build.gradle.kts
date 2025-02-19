@@ -212,13 +212,17 @@ tasks.shadowJar {
 	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")
 }
 
-val compressJar = tau.compression.compress<AdvzipTask>(tasks.shadowJar, "compressJar") {
+val inputJar = tasks.shadowJar
+
+val compressJar = tau.compression.compress<AdvzipTask>(inputJar, "compressJar") {
 	level = DeflateAlgorithm.EXTRA
 	throwIfNotInstalled = tau.versioning.isRelease
 }
 
+val outputJar = compressJar
+
 tasks.assemble {
-	dependsOn(compressJar, sourcesJar)
+	dependsOn(outputJar, sourcesJar)
 }
 
 afterEvaluate {
@@ -237,7 +241,7 @@ afterEvaluate {
 	}
 
 	tasks.withType<AbstractPublishToMaven> {
-		dependsOn(compressJar, sourcesJar)
+		dependsOn(outputJar, sourcesJar)
 	}
 
 	fun getChangelog(): String {
@@ -245,7 +249,7 @@ afterEvaluate {
 	}
 
 	publishMods {
-		file = compressJar.archiveFile
+		file = outputJar.archiveFile
 		additionalFiles.from(sourcesJar.get().archiveFile)
 		type = if (tau.versioning.releaseChannel == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
 		displayName = tau.versioning.versionNoMetadata
@@ -294,7 +298,7 @@ afterEvaluate {
 	}
 
 	tasks.withType<PublishModTask> {
-		dependsOn(compressJar, sourcesJar)
+		dependsOn(outputJar, sourcesJar)
 	}
 
 	tasks.publishMods {

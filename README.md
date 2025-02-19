@@ -67,3 +67,13 @@ The plan is to replace more of the JEI internals in future updates. However, som
 This project is licensed under OSL-3.0. For more information, see [LICENSE](LICENSE).
 
 Some code was copied from [EMI](https://github.com/emilyploszaj/emi) and [JEI](https://github.com/mezz/JustEnoughItems) in compliance with their copyright licenses. All modifications present in this project are licensed under the same license as the rest of this project, OSL-3.0.
+
+# ![YourKit](https://www.yourkit.com/images/yklogo.png)
+
+TooManyRecipeViewers uses [YourKit](https://www.yourkit.com) for ensuring code efficiency.
+
+YourKit supports open source projects with innovative and intelligent tools
+for monitoring and profiling Java and .NET applications.
+YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/),
+[YourKit .NET Profiler](https://www.yourkit.com/dotnet-profiler/),
+and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).

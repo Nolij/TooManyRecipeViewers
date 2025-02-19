@@ -42,6 +42,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,6 +78,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			ItemStack.STRICT_SINGLE_ITEM_CODEC
 		), Collections.emptyList());
 		
+		//noinspection UnstableApiUsage
+		EmiStackList.stacks.stream()
+			.filter(ItemEmiStack.class::isInstance)
+			.map(ItemEmiStack.class::cast)
+			.map(ItemEmiStack::getItemStack)
+			.forEach(itemStacks::add);
+		
 		//noinspection rawtypes,unchecked
 		registerIngredientType(new IngredientInfo(
 			fluidHelper.getFluidIngredientType(),
@@ -85,6 +93,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			new FluidTankRenderer<>(fluidHelper),
 			fluidHelper.getCodec()
 		), Collections.emptyList());
+		
+		//noinspection UnstableApiUsage
+		EmiStackList.stacks.stream()
+			.filter(FluidEmiStack.class::isInstance)
+			.map(FluidEmiStack.class::cast)
+			.map(FluidEmiStack::getKey)
+			.forEach(fluidStacks::add);
 	}
 	
 	@SuppressWarnings("UnstableApiUsage")
@@ -117,23 +132,33 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	//region IIngredientManager
-	@SuppressWarnings({"unchecked", "UnstableApiUsage"})
+	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
+	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
+	
+	@SuppressWarnings({"unchecked", "UnstableApiUsage", "ReplaceNullCheck"})
 	@Override
 	public @Unmodifiable <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType) {
-		final var stacks = EmiStackList.stacks.stream();
+		if (ingredientType == VanillaTypes.ITEM_STACK) {
+			if (itemStacks != null) {
+				return (Collection<V>) itemStacks;
+			} else {
+				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
+					.filter(ItemEmiStack.class::isInstance)
+					.map(ItemEmiStack.class::cast)
+					.toList(), ItemEmiStack::getItemStack);
+			}
+		} else if (ingredientType == fluidHelper.getFluidIngredientType()) {
+			if (fluidStacks != null) {
+				return (Collection<V>) fluidStacks;
+			} else {
+				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
+					.filter(FluidEmiStack.class::isInstance)
+					.map(FluidEmiStack.class::cast)
+					.toList(), FluidEmiStack::getKey);
+			}
+		}
 		
-		if (ingredientType == VanillaTypes.ITEM_STACK)
-			return (Collection<V>) new LazyMappedCollection<>(stacks
-				.filter(ItemEmiStack.class::isInstance)
-				.map(ItemEmiStack.class::cast)
-				.toList(), ItemEmiStack::getItemStack);
-		else if (ingredientType == fluidHelper.getFluidIngredientType())
-			return (Collection<V>) new LazyMappedCollection<>(stacks
-				.filter(FluidEmiStack.class::isInstance)
-				.map(FluidEmiStack.class::cast)
-				.toList(), FluidEmiStack::getKey);
-		
-		return (Collection<V>) stacks
+		return (Collection<V>) EmiStackList.stacks.stream()
 			.filter(JemiStack.class::isInstance)
 			.map(JemiStack.class::cast)
 			.map(x -> x.ingredient)
@@ -459,6 +484,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		if (locked)
 			throw new IllegalStateException();
 		
+		if (itemStacks != null && ingredientType == VanillaTypes.ITEM_STACK)
+			//noinspection unchecked
+			itemStacks.addAll((Collection<ItemStack>) ingredients);
+		else if (fluidStacks != null && ingredientType == fluidHelper.getFluidIngredientType())
+			fluidStacks.addAll(ingredients);
+			
 		for (final var ingredient : ingredients) {
 			final var emiStack = getEMIStack(ingredientType, ingredient);
 			if (!emiStack.isEmpty())
@@ -558,6 +589,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerOtherJEIIngredientTypeComparisons();
 		
 		removedStacks.clear();
+		
+		itemStacks = null;
+		fluidStacks = null;
 	}
 	
 }

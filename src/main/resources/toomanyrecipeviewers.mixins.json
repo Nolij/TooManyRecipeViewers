@@ -10,9 +10,7 @@
 		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
 		"TypedIngredientMixin",
-		"TypedItemStackMixin",
-		"EmiSearchMixin",
-		"VanillaPluginMixin"
+		"TypedItemStackMixin"
 	],
 	"client": [],
 	"injectors": {

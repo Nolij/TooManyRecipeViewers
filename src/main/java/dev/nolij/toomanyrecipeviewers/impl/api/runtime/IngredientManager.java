@@ -1,14 +1,18 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 
 import com.google.common.collect.Lists;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.stack.FluidEmiStack;
+import dev.emi.emi.api.stack.ItemEmiStack;
 import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiUtil;
+import dev.emi.emi.registry.EmiStackList;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
+import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
+import dev.nolij.toomanyrecipeviewers.util.LazyMappedCollection;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.ingredients.IIngredientHelper;
@@ -28,17 +32,23 @@ import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.core.util.WeakList;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
+import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
+import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
+import mezz.jei.library.render.FluidTankRenderer;
+import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
@@ -58,13 +68,77 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	public IngredientManager(TooManyRecipeViewers runtime) {
 		runtime.lockAfterRegistration(this);
 		this.runtime = runtime;
+		
+		registerIngredientType(new IngredientInfo<>(
+			VanillaTypes.ITEM_STACK,
+			Collections.emptyList(),
+			new ItemStackHelper(runtime.stackHelper, runtime.colorHelper),
+			new ItemStackRenderer(),
+			ItemStack.STRICT_SINGLE_ITEM_CODEC
+		), Collections.emptyList());
+		
+		//noinspection rawtypes,unchecked
+		registerIngredientType(new IngredientInfo(
+			fluidHelper.getFluidIngredientType(),
+			Collections.emptyList(),
+			new FluidIngredientHelper<>(runtime.subtypeManager, runtime.colorHelper, fluidHelper),
+			new FluidTankRenderer<>(fluidHelper),
+			fluidHelper.getCodec()
+		), Collections.emptyList());
+	}
+	
+	@SuppressWarnings("UnstableApiUsage")
+	public EmiStack getEMIStack(ItemStack stack) {
+		if (stack == null)
+			return ItemEmiStack.EMPTY;
+		
+		return ItemEmiStack.of(stack);
+	}
+	
+	public <T> EmiStack getEMIStack(IIngredientType<T> ingredientType, T ingredient) {
+		if (ingredient == null)
+			return EmiStack.EMPTY;
+		
+		if (ingredient instanceof ItemStack itemStack)
+			return getEMIStack(itemStack);
+		
+		return JemiUtil.getStack(ingredientType, ingredient);
+	}
+	
+	@SuppressWarnings("UnstableApiUsage")
+	public EmiStack getEMIStack(ITypedIngredient<?> typedIngredient) {
+		if (typedIngredient == null)
+			return EmiStack.EMPTY;
+			
+		if (typedIngredient instanceof IJEITypedItemStack typedItemStack)
+			return ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
+		
+		return JemiUtil.getStack(typedIngredient);
 	}
 	
 	//region IIngredientManager
+	@SuppressWarnings({"unchecked", "UnstableApiUsage"})
 	@Override
 	public @Unmodifiable <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType) {
-		//noinspection unchecked
-		return (Collection<V>) typeInfoMap.get(ingredientType).getAllIngredients();
+		final var stacks = EmiStackList.stacks.stream();
+		
+		if (ingredientType == VanillaTypes.ITEM_STACK)
+			return (Collection<V>) new LazyMappedCollection<>(stacks
+				.filter(ItemEmiStack.class::isInstance)
+				.map(ItemEmiStack.class::cast)
+				.toList(), ItemEmiStack::getItemStack);
+		else if (ingredientType == fluidHelper.getFluidIngredientType())
+			return (Collection<V>) new LazyMappedCollection<>(stacks
+				.filter(FluidEmiStack.class::isInstance)
+				.map(FluidEmiStack.class::cast)
+				.toList(), FluidEmiStack::getKey);
+		
+		return (Collection<V>) stacks
+			.filter(JemiStack.class::isInstance)
+			.map(JemiStack.class::cast)
+			.map(x -> x.ingredient)
+			.filter(ingredientType.getIngredientClass()::isInstance)
+			.toList();
 	}
 	
 	@Override
@@ -132,7 +206,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			.toList();
 		
 		registerIngredients(ingredientType, ingredients);
-		ingredientInfo.addIngredients(ingredients);
 		
 		if (!this.listeners.isEmpty()) {
 			final var typedIngredients = validIngredients.stream()
@@ -143,6 +216,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	
+	private final Set<EmiStack> removedStacks = Collections.synchronizedSet(new HashSet<>());
+	
 	@Override
 	public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
 		if (locked)
@@ -152,11 +227,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
 		
-		ingredientInfo.removeIngredients(ingredients);
 		for (final var ingredient : ingredients) {
-			final var emiStack = JemiUtil.getStack(ingredientType, ingredient);
+			final var emiStack = getEMIStack(ingredientType, ingredient);
 			if (!emiStack.isEmpty())
-				runtime.emiRegistry.removeEmiStacks(emiStack);
+				removedStacks.add(emiStack);
 		}
 		
 		if (!this.listeners.isEmpty()) {
@@ -212,20 +286,49 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.of(clickableIngredient);
 	}
 	
+	private <V> Object getUid(IIngredientType<V> ingredientType, V ingredient) {
+		//noinspection unchecked
+		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
+		final var ingredientHelper = ingredientInfo.getIngredientHelper();
+		
+		try {
+			return ingredientHelper.getUid(ingredient, UidContext.Ingredient);
+		} catch (Throwable getUidException) {
+			try {
+				LOGGER.error("Failed to get UID for broken ingredient {}", ingredientHelper.getErrorInfo(ingredient), getUidException);
+			} catch (Throwable getErrorInfoException) {
+				LOGGER.error("Failed to get UID for broken ingredient", getErrorInfoException);
+			}
+			return null;
+		}
+	}
+	
+	private <V> Object getLegacyUid(IIngredientType<V> ingredientType, V ingredient) {
+		//noinspection unchecked
+		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
+		final var ingredientHelper = ingredientInfo.getIngredientHelper();
+		
+		try {
+			//noinspection removal
+			return ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient);
+		} catch (Throwable throwable) {
+			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
+			return null;
+		}
+	}
+	
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<V> getIngredientByUid(IIngredientType<V> ingredientType, String uid) {
-		//noinspection unchecked
-		return ((IngredientInfo<V>) typeInfoMap.get(ingredientType))
-			.getIngredientByLegacyUid(uid);
+		return getAllIngredients(ingredientType).stream()
+			.filter(x -> uid.equals(getUid(ingredientType, x)) || uid.equals(getLegacyUid(ingredientType, x)))
+			.findFirst();
 	}
 	
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> ingredientType, String uid) {
-		//noinspection unchecked
-		return ((IngredientInfo<V>) typeInfoMap.get(ingredientType))
-			.getIngredientByLegacyUid(uid)
+		return getIngredientByUid(ingredientType, uid)
 			.flatMap(i -> {
 				ITypedIngredient<V> typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, i, true);
 				return Optional.ofNullable(typedIngredient);
@@ -234,8 +337,17 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public Collection<String> getIngredientAliases(ITypedIngredient<?> typedIngredient) {
-		//noinspection rawtypes,unchecked
-		return typeInfoMap.get(typedIngredient.getType()).getIngredientAliases((ITypedIngredient) typedIngredient);
+		final var emiStack = getEMIStack(typedIngredient);
+		final var normalizedEMIStack = emiStack.getEmiStacks().getFirst();
+		final var registeredAlias = EmiStackList.registryAliases.stream()
+			.filter(x -> 
+				x.stacks().stream().anyMatch(normalizedEMIStack::equals))
+			.findFirst();
+		
+		return registeredAlias.<Collection<String>>map(x -> x.text().stream()
+				.map(Component::getString)
+				.toList())
+			.orElse(Collections.emptyList());
 	}
 	
 	@Override
@@ -257,13 +369,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public <V> void register(IIngredientType<V> ingredientType, Collection<V> ingredients, IIngredientHelper<V> ingredientHelper, IIngredientRenderer<V> ingredientRenderer, Codec<V> codec) {
-		registerIngredientType(new IngredientInfo<>(ingredientType, ingredients, ingredientHelper, ingredientRenderer, codec));
+		registerIngredientType(new IngredientInfo<>(ingredientType, Collections.emptyList(), ingredientHelper, ingredientRenderer, codec), ingredients);
 	}
 	
 	@SuppressWarnings("removal")
 	@Override
 	public <V> void register(IIngredientType<V> ingredientType, Collection<V> ingredients, IIngredientHelper<V> ingredientHelper, IIngredientRenderer<V> ingredientRenderer) {
-		registerIngredientType(new IngredientInfo<>(ingredientType, ingredients, ingredientHelper, ingredientRenderer, null));
+		registerIngredientType(new IngredientInfo<>(ingredientType, Collections.emptyList(), ingredientHelper, ingredientRenderer, null), ingredients);
 	}
 	//endregion
 	
@@ -280,28 +392,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	//endregion
 	
 	//region IIngredientAliasRegistration
-	private volatile boolean aliasesLocked = false;
-	private final List<Pair<EmiStack, String>> aliases = new ArrayList<>();
-	
-	public synchronized List<Pair<EmiStack, String>> getAliasesAndLock() {
-		if (aliasesLocked)
-			throw new IllegalStateException();
-		
-		aliasesLocked = true;
-		return aliases;
-	}
-	
 	@Override
 	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
-		if (aliasesLocked)
+		if (locked)
 			throw new IllegalStateException();
 		
-		if (typeInfoMap.containsKey(type))
-			//noinspection unchecked
-			((IngredientInfo<I>) typeInfoMap.get(type)).addIngredientAlias(ingredient, alias);
-		
-		final var stack = JemiUtil.getStack(type, ingredient);
-		aliases.add(Pair.of(stack, alias));
+		final var emiStack = getEMIStack(type, ingredient);
+		final var normalizedEMIStack = emiStack.getEmiStacks().getFirst();
+		//noinspection UnstableApiUsage
+		runtime.emiRegistry.addAlias(normalizedEMIStack, Component.translatable(alias));
 	}
 	
 	@Override
@@ -361,13 +460,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			throw new IllegalStateException();
 		
 		for (final var ingredient : ingredients) {
-			final var emiStack = JemiUtil.getStack(ingredientType, ingredient);
+			final var emiStack = getEMIStack(ingredientType, ingredient);
 			if (!emiStack.isEmpty())
 				runtime.emiRegistry.addEmiStack(emiStack);
 		}
 	}
 	
-	private <V> void registerIngredientType(IngredientInfo<V> ingredientInfo) {
+	private <V> void registerIngredientType(IngredientInfo<V> ingredientInfo, Collection<V> ingredients) {
 		if (locked)
 			throw new IllegalStateException();
 		
@@ -384,7 +483,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			ingredientType == fluidHelper.getFluidIngredientType())
 			return;
 		
-		registerIngredients(ingredientType, ingredientInfo.getAllIngredients());
+		registerIngredients(ingredientType, ingredients);
 	}
 	
 	private void registerItemStackDefaultComparison() {
@@ -451,9 +550,14 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		locked = true;
 		
+		if (!removedStacks.isEmpty())
+			runtime.emiRegistry.removeEmiStacks(removedStacks::contains);
+		
 		registerItemStackDefaultComparison();
 		registerFluidDefaultComparison();
 		registerOtherJEIIngredientTypeComparisons();
+		
+		removedStacks.clear();
 	}
 	
 }

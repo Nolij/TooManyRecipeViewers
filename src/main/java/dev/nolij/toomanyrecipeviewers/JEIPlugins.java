@@ -24,11 +24,11 @@ import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.library.plugins.jei.JeiInternalPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.ModList;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -63,15 +63,15 @@ public final class JEIPlugins {
 	}
 	
 	private static final InverseSet<String> forceLoadJEIPluginsFrom = InverseSet.of("emi", "jei", "jei-api", MOD_ID);
-	public static final Set<String> modsWithEMIPlugins =
+	private static final Set<String> modsWithEMIPlugins =
 		JemiUtil
 			.getHandledMods()
 			.stream()
 			.filter(forceLoadJEIPluginsFrom::contains)
 			.collect(Collectors.toUnmodifiableSet());
 	
-	public static final List<IModPlugin> allPlugins;
-	public static final List<IModPlugin> modPlugins;
+	public static final List<IModPlugin> allPlugins = new ArrayList<>();
+	public static final List<IModPlugin> modPlugins = new ArrayList<>();
 	public static final VanillaPlugin vanillaPlugin;
 	
 	static {
@@ -85,25 +85,19 @@ public final class JEIPlugins {
 		pluginClasses.remove(JeiInternalPlugin.class);
 		pluginClasses.addLast(JeiInternalPlugin.class);
 		
-		final var plugins = new ArrayList<IModPlugin>();
 		for (final var pluginClass : pluginClasses) {
 			final IModPlugin plugin = pluginClass.getDeclaredConstructor().newInstance();
-			final ResourceLocation id = plugin.getPluginUid();
 			
-			if (modsWithEMIPlugins.contains(id.getNamespace()))
+			if (modsWithEMIPlugins.contains(plugin.getPluginUid().getNamespace()))
 				continue;
-			
-			plugins.add(plugin);
+			allPlugins.add(plugin);
+			if (plugin instanceof VanillaPlugin)
+				continue;
+			modPlugins.add(plugin);
 		}
 		
-		allPlugins = plugins;
-		modPlugins = 
-			plugins
-				.stream()
-				.filter(x -> !(x instanceof VanillaPlugin))
-				.toList();
 		vanillaPlugin = 
-			plugins
+			allPlugins
 				.stream()
 				.filter(VanillaPlugin.class::isInstance)
 				.map(VanillaPlugin.class::cast)
@@ -111,7 +105,7 @@ public final class JEIPlugins {
 				.orElseThrow();
 	}
 	
-	private static final Map<IModPlugin, Long> loadTimes = new HashMap<>();
+	private static final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>());
 	private static long loadTime = 0L;
 	
 	public static void resetLoadTimes() {
@@ -128,26 +122,33 @@ public final class JEIPlugins {
 		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
 	}
 	
+	private static long dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
+		final var pluginId = plugin.getPluginUid();
+		final var pluginTimestamp = System.currentTimeMillis();
+		long dispatchTime;
+		try {
+			dispatcher.accept(plugin);
+			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
+			LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, dispatchTime);
+		} catch (Throwable t) {
+			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
+			LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);
+		}
+		
+		return dispatchTime;
+	}
+	
 	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
 		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
 		
 		final var timestamp = System.currentTimeMillis();
+		final Consumer<IModPlugin> dispatch = onMainThread 
+			? plugin -> Minecraft.getInstance().executeBlocking(() -> dispatcher.accept(plugin)) 
+			: dispatcher;
+		
 		for (final var plugin : plugins) {
-			final var pluginId = plugin.getPluginUid();
-			final var pluginTimestamp = System.currentTimeMillis();
-			long dispatchTime;
-			try {
-				if (onMainThread) {
-					Minecraft.getInstance().executeBlocking(() -> dispatcher.accept(plugin));
-				} else {
-					dispatcher.accept(plugin);
-				}
-				dispatchTime = System.currentTimeMillis() - pluginTimestamp;
-//				LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, dispatchTime);
-			} catch (Throwable t) {
-				dispatchTime = System.currentTimeMillis() - pluginTimestamp;
-				LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);
-			}
+			final long dispatchTime;
+			dispatchTime = dispatchInternal(plugin, dispatch, callerMethod);
 			loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
 		}
 		
@@ -165,7 +166,7 @@ public final class JEIPlugins {
 	}
 	
 	public static void registerIngredients(IModIngredientRegistration registration) {
-		dispatch(allPlugins, x -> x.registerIngredients(registration), false);
+		dispatch(modPlugins, x -> x.registerIngredients(registration), false);
 	}
 	
 	public static void registerExtraIngredients(IExtraIngredientRegistration registration) {
@@ -213,12 +214,11 @@ public final class JEIPlugins {
 	}
 	
 	public static void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-		// TODO: run off main thread after replacing IngredientManager
-		dispatch(allPlugins, x -> x.onRuntimeAvailable(jeiRuntime), true);
+		dispatch(modPlugins, x -> x.onRuntimeAvailable(jeiRuntime), true);
 	}
 	
 	public static void onRuntimeUnavailable() {
-		dispatch(allPlugins, IModPlugin::onRuntimeUnavailable, false);
+		dispatch(modPlugins, IModPlugin::onRuntimeUnavailable, false);
 	}
 	
 	public static void onConfigManagerAvailable(IJeiConfigManager configManager) {

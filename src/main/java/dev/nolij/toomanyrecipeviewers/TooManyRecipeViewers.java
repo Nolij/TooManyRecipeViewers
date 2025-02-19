@@ -35,6 +35,8 @@ import mezz.jei.api.runtime.IScreenHelper;
 import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.common.config.IClientToggleState;
 import mezz.jei.common.input.IInternalKeyMappings;
+import mezz.jei.common.platform.IPlatformFluidHelperInternal;
+import mezz.jei.common.util.StackHelper;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.gui.helpers.GuiHelper;
 import mezz.jei.library.ingredients.IngredientBlacklistInternal;
@@ -59,7 +61,7 @@ public final class TooManyRecipeViewers {
 	//region Storage
 	public volatile EmiRegistry emiRegistry = null;
 	public volatile SubtypeManager subtypeManager = null;
-	public volatile IStackHelper stackHelper = null;
+	public volatile StackHelper stackHelper = null;
 	public volatile IColorHelper colorHelper = null;
 	public volatile IngredientManager ingredientManager = null;
 	public volatile GuiHelper guiHelper = null;
@@ -107,7 +109,7 @@ public final class TooManyRecipeViewers {
 	
 	//region Static Storage
 	public static final JEIConfigManager jeiConfigManager = new JEIConfigManager();
-	public static final IPlatformFluidHelper<?> fluidHelper = new FluidHelper();
+	public static final IPlatformFluidHelperInternal<?> fluidHelper = new FluidHelper();
 	public static final IInternalKeyMappings jeiKeyMappings = new JEIKeyMappings();
 	
 	public static final IJeiHelpers staticJEIHelpers = new IJeiHelpers() {

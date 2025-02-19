@@ -64,14 +64,13 @@ public final class EMIPlugin implements EmiPlugin {
 		JEIPlugins.resetLoadTimes();
 		
 		runtime = new TooManyRecipeViewers();
-		
-		registerSubtypes();
 	}
 	
 	@Override
 	public void register(EmiRegistry registry) {
 		runtime.emiRegistry = registry;
 		
+		registerSubtypes();
 		registerIngredients();
 		registerModAliases();
 		createJeiHelpers();

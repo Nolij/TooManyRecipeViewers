@@ -46,9 +46,13 @@ import mezz.jei.library.load.registration.VanillaCategoryExtensionRegistration;
 import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
+import net.minecraft.client.Minecraft;
+import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
@@ -116,6 +120,19 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.stackHelper = new StackHelper(runtime.subtypeManager);
 	}
 	
+	private static final EditModeConfig.ISerializer VOID_SERIALIZER = new EditModeConfig.ISerializer() {
+		@Override
+		public void initialize(EditModeConfig editModeConfig) {}
+		
+		@Override
+		public void save(EditModeConfig editModeConfig) {}
+		
+		@Override
+		public void load(EditModeConfig editModeConfig) {}
+	};
+	
+	private static final Path BLACKLIST_PATH = FMLPaths.CONFIGDIR.get().resolve("jei").resolve("blacklist.json");
+	
 	private void registerIngredients() {
 		runtime.colorHelper = new ColorHelper(new ColorNameConfig());
 		runtime.ingredientManager = new IngredientManager(runtime);
@@ -131,11 +148,12 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.blacklist = new IngredientBlacklistInternal();
 		runtime.ingredientManager.registerIngredientListener(runtime.blacklist);
 		runtime.clientToggleState = new ClientToggleState();
-		runtime.editModeConfig = new EditModeConfig(new EditModeConfig.ISerializer() {
-			@Override public void initialize(@NotNull EditModeConfig editModeConfig) {}
-			@Override public void save(@NotNull EditModeConfig editModeConfig) {}
-			@Override public void load(@NotNull EditModeConfig editModeConfig) {}
-		}, runtime.ingredientManager);
+		final EditModeConfig.ISerializer serializer;
+		if (Files.exists(BLACKLIST_PATH))
+			serializer = new EditModeConfig.FileSerializer(BLACKLIST_PATH, Objects.requireNonNull(Minecraft.getInstance().level).registryAccess(), runtime.codecHelper);
+		else
+			serializer = VOID_SERIALIZER;
+		runtime.editModeConfig = new EditModeConfig(serializer, runtime.ingredientManager);
 		runtime.ingredientVisibility = new IngredientVisibility(runtime.blacklist, runtime.clientToggleState, runtime.editModeConfig, runtime.ingredientManager);
 		
 		// TODO: use init registry instead?

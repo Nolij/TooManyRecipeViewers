@@ -261,21 +261,15 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 	}
 	
-	private final Set<EmiRecipe> hiddenRecipes = Collections.synchronizedSet(new HashSet<>());
 	private final Set<ResourceLocation> hiddenRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	
-	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<EmiRecipe> recipeConsumer, Consumer<ResourceLocation> idConsumer) {
+	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<ResourceLocation> idConsumer) {
 		if (locked)
 			throw new IllegalStateException();
 		
 		final var category = category(recipeType);
 		final var recipes = jeiRecipes.stream().map(category::recipe).toList();
 		recipes.stream()
-			.map(Category.Recipe::getEMIRecipe)
-			.filter(Objects::nonNull)
-			.forEach(recipeConsumer);
-		recipes.stream()
-			.filter(x -> x.getEMIRecipe() == null)
 			.map(Category.Recipe::getID)
 			.filter(Objects::nonNull)
 			.forEach(idConsumer);
@@ -283,12 +277,12 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	
 	@Override
 	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
-		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::add, hiddenRecipeIDs::add);
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::add);
 	}
 	
 	@Override
 	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
-		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::remove, hiddenRecipeIDs::remove);
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::remove);
 	}
 	
 	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new HashSet<>());
@@ -620,12 +614,11 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		locked = true;
 		registry.removeRecipes(x ->
 			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
-			hiddenRecipes.contains(x) || hiddenRecipeIDs.contains(x.getId()) ||
+			hiddenRecipeIDs.contains(x.getId()) ||
 			hiddenCategories.contains(x.getCategory()));
 		
 		replacedRecipeIDs.clear();
 		replacementRecipes.clear();
-		hiddenRecipes.clear();
 		hiddenRecipeIDs.clear();
 		hiddenCategories.clear();
 	}

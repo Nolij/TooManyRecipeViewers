@@ -1,14 +1,20 @@
 package dev.nolij.toomanyrecipeviewers.util;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 public interface IJEITypedIngredient {
 	
 	int tmrv$hashIngredient();
 	
-	static int hashIngredients(Collection<? extends IJEITypedIngredient> ingredients) {
-		return Arrays.hashCode(ingredients.stream().map(IJEITypedIngredient::tmrv$hashIngredient).toArray());
+	static int hash(IJEITypedIngredient ingredient) {
+		if (ingredient == null)
+			return 0;
+		
+		return ingredient.tmrv$hashIngredient();
+	}
+	
+	static int hash(Collection<? extends IJEITypedIngredient> ingredients) {
+		return ingredients.stream().map(IJEITypedIngredient::hash).toList().hashCode();
 	}
 	
 }

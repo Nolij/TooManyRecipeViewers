@@ -63,9 +63,9 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	public int hashIngredients() {
 		//noinspection unchecked,rawtypes
 		return Objects.hash(
-			IJEITypedIngredient.hashIngredients((Collection) inputs),
-			IJEITypedIngredient.hashIngredients((Collection) catalysts),
-			IJEITypedIngredient.hashIngredients((Collection) outputs),
+			IJEITypedIngredient.hash((Collection) inputs),
+			IJEITypedIngredient.hash((Collection) catalysts),
+			IJEITypedIngredient.hash((Collection) outputs),
 			shapeless
 		);
 	}

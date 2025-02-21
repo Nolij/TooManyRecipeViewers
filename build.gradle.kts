@@ -181,6 +181,8 @@ dependencies {
 	runtimeOnly("curse.maven:chipped-456956:5813117")
 	runtimeOnly("curse.maven:resourceful-lib-570073:5793500")
 	runtimeOnly("curse.maven:athena-841890:5629395")
+	runtimeOnly("curse.maven:farmers-delight-398521:6154807")
+	runtimeOnly("curse.maven:fruits-delight-943774:6095147")
 }
 
 tasks.jar {

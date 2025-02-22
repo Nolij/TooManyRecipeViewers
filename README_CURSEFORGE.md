@@ -38,12 +38,19 @@ As already mentioned, TMRV replaces much of the JEI APIs with mappers to the cor
 
 The full results and steps followed to obtain them are documented in [BENCHMARKS.md](https://github.com/Nolij/TooManyRecipeViewers/raw/master/BENCHMARKS.md). These results were not cherry-picked. The instructions were followed exactly as documented in that file. I encourage the community to verify them.
 
-|                             | TMRV                                                                             | JEMI                                                           |
-|-----------------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 3957ms (0ms before world load, 3957ms after world load)&nbsp;&nbsp;&nbsp;        | 6061ms (4864ms before world load, 1197ms after world load)     |
-| &nbsp;&nbsp;&nbsp;          | -2104ms (-4864ms before world load, +2760ms after world load)&nbsp;&nbsp;&nbsp;  | +2104ms (+4864ms before world load, -2760ms after world load)  |
-| ATM10&nbsp;&nbsp;&nbsp;     | 8908ms (0ms before world load, 8908ms after world load)&nbsp;&nbsp;&nbsp;        | 16550ms (13580ms before world load, 2970ms after world load)   |
-| &nbsp;&nbsp;&nbsp;          | -7642ms (-13580ms before world load, +5938ms after world load)&nbsp;&nbsp;&nbsp; | +7642ms (+13580ms before world load, -5938ms after world load) |
+### Load Times
+
+|                             | TMRV                                                                      | JEMI                                                                           | Comparison                                                     |
+|-----------------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Craftoria&nbsp;&nbsp;&nbsp; | 3858ms (0ms before world load, 3858ms after world load)&nbsp;&nbsp;&nbsp; | 5712ms (4909ms before world load, 803ms after world load)&nbsp;&nbsp;&nbsp;    | -1854ms (-4909ms before world load, +3055ms after world load)  |
+| ATM10&nbsp;&nbsp;&nbsp;     | 9660ms (0ms before world load, 9660ms after world load)&nbsp;&nbsp;&nbsp; | 16713ms (14190ms before world load, 2523ms after world load)&nbsp;&nbsp;&nbsp; | -7053ms (-14190ms before world load, +7137ms after world load) |
+
+### Memory Usage
+
+|                             | TMRV                       | JEMI                       | Comparison |
+|-----------------------------|----------------------------|----------------------------|------------|
+| Craftoria&nbsp;&nbsp;&nbsp; | 2,480 MB&nbsp;&nbsp;&nbsp; | 2,537 MB&nbsp;&nbsp;&nbsp; | -57 MB     |
+| ATM10&nbsp;&nbsp;&nbsp;     | 3,792 MB&nbsp;&nbsp;&nbsp; | 4,065 MB&nbsp;&nbsp;&nbsp; | -273 MB    |
 
 # Known API Limitations
 

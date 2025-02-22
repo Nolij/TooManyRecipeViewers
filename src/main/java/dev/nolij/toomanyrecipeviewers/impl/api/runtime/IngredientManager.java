@@ -74,8 +74,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			VanillaTypes.ITEM_STACK,
 			Collections.emptyList(),
 			new ItemStackHelper(runtime.stackHelper, runtime.colorHelper),
-			new ItemStackRenderer(),
-			ItemStack.STRICT_SINGLE_ITEM_CODEC
+			new ItemStackRenderer()
+			//? if >=1.21.1
+			,ItemStack.STRICT_SINGLE_ITEM_CODEC
 		), Collections.emptyList());
 		
 		//noinspection UnstableApiUsage
@@ -90,8 +91,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			fluidHelper.getFluidIngredientType(),
 			Collections.emptyList(),
 			new FluidIngredientHelper<>(runtime.subtypeManager, runtime.colorHelper, fluidHelper),
-			new FluidTankRenderer<>(fluidHelper),
-			fluidHelper.getCodec()
+			new FluidTankRenderer<>(fluidHelper)
+			//? if >=1.21.1
+			,fluidHelper.getCodec()
 		), Collections.emptyList());
 		
 		//noinspection UnstableApiUsage

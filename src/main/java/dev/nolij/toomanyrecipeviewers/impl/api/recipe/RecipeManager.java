@@ -73,6 +73,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+//? if >=1.21.1
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
@@ -992,45 +993,47 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				}
 				
 			}
+
+			//? if >=1.21.1 {
+			@SuppressWarnings("unchecked")
+			private <O extends net.minecraft.world.item.crafting.Recipe<?>> O castJEIToEMIRecipe(Class<O> ignoredClz) {
+				return ((RecipeHolder<O>) this.jeiRecipe).value();
+			}
+			//?} else {
+			/*@SuppressWarnings("unchecked")
+			private <O extends net.minecraft.world.item.crafting.Recipe<?>> O castJEIToEMIRecipe(Class<O> ignoredClz) {
+				return (O)this.jeiRecipe;
+			}
+			*///?}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMISmeltingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<SmeltingRecipe>) this.jeiRecipe;
-				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false, getID());
+				final var jeiRecipe = castJEIToEMIRecipe(SmeltingRecipe.class);
+
+				return new EMICookingRecipeWithCustomID(jeiRecipe, VanillaEmiRecipeCategories.SMELTING, 1, false, getID());
 			}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMIBlastingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<BlastingRecipe>) this.jeiRecipe;
+				final var jeiRecipe = castJEIToEMIRecipe(BlastingRecipe.class);
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false, getID());
+				return new EMICookingRecipeWithCustomID(jeiRecipe, VanillaEmiRecipeCategories.BLASTING, 2, false, getID());
 			}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMISmokingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<SmokingRecipe>) this.jeiRecipe;
+				final var jeiRecipe = castJEIToEMIRecipe(SmokingRecipe.class);
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false, getID());
+				return new EMICookingRecipeWithCustomID(jeiRecipe, VanillaEmiRecipeCategories.SMOKING, 2, false, getID());
 			}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMICampfireRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<CampfireCookingRecipe>) this.jeiRecipe;
+				final var jeiRecipe = castJEIToEMIRecipe(CampfireCookingRecipe.class);
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, getID());
+				return new EMICookingRecipeWithCustomID(jeiRecipe, VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, getID());
 			}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiStonecuttingRecipe convertEMIStonecuttingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<StonecutterRecipe>) this.jeiRecipe;
+				final var jeiRecipe = castJEIToEMIRecipe(StonecutterRecipe.class);
 				
-				return new EmiStonecuttingRecipe(jeiRecipe.value()) {
+				return new EmiStonecuttingRecipe(jeiRecipe) {
 					@Override
 					public ResourceLocation getId() {
 						return getID();
@@ -1046,7 +1049,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 				// TODO: smithing trim recipes?
 				// TODO: IExtendableSmithingRecipeCategory?
-				return new EmiSmithingRecipe(emiInputs.get(0), emiInputs.get(1), emiInputs.get(2), emiOutputs.getFirst(), getID());
+				return new EmiSmithingRecipe(emiInputs.get(0), emiInputs.get(1), emiInputs.get(2), emiOutputs.get(0), getID());
 			}
 			
 			@SuppressWarnings("DataFlowIssue")
@@ -1099,11 +1102,11 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					public void addWidgets(WidgetHolder widgets) {
 						widgets.addTexture(EmiTexture.PLUS, 27, 3);
 						widgets.addTexture(EmiTexture.EMPTY_ARROW, 75, 1);
-						if (leftInputs.size() == 1) widgets.addSlot(leftInputs.getFirst(), 0, 0);
+						if (leftInputs.size() == 1) widgets.addSlot(leftInputs.get(0), 0, 0);
 						else widgets.addGeneratedSlot(r -> leftInputs.get(r.nextInt(leftInputs.size())), unique, 0, 0);
-						if (rightInputs.size() == 1) widgets.addSlot(rightInputs.getFirst(), 49, 0);
+						if (rightInputs.size() == 1) widgets.addSlot(rightInputs.get(0), 49, 0);
 						else widgets.addGeneratedSlot(r -> rightInputs.get(r.nextInt(rightInputs.size())), unique, 49, 0);
-						if (outputs.size() == 1) widgets.addSlot(outputs.getFirst(), 107, 0).recipeContext(this);
+						if (outputs.size() == 1) widgets.addSlot(outputs.get(0), 107, 0).recipeContext(this);
 						else widgets.addGeneratedSlot(r -> outputs.get(r.nextInt(outputs.size())), unique, 107, 0).recipeContext(this);
 					}
 				};
@@ -1114,8 +1117,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var jeiRecipe = (IJeiBrewingRecipe) this.jeiRecipe;
 				
 				return new EmiBrewingRecipe(
-					ingredientManager.getEMIStack(jeiRecipe.getPotionInputs().getFirst()),
-					ingredientManager.getEMIStack(jeiRecipe.getIngredients().getFirst()),
+					ingredientManager.getEMIStack(jeiRecipe.getPotionInputs().get(0)),
+					ingredientManager.getEMIStack(jeiRecipe.getIngredients().get(0)),
 					ingredientManager.getEMIStack(jeiRecipe.getPotionOutput()),
 					getID());
 			}
@@ -1126,7 +1129,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				extractJEIRecipeData();
 				final var emiInputs = this.emiInputs;
 				
-				return new EmiFuelRecipe(emiInputs.getFirst(), jeiRecipe.getBurnTime(), getID());
+				return new EmiFuelRecipe(emiInputs.get(0), jeiRecipe.getBurnTime(), getID());
 			}
 			
 			@SuppressWarnings("DataFlowIssue")
@@ -1134,7 +1137,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var jeiRecipe = (IJeiCompostingRecipe) this.jeiRecipe;
 				
 				// TODO: support multiple inputs?
-				return new EmiCompostingRecipe(ingredientManager.getEMIStack(jeiRecipe.getInputs().getFirst()), jeiRecipe.getChance(), getID());
+				return new EmiCompostingRecipe(ingredientManager.getEMIStack(jeiRecipe.getInputs().get(0)), jeiRecipe.getChance(), getID());
 			}
 			//endregion
 			

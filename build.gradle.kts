@@ -176,7 +176,11 @@ dependencies {
 		minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17")
 	}
 
-	modImplementation("dev.emi:emi-${modloader.id}:${"emi_version"()}")
+	if (stonecutter.eval(stonecutter.current.version, ">=1.20.2")) {
+		implementation("dev.emi:emi-${modloader.id}:${"emi_version"()}")
+	} else {
+		modImplementation("dev.emi:emi-${modloader.id}:${"emi_version"()}")
+	}
 
 	shade(project(stonecutter.node.sibling("jei-api")!!.project.path, configuration = "jeiApiJar"))
 

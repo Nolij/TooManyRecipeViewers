@@ -187,7 +187,6 @@ dependencies {
 	}
 
 	// for testing purposes
-
 	if (minecraftVersion == "1.21.1") {
 		runtimeOnly("maven.modrinth:just-enough-professions-jep:4.0.3")
 		runtimeOnly("maven.modrinth:justenoughbreeding:mxmXy9Cs")
@@ -215,6 +214,12 @@ dependencies {
 		runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
 		runtimeOnly("curse.maven:polymorph-388800:5995380")
 		runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
+		runtimeOnly("curse.maven:laserio-626839:5730007")
+		runtimeOnly("curse.maven:chipped-456956:5813117")
+		runtimeOnly("curse.maven:resourceful-lib-570073:5793500")
+		runtimeOnly("curse.maven:athena-841890:5629395")
+		runtimeOnly("curse.maven:farmers-delight-398521:6154807")
+		runtimeOnly("curse.maven:fruits-delight-943774:6095147")
 	}
 }
 
@@ -246,14 +251,17 @@ tasks.shadowJar {
 tasks.named<RemapJarTask>("remapJar") {
 	inputFile.set(tasks.shadowJar.get().archiveFile)
 }
+val inputJar = tasks.getByName("remapJar") as AbstractArchiveTask
 
-val compressJar = tau.compression.compress<AdvzipTask>(tasks.getByName("remapJar") as AbstractArchiveTask, "compressJar") {
+val compressJar = tau.compression.compress<AdvzipTask>(inputJar, "compressJar") {
 	level = DeflateAlgorithm.EXTRA
 	throwIfNotInstalled = tau.versioning.isRelease
 }
 
+val outputJar = compressJar
+
 tasks.assemble {
-	dependsOn(compressJar, sourcesJar)
+	dependsOn(outputJar, sourcesJar)
 }
 
 afterEvaluate {
@@ -272,7 +280,7 @@ afterEvaluate {
 	}
 
 	tasks.withType<AbstractPublishToMaven> {
-		dependsOn(compressJar, sourcesJar)
+		dependsOn(outputJar, sourcesJar)
 	}
 
 	fun getChangelog(): String {
@@ -280,7 +288,7 @@ afterEvaluate {
 	}
 
 	publishMods {
-		file = compressJar.archiveFile
+		file = outputJar.archiveFile
 		additionalFiles.from(sourcesJar.get().archiveFile)
 		type = if (tau.versioning.releaseChannel == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
 		displayName = tau.versioning.versionNoMetadata
@@ -329,7 +337,7 @@ afterEvaluate {
 	}
 
 	tasks.withType<PublishModTask> {
-		dependsOn(compressJar, sourcesJar)
+		dependsOn(outputJar, sourcesJar)
 	}
 
 	tasks.publishMods {

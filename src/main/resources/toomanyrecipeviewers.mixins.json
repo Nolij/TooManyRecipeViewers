@@ -5,8 +5,11 @@
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
 		"EmiAgnosMixin",
-		"EmiSearchMixin",
-		"VanillaPluginMixin"
+		"EmiReloadManager$ReloadWorkerMixin",
+		"FullTypedItemStackMixin",
+		"NormalizedTypedItemStackMixin",
+		"TypedIngredientMixin",
+		"TypedItemStackMixin"
 	],
 	"client": [],
 	"injectors": {

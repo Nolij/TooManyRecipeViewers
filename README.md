@@ -22,7 +22,7 @@ That being said, TMRV has two primary advantages over JEMI:
 
 TMRV has better coverage of JEI's API than JEMI does (with one exception - see [Known API Limitations](#known-api-limitations)). As of writing, this includes:
 
-- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe)
+- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe) (NOTE: there's no way of doing this 100% consistently, meaning sometimes generated recipe IDs will change. I decided that being able to bookmark recipes temporarily was better than not being able to bookmark them at all)
 - Better conversion of built-in recipe types (JEMI only supports crafting and info recipe types; TMRV supports all built-in JEI recipe types)
 - Ingredient/search aliases
 
@@ -38,18 +38,29 @@ As already mentioned, TMRV replaces much of the JEI APIs with mappers to the cor
 
 The full results and steps followed to obtain them are documented in [BENCHMARKS.md](BENCHMARKS.md). These results were not cherry-picked. The instructions were followed exactly as documented in that file. I encourage the community to verify them.
 
-|           | TMRV                                                                                                                                                            | JEMI                                                                                                                                                          |
-|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Craftoria | 3957ms (0ms before world load, 3957ms after world load)                                                                                                         | 6061ms (4864ms before world load, 1197ms after world load)                                                                                                    |
-|           | <span style="color:green">-2104ms</span> (<span style="color:green">-4864ms</span> before world load, <span style="color:red">+2760ms</span> after world load)  | <span style="color:red">+2104ms</span> (<span style="color:red">+4864ms</span> before world load, <span style="color:green">-2760ms</span> after world load)  |
-| ATM10     | 8908ms (0ms before world load, 8908ms after world load)                                                                                                         | 16550ms (13580ms before world load, 2970ms after world load)                                                                                                  |
-|           | <span style="color:green">-7642ms</span> (<span style="color:green">-13580ms</span> before world load, <span style="color:red">+5938ms</span> after world load) | <span style="color:red">+7642ms</span> (<span style="color:red">+13580ms</span> before world load, <span style="color:green">-5938ms</span> after world load) |
+### Load Times
+
+|           | TMRV                                                    | JEMI                                                         | Comparison                                                                                                                                                      |
+|-----------|---------------------------------------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Craftoria | 3858ms (0ms before world load, 3858ms after world load) | 5712ms (4909ms before world load, 803ms after world load)    | <span style="color:green">-1854ms</span> (<span style="color:green">-4909ms</span> before world load, <span style="color:red">+3055ms</span> after world load)  |
+| ATM10     | 9660ms (0ms before world load, 9660ms after world load) | 16713ms (14190ms before world load, 2523ms after world load) | <span style="color:green">-7053ms</span> (<span style="color:green">-14190ms</span> before world load, <span style="color:red">+7137ms</span> after world load) |
+
+### Memory Usage
+
+|           | TMRV     | JEMI     | Comparison                               |
+|-----------|----------|----------|------------------------------------------|
+| Craftoria | 2,480 MB | 2,537 MB | <span style="color:green">-57 MB</span>  |
+| ATM10     | 3,792 MB | 4,065 MB | <span style="color:green">-273 MB</span> |
 
 # Known API Limitations
 
-### Hidden Ingredients, Recipes, & Recipe Categories/Types
+### Scroll Widget
 
-The JEI API supports hiding ingredients, recipes, and recipe categories/types. EMI has no such concept of this. This is the only area where TMRV intentionally does not support a feature that JEMI does support (NOTE: I have not tested how effective JEMI's support of this feature is). JEI plugins marking something as "hidden" will simply be silently ignored by TMRV.
+Neither TMRV nor JEMI currently render this JEI widget properly. This limitation will eventually be addressed, but for now, recipes using it (such as Chipped's Workbench) will not render properly.
+
+### JEI Config Files
+
+`.minecraft/config/jei/blacklist.json` is the only JEI config file that TMRV even reads. This file _should_ work fine for vanilla ingredient types and for modded ingredient types added by a JEI plugin (this does not include mods that support both JEI and EMI natively, such as Mekanism). This is meant to be a stop-gap for packs switching over from JEI. JEMI had a similar flaw. EMI has its own config for hiding ingredients - please use that instead. All other JEI config files are completely ignored by TMRV, and there are no plans to support them.
 
 ### Recipe Manager Plugins
 
@@ -71,3 +82,13 @@ The plan is to replace more of the JEI internals in future updates. However, som
 This project is licensed under OSL-3.0. For more information, see [LICENSE](LICENSE).
 
 Some code was copied from [EMI](https://github.com/emilyploszaj/emi) and [JEI](https://github.com/mezz/JustEnoughItems) in compliance with their copyright licenses. All modifications present in this project are licensed under the same license as the rest of this project, OSL-3.0.
+
+# ![YourKit](https://www.yourkit.com/images/yklogo.png)
+
+TooManyRecipeViewers uses [YourKit](https://www.yourkit.com) for ensuring code efficiency.
+
+YourKit supports open source projects with innovative and intelligent tools
+for monitoring and profiling Java and .NET applications.
+YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/),
+[YourKit .NET Profiler](https://www.yourkit.com/dotnet-profiler/),
+and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).

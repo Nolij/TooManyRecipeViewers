@@ -22,7 +22,7 @@ That being said, TMRV has two primary advantages over JEMI:
 
 TMRV has better coverage of JEI's API than JEMI does (with one exception - see [Known API Limitations](#known-api-limitations)). As of writing, this includes:
 
-- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe)
+- Automatic recipe ID generation if none is provided by the registering JEI plugin (this is necessary for bookmarking recipes - no ID means you can't bookmark the recipe) (NOTE: there's no way of doing this 100% consistently, meaning sometimes generated recipe IDs will change. I decided that being able to bookmark recipes temporarily was better than not being able to bookmark them at all)
 - Better conversion of built-in recipe types (JEMI only supports crafting and info recipe types; TMRV supports all built-in JEI recipe types)
 - Ingredient/search aliases
 
@@ -38,18 +38,29 @@ As already mentioned, TMRV replaces much of the JEI APIs with mappers to the cor
 
 The full results and steps followed to obtain them are documented in [BENCHMARKS.md](https://github.com/Nolij/TooManyRecipeViewers/raw/master/BENCHMARKS.md). These results were not cherry-picked. The instructions were followed exactly as documented in that file. I encourage the community to verify them.
 
-|                             | TMRV                                                                             | JEMI                                                           |
-|-----------------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 3957ms (0ms before world load, 3957ms after world load)&nbsp;&nbsp;&nbsp;        | 6061ms (4864ms before world load, 1197ms after world load)     |
-| &nbsp;&nbsp;&nbsp;          | -2104ms (-4864ms before world load, +2760ms after world load)&nbsp;&nbsp;&nbsp;  | +2104ms (+4864ms before world load, -2760ms after world load)  |
-| ATM10&nbsp;&nbsp;&nbsp;     | 8908ms (0ms before world load, 8908ms after world load)&nbsp;&nbsp;&nbsp;        | 16550ms (13580ms before world load, 2970ms after world load)   |
-| &nbsp;&nbsp;&nbsp;          | -7642ms (-13580ms before world load, +5938ms after world load)&nbsp;&nbsp;&nbsp; | +7642ms (+13580ms before world load, -5938ms after world load) |
+### Load Times
+
+|                             | TMRV                                                                      | JEMI                                                                           | Comparison                                                     |
+|-----------------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Craftoria&nbsp;&nbsp;&nbsp; | 3858ms (0ms before world load, 3858ms after world load)&nbsp;&nbsp;&nbsp; | 5712ms (4909ms before world load, 803ms after world load)&nbsp;&nbsp;&nbsp;    | -1854ms (-4909ms before world load, +3055ms after world load)  |
+| ATM10&nbsp;&nbsp;&nbsp;     | 9660ms (0ms before world load, 9660ms after world load)&nbsp;&nbsp;&nbsp; | 16713ms (14190ms before world load, 2523ms after world load)&nbsp;&nbsp;&nbsp; | -7053ms (-14190ms before world load, +7137ms after world load) |
+
+### Memory Usage
+
+|                             | TMRV                       | JEMI                       | Comparison |
+|-----------------------------|----------------------------|----------------------------|------------|
+| Craftoria&nbsp;&nbsp;&nbsp; | 2,480 MB&nbsp;&nbsp;&nbsp; | 2,537 MB&nbsp;&nbsp;&nbsp; | -57 MB     |
+| ATM10&nbsp;&nbsp;&nbsp;     | 3,792 MB&nbsp;&nbsp;&nbsp; | 4,065 MB&nbsp;&nbsp;&nbsp; | -273 MB    |
 
 # Known API Limitations
 
-### Hidden Ingredients, Recipes, & Recipe Categories/Types
+### Scroll Widget
 
-The JEI API supports hiding ingredients, recipes, and recipe categories/types. EMI has no such concept of this. This is the only area where TMRV intentionally does not support a feature that JEMI does support (NOTE: I have not tested how effective JEMI's support of this feature is). JEI plugins marking something as "hidden" will simply be silently ignored by TMRV.
+Neither TMRV nor JEMI currently render this JEI widget properly. This limitation will eventually be addressed, but for now, recipes using it (such as Chipped's Workbench) will not render properly.
+
+### JEI Config Files
+
+`.minecraft/config/jei/blacklist.json` is the only JEI config file that TMRV even reads. This file _should_ work fine for vanilla ingredient types and for modded ingredient types added by a JEI plugin (this does not include mods that support both JEI and EMI natively, such as Mekanism). This is meant to be a stop-gap for packs switching over from JEI. JEMI had a similar flaw. EMI has its own config for hiding ingredients - please use that instead. All other JEI config files are completely ignored by TMRV, and there are no plans to support them.
 
 ### Recipe Manager Plugins
 

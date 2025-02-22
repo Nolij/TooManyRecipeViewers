@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
-import dev.nolij.toomanyrecipeviewers.impl.api.registration.IngredientAliasRegistration;
+import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIKeyMappings;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.config.JEIConfigManager;
@@ -36,6 +36,8 @@ import mezz.jei.api.runtime.IScreenHelper;
 import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.common.config.IClientToggleState;
 import mezz.jei.common.input.IInternalKeyMappings;
+import mezz.jei.common.platform.IPlatformFluidHelperInternal;
+import mezz.jei.common.util.StackHelper;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.gui.helpers.GuiHelper;
 import mezz.jei.library.ingredients.IngredientBlacklistInternal;
@@ -47,6 +49,8 @@ import mezz.jei.neoforge.platform.FluidHelper;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -58,10 +62,9 @@ public final class TooManyRecipeViewers {
 	//region Storage
 	public volatile EmiRegistry emiRegistry = null;
 	public volatile SubtypeManager subtypeManager = null;
-	public volatile IStackHelper stackHelper = null;
+	public volatile StackHelper stackHelper = null;
 	public volatile IColorHelper colorHelper = null;
-	public volatile IngredientAliasRegistration ingredientAliasRegistration = null;
-	public volatile IIngredientManager ingredientManager = null;
+	public volatile IngredientManager ingredientManager = null;
 	public volatile GuiHelper guiHelper = null;
 	public volatile IFocusFactory focusFactory = null;
 	//? if >=1.21.1
@@ -84,9 +87,31 @@ public final class TooManyRecipeViewers {
 	public volatile JEIRuntime jeiRuntime = null;
 	//endregion
 	
+	public interface ILockable {
+		void lock() throws IllegalStateException;
+	}
+	
+	private volatile boolean registrationLocked = false;
+	private final List<ILockable> lockAfterRegistration = Collections.synchronizedList(new ArrayList<>());
+	
+	public synchronized void lockAfterRegistration(ILockable lockable) throws IllegalStateException {
+		if (registrationLocked)
+			throw new IllegalStateException();
+		
+		lockAfterRegistration.add(lockable);
+	}
+	
+	public synchronized void lockRegistration() throws IllegalStateException {
+		if (registrationLocked)
+			throw new IllegalStateException();
+		registrationLocked = true;
+		
+		lockAfterRegistration.forEach(ILockable::lock);
+	}
+	
 	//region Static Storage
 	public static final JEIConfigManager jeiConfigManager = new JEIConfigManager();
-	public static final IPlatformFluidHelper<?> fluidHelper = new FluidHelper();
+	public static final IPlatformFluidHelperInternal<?> fluidHelper = new FluidHelper();
 	public static final IInternalKeyMappings jeiKeyMappings = new JEIKeyMappings();
 	
 	public static final IJeiHelpers staticJEIHelpers = new IJeiHelpers() {

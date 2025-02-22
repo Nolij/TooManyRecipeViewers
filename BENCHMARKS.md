@@ -17,16 +17,16 @@ JVM Flags: -XX:+UseShenandoahGC -XX:+UnlockExperimentalVMOptions -XX:+AlwaysPreT
 Two modpacks were tested:
 
 - [Craftoria 1.14.0](https://legacy.curseforge.com/minecraft/modpacks/craftoria/files/6117372)
-- [ATM10 2.34](https://legacy.curseforge.com/minecraft/modpacks/all-the-mods-10/files/6169683)
+- [ATM10 2.36](https://legacy.curseforge.com/minecraft/modpacks/all-the-mods-10/files/6201429)
 
 With the following modifications:
 
-- [EMI 1.1.19](https://legacy.curseforge.com/minecraft/mc-mods/emi/files/6075440) was added to ATM10 (because ATM10 doesn't include EMI yet).
+- [EMI 1.1.20](https://legacy.curseforge.com/minecraft/mc-mods/emi/files/6205506) was added to ATM10 (because ATM10 doesn't include EMI yet).
 - [Just Enough Mekanism Multiblocks](https://legacy.curseforge.com/projects/898746) was updated to the latest version ([7.5](https://legacy.curseforge.com/minecraft/mc-mods/just-enough-mekanism-multiblocks/files/6170220) as of writing) in both packs (this version fixes compatibility issues with both JEMI **and** TMRV, so I viewed this as a fair comparison).
 - Log Begone was disabled in Craftoria (because it hurts performance in all scenarios for no reason and is going to be removed from Craftoria in a future update).
 - [Zume](https://legacy.curseforge.com/minecraft/mc-mods/zume) was added to ATM10, and [Just Zoom](https://legacy.curseforge.com/minecraft/mc-mods/just-zoom) was disabled (because I felt like it).
 
-All tests were performed using [TMRV 0.1.0-pre.1](https://github.com/Nolij/TooManyRecipeViewers/releases/tag/release/0.1.0-pre.1).
+All tests were performed using [TMRV 0.2.0-rc.2](https://github.com/Nolij/TooManyRecipeViewers/releases/tag/release/0.2.0-rc.2).
 
 # Steps
 
@@ -36,20 +36,18 @@ All tests were performed using [TMRV 0.1.0-pre.1](https://github.com/Nolij/TooMa
    3. For TMRV: Ensure TMRV is enabled and JEI is disabled
 2. Launch instance
 3. Open world
-4. Wait for EMI to finish loading (`Reloaded EMI in ...ms` and `Baked recipes after reload in ...ms` are both in logs)
-5. Open inventory
-6. Wait for Minecraft to unfreeze
+4. Deselect Minecraft before world finishes loading (this will ensure that the game is paused immediately on load, which is necessary for reliably getting a comparable heap size, as the heap size constantly changes when the game is running)
+5. Wait for EMI to finish loading (`Baked recipes after reload in ...ms` and `Reloaded EMI in ...ms` are both in logs)
+6. Take heap dump using your preferred profiler (I used VisualVM)
 7. Quit game
-8. Launch instance
-9. Open world
-10. Wait for EMI to finish loading (`Reloaded EMI in ...ms` and `Baked recipes after reload in ...ms` are both in logs)
-11. Open inventory
-12. Wait for Minecraft to unfreeze
-13. Quit game
-14. Collect relevant logs using following RegEx: `/\[ModernFix\/\]: (Game took \d+\.\d+ seconds to start|Time from main menu to in\-game was \d+\.\d+ seconds|Total time to load game and open world was \d+\.\d+ seconds)|Starting JEI took \d+\.\d+ s|\[EMI\] (Reloaded plugin from (jemi|toomanyrecipeviewers) in \d+ms|Baked \d+ recipes in \d+ms|Reloaded EMI in \d+ms|Baked recipes after reload in \d+ms)|\[toomanyrecipeviewers\/\]: Registered \d+ ingredient aliases from JEI plugins in \d+ms/g`
-15. Determine load times from logs
-    - For JEMI: JEI start time (`Starting JEI took {} s`) + `jemi` EMI plugin load time (`Reloaded plugin from jemi in {}ms`)
-    - For TMRV: `toomanyrecipeviewers` EMI plugin load time (`Reloaded plugin from toomanyrecipeviewers in {}ms`) + ingredient alias registration time (`Registered ... ingredient aliases from JEI plugins in {}ms`) (this one is beyond miniscule, but I want to be as fair as possible)
+8. Collect relevant logs using following RegEx: `/\[ModernFix\/\]: (Game took \d+\.\d+ seconds to start|Time from main menu to in\-game was \d+\.\d+ seconds|Total time to load game and open world was \d+\.\d+ seconds)|Starting JEI took \d+\.\d+ s|\[EMI\] ((Reloaded|Initialized) plugin from (jemi|toomanyrecipeviewers) in \d+ms|Baked \d+ recipes in \d+ms|Reloaded EMI in \d+ms|Baked recipes after reload in \d+ms)/g`
+9. Determine load times from logs
+   - For JEMI:
+     - Pre-world-load time: JEI start time (`Starting JEI took {} s`) + `jemi` EMI plugin initialize time (`Reloaded plugin from jemi in {}ms`)
+     - Post-world-load time: `jemi` EMI plugin register time (`Reloaded plugin from jemi in {}ms`)
+   - For TMRV:
+     - Pre-world-load time: `toomanyrecipeviewers` EMI plugin initialize time (`Initialized plugin from toomanyrecipeviewers in {}ms`)
+     - Post-world-load time: EMI plugin register time (`Reloaded plugin from toomanyrecipeviewers in {}ms`)
 
 # Results
 
@@ -57,62 +55,72 @@ All tests were performed using [TMRV 0.1.0-pre.1](https://github.com/Nolij/TooMa
 
 #### TMRV
 
-Load time: 3957ms (0ms before world load, 3957ms after world load)
+Load time: 3858ms (0ms before world load, 3858ms after world load)
+Heap size: 2,480,544,152 B
 
+Relevant logs:
 ```
-[ModernFix/]: Game took 42.757 seconds to start
-[ModernFix/]: Time from main menu to in-game was 24.713524 seconds
-[ModernFix/]: Total time to load game and open world was 67.47052 seconds
-[EMI] Reloaded plugin from toomanyrecipeviewers in 3954ms
-[EMI] Baked 186559 recipes in 6257ms
-[toomanyrecipeviewers/]: Registered 253 ingredient aliases from JEI plugins in 3ms
-[EMI] Reloaded EMI in 23044ms
-[EMI] Baked recipes after reload in 5580ms
+[ModernFix/]: Game took 46.368 seconds to start
+[EMI] Initialized plugin from toomanyrecipeviewers in 0ms
+[ModernFix/]: Time from main menu to in-game was 28.567137 seconds
+[ModernFix/]: Total time to load game and open world was 74.935135 seconds
+[EMI] Reloaded plugin from toomanyrecipeviewers in 3858ms
+[EMI] Baked 187208 recipes in 2194ms
+[EMI] Baked recipes after reload in 1811ms
+[EMI] Reloaded EMI in 21525ms
 ```
 
 #### JEMI
 
-Load time: 6061ms (4864ms before world load, 1197ms after world load)
+Load time: 5712ms (4909ms before world load, 803ms after world load)
+Heap size: 2,537,532,376 B
 
+Relevant logs:
 ```
-[ModernFix/]: Game took 44.499 seconds to start
-Starting JEI took 4.864 s
-[ModernFix/]: Time from main menu to in-game was 29.854439 seconds
-[ModernFix/]: Total time to load game and open world was 74.35344 seconds
-[EMI] Reloaded plugin from jemi in 1197ms
-[EMI] Baked 185722 recipes in 13190ms
-[EMI] Reloaded EMI in 27726ms
-[EMI] Baked recipes after reload in 13359ms
+[ModernFix/]: Game took 44.919 seconds to start
+Starting JEI took 4.909 s
+[EMI] Initialized plugin from jemi in 0ms
+[ModernFix/]: Time from main menu to in-game was 32.27889 seconds
+[ModernFix/]: Total time to load game and open world was 77.19789 seconds
+[EMI] Reloaded plugin from jemi in 803ms
+[EMI] Baked 185722 recipes in 2504ms
+[EMI] Baked recipes after reload in 2101ms
+[EMI] Reloaded EMI in 16154ms
 ```
 
 ## ATM10
 
 #### TMRV
 
-Load time: 8908ms (0ms before world load, 8908ms after world load)
+Load time: 9660ms (0ms before world load, 9660ms after world load)
+Heap size: 3,792,172,208 B
 
+Relevant logs:
 ```
-[ModernFix/]: Game took 50.463 seconds to start
-[ModernFix/]: Time from main menu to in-game was 30.587208 seconds
-[ModernFix/]: Total time to load game and open world was 81.05021 seconds
-[EMI] Reloaded plugin from toomanyrecipeviewers in 8905ms
-[EMI] Baked 346710 recipes in 7742ms
-[EMI] Baked recipes after reload in 8219ms
-[toomanyrecipeviewers/]: Registered 235 ingredient aliases from JEI plugins in 3ms
-[EMI] Reloaded EMI in 73433ms
+[ModernFix/]: Game took 51.638 seconds to start
+[EMI] Initialized plugin from toomanyrecipeviewers in 0ms
+[ModernFix/]: Time from main menu to in-game was 30.616863 seconds
+[ModernFix/]: Total time to load game and open world was 82.25487 seconds
+[EMI] Reloaded plugin from toomanyrecipeviewers in 9660ms
+[EMI] Baked 352219 recipes in 3471ms
+[EMI] Baked recipes after reload in 3056ms
+[EMI] Reloaded EMI in 43189ms
 ```
 
 #### JEMI
 
-Load time: 16550ms (13580ms before world load, 2970ms after world load)
+Load time: 16713ms (14190ms before world load, 2523ms after world load)
+Heap size: 4,065,737,480 B
 
+Relevant logs:
 ```
-[ModernFix/]: Game took 50.462 seconds to start
-Starting JEI took 13.58 s
-[ModernFix/]: Time from main menu to in-game was 41.512444 seconds
-[ModernFix/]: Total time to load game and open world was 91.97444 seconds
-[EMI] Reloaded plugin from jemi in 2970ms
-[EMI] Baked 343383 recipes in 13003ms
-[EMI] Reloaded EMI in 66541ms
-[EMI] Baked recipes after reload in 12414ms
+[ModernFix/]: Game took 53.027 seconds to start
+Starting JEI took 14.19 s
+[EMI] Initialized plugin from jemi in 0ms
+[ModernFix/]: Time from main menu to in-game was 41.428333 seconds
+[ModernFix/]: Total time to load game and open world was 94.45534 seconds
+[EMI] Reloaded plugin from jemi in 2523ms
+[EMI] Baked 344880 recipes in 5830ms
+[EMI] Baked recipes after reload in 4218ms
+[EMI] Reloaded EMI in 37059ms
 ```

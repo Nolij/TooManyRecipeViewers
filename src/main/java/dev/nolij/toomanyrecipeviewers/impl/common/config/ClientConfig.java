@@ -53,7 +53,7 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
-	public boolean getShowHiddenIngredients() {
+	public boolean /*? if >=1.21.1 {*/getShowHiddenIngredients /*?} else {*/ /*isShowHiddenItemsEnabled *//*?}*/() {
 		return true;
 	}
 	
@@ -111,12 +111,12 @@ public class ClientConfig implements IClientConfig {
 	public boolean isTagContentTooltipEnabled() {
 		return false;
 	}
-	
+
 	@Override
-	public boolean getHideSingleTagContentTooltipEnabled() {
+	public boolean /*? if >=1.21.1 {*/getHideSingleTagContentTooltipEnabled /*?} else {*/ /*isHideSingleIngredientTagsEnabled *//*?}*/ () {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isShowTagRecipesEnabled() {
 		return false;

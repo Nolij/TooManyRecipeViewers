@@ -30,6 +30,7 @@ import mezz.jei.library.config.ColorNameConfig;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.focus.FocusFactory;
 import mezz.jei.library.gui.helpers.GuiHelper;
+//? if >=1.21.1
 import mezz.jei.library.helpers.CodecHelper;
 import mezz.jei.library.helpers.ModIdHelper;
 import mezz.jei.library.ingredients.IngredientBlacklistInternal;
@@ -37,6 +38,7 @@ import mezz.jei.library.ingredients.IngredientVisibility;
 import mezz.jei.library.ingredients.subtypes.SubtypeManager;
 import mezz.jei.library.load.registration.AdvancedRegistration;
 import mezz.jei.library.load.registration.GuiHandlerRegistration;
+//? if >=1.21.1
 import mezz.jei.library.load.registration.ModInfoRegistration;
 import mezz.jei.library.load.registration.RecipeCatalystRegistration;
 import mezz.jei.library.load.registration.RecipeCategoryRegistration;
@@ -142,6 +144,7 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime.guiHelper = new GuiHelper(runtime.ingredientManager);
 		runtime.focusFactory = new FocusFactory(runtime.ingredientManager);
+		//? if >=1.21.1
 		runtime.codecHelper = new CodecHelper(runtime.ingredientManager, runtime.focusFactory);
 		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(runtime.ingredientManager);
 		
@@ -162,10 +165,12 @@ public final class EMIPlugin implements EmiPlugin {
 	}
 	
 	private void registerModAliases() {
+		//? if >=1.21.1 {
 		final var modInfoRegistration = new ModInfoRegistration();
 		JEIPlugins.registerModInfo(modInfoRegistration);
 		runtime.modAliases = modInfoRegistration.getModAliases();
-		runtime.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), runtime.ingredientManager, runtime.modAliases);
+		//?}
+		runtime.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), runtime.ingredientManager/*? if >=1.21.1 {*/, runtime.modAliases/*?}*/);
 	}
 	
 	private void createJeiHelpers() {
@@ -177,6 +182,7 @@ public final class EMIPlugin implements EmiPlugin {
 			runtime.colorHelper,
 			runtime.ingredientManager,
 			runtime.vanillaRecipeFactory,
+			//? if >=1.21.1
 			runtime.codecHelper,
 			runtime.ingredientVisibility
 		);
@@ -225,7 +231,7 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void registerRecipeTransferHandlers() {
 		final var stackHelper = runtime.stackHelper;
-		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper, runtime.craftingCategory);
+		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper/*? if >=1.21.1 {*/, runtime.craftingCategory/*?}*/);
 		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, runtime.jeiHelpers, Internal.getServerConnection());
 		JEIPlugins.registerRecipeTransferHandlers(recipeTransferRegistration);
 		runtime.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();

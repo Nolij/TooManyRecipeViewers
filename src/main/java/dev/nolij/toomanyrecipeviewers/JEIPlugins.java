@@ -10,6 +10,7 @@ import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.registration.IExtraIngredientRegistration;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IIngredientAliasRegistration;
+//? if >=1.21.1
 import mezz.jei.api.registration.IModInfoRegistration;
 import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
@@ -24,7 +25,10 @@ import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.library.plugins.jei.JeiInternalPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import net.minecraft.client.Minecraft;
+//? if neoforge
 import net.neoforged.fml.ModList;
+//? if forge
+/*import net.minecraftforge.fml.ModList;*/
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
@@ -81,9 +85,9 @@ public final class JEIPlugins {
 		
 		// necessary ordering
 		pluginClasses.remove(VanillaPlugin.class);
-		pluginClasses.addFirst(VanillaPlugin.class);
+		pluginClasses.add(0, VanillaPlugin.class);
 		pluginClasses.remove(JeiInternalPlugin.class);
-		pluginClasses.addLast(JeiInternalPlugin.class);
+		pluginClasses.add(JeiInternalPlugin.class);
 		
 		for (final var pluginClass : pluginClasses) {
 			final IModPlugin plugin = pluginClass.getDeclaredConstructor().newInstance();
@@ -176,10 +180,12 @@ public final class JEIPlugins {
 	public static void registerIngredientAliases(IIngredientAliasRegistration registration) {
 		dispatch(modPlugins, x -> x.registerIngredientAliases(registration), false);
 	}
-	
+
+	//? if >=1.21.1 {
 	public static void registerModInfo(IModInfoRegistration modAliasRegistration) {
 		dispatch(modPlugins, x -> x.registerModInfo(modAliasRegistration), false);
 	}
+	//?}
 	
 	public static void registerCategories(IRecipeCategoryRegistration registration) {
 		dispatch(allPlugins, x -> x.registerCategories(registration), false);

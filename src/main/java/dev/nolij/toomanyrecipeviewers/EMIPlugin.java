@@ -233,7 +233,10 @@ public final class EMIPlugin implements EmiPlugin {
 		EmiRecipeFiller.extraHandlers = (handler, recipe) -> {
 			final var jeiCategory = runtime.recipeManager.category(recipe.getCategory()).getJEICategory();
 			if (jeiCategory != null) {
-				return runtime.recipeTransferManager.getRecipeTransferHandler(handler, jeiCategory).map(JemiRecipeHandler::new).orElse(null);
+				return runtime.recipeTransferManager
+					.getRecipeTransferHandler(handler, jeiCategory)
+					.map(JemiRecipeHandler::new)
+					.orElse(null);
 			}
 			return null;
 		};

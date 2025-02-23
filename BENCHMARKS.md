@@ -47,7 +47,7 @@ All tests were performed using [TMRV 0.2.0-rc.2](https://github.com/Nolij/TooMan
      - Post-world-load time: `jemi` EMI plugin register time (`Reloaded plugin from jemi in {}ms`)
    - For TMRV:
      - Pre-world-load time: `toomanyrecipeviewers` EMI plugin initialize time (`Initialized plugin from toomanyrecipeviewers in {}ms`)
-     - Post-world-load time: EMI plugin register time (`Reloaded plugin from toomanyrecipeviewers in {}ms`)
+     - Post-world-load time: `toomanyrecipeviewers` EMI plugin register time (`Reloaded plugin from toomanyrecipeviewers in {}ms`)
 
 # Results
 

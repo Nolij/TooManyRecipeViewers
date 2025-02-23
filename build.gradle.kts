@@ -187,6 +187,9 @@ dependencies {
 	runtimeOnly("curse.maven:puzzles-lib-495476:6095894")
 	runtimeOnly("curse.maven:visual-workbench-500273:5714956")
 	runtimeOnly("curse.maven:immersive-engineering-231951:5828000")
+	runtimeOnly("curse.maven:guideme-1173950:6223759")
+	runtimeOnly("curse.maven:applied-energistics-2-223794:6225422")
+	runtimeOnly("curse.maven:ae2-jei-integration-1074338:5748513")
 }
 
 tasks.jar {

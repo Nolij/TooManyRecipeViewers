@@ -1,6 +1,2 @@
-- improve memory usage (memory usage should actually be better than JEMI now; was previously within a margin of error)
-- replace ingredient manager
-- add hidden ingredient, recipe, & category support
-- use EMI API for alias registration (EMI >=1.1.20 is now required due to this change)
-- changed how recipe IDs are generated (this should result in less duplicates at the cost of unfortunately invalidating all previously generated recipe IDs)
+- fixed bug with Sophisticated Backpacks
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

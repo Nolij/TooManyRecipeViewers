@@ -1,2 +1,2 @@
-- fixed bug with Sophisticated Backpacks (actually though this time)
+- fixed compatibility with Visual Workbench and modded regular crafting tables
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

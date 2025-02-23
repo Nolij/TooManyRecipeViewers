@@ -19,7 +19,6 @@ import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.JemiCategory;
 import dev.emi.emi.jemi.JemiRecipe;
-import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.recipe.EmiBrewingRecipe;
 import dev.emi.emi.recipe.EmiCompostingRecipe;
 import dev.emi.emi.recipe.EmiCookingRecipe;
@@ -144,7 +143,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			final var jeiRecipeType = jeiCategory.getRecipeType();
 			
 			final var jeiCatalysts = runtime.recipeCatalysts.get(jeiRecipeType);
-			final var emiCatalysts = jeiCatalysts.stream().map(JemiUtil::getStack).toList();
+			final var emiCatalysts = jeiCatalysts.stream().map(ingredientManager::getEMIStack).toList();
 			
 			final var category = category(jeiCategory);
 			final var emiCategory = category.getEMICategory();
@@ -517,7 +516,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		final var workstations = EmiApi.getRecipeManager().getWorkstations(emiCategory);
 		final var catalysts = workstations
 			.stream()
-			.map(x -> JemiUtil.getTyped(x.getEmiStacks().getFirst()))
+			.map(x -> ingredientManager.getTypedIngredient(x.getEmiStacks().getFirst()))
 			.filter(Optional::isPresent)
 			.map(Optional::get)
 			.map((Function<ITypedIngredient<?>, ITypedIngredient<?>>) x -> x);
@@ -909,7 +908,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var emiIngredients = jeiRecipe
 					.getIngredients()
 					.stream()
-					.map(JemiUtil::getStack)
+					.map(ingredientManager::getEMIStack)
 					.map(EmiIngredient.class::cast)
 					.toList();
 				
@@ -1044,9 +1043,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var jeiRecipe = (IJeiAnvilRecipe) this.jeiRecipe;
 				
 				final var id = getID();
-				final var leftInputs = jeiRecipe.getLeftInputs().stream().map(JemiUtil::getStack).toList();
-				final var rightInputs = jeiRecipe.getRightInputs().stream().map(JemiUtil::getStack).toList();
-				final var outputs = jeiRecipe.getOutputs().stream().map(JemiUtil::getStack).toList();
+				final var leftInputs = jeiRecipe.getLeftInputs().stream().map(ingredientManager::getEMIStack).toList();
+				final var rightInputs = jeiRecipe.getRightInputs().stream().map(ingredientManager::getEMIStack).toList();
+				final var outputs = jeiRecipe.getOutputs().stream().map(ingredientManager::getEMIStack).toList();
 				return new EmiRecipe() {
 					private final int unique = EmiUtil.RANDOM.nextInt();
 					

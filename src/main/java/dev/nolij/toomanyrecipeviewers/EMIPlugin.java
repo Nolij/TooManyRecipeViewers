@@ -90,12 +90,12 @@ public final class EMIPlugin implements EmiPlugin {
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
 			return new EmiStackInteraction(runtime.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
-				.map(IClickableIngredient::getTypedIngredient).map(JemiUtil::getStack).findFirst().orElse(EmiStack.EMPTY), null, false);
+				.map(IClickableIngredient::getTypedIngredient).map(runtime.ingredientManager::getEMIStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
 		registry.removeEmiStacks(emiStack -> {
 			try {
-				final var jeiIngredient = JemiUtil.getTyped(emiStack);
+				final var jeiIngredient = runtime.ingredientManager.getTypedIngredient(emiStack);
 				if (jeiIngredient.isPresent())
 					return !runtime.ingredientVisibility.isIngredientVisible(jeiIngredient.get());
 			} catch (Throwable ignored) {}

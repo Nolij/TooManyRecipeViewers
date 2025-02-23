@@ -32,12 +32,14 @@ import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.core.util.WeakList;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
+import mezz.jei.library.ingredients.itemStacks.TypedItemStackExtension;
 import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -129,6 +131,19 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			return ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
 		
 		return JemiUtil.getStack(typedIngredient);
+	}
+	
+	@SuppressWarnings("UnstableApiUsage")
+	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
+		if (emiStack instanceof ItemEmiStack itemEmiStack)
+			try {
+				return Optional.of(TypedItemStackExtension.create((Item) itemEmiStack.getKey(), (int) itemEmiStack.getAmount(), itemEmiStack.getComponentChanges()));
+			} catch (Throwable t) {
+				LOGGER.error("Error converting ItemEmiStack to JEI TypedItemStack: ", t);
+				return Optional.empty();
+			}
+		
+		return JemiUtil.getTyped(emiStack);
 	}
 	
 	//region IIngredientManager
@@ -534,7 +549,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			//noinspection deprecation
 			if (runtime.subtypeManager.hasSubtypes(type, fluidHelper.create(fluid.builtInRegistryHolder(), 1000L))) {
 				runtime.emiRegistry.setDefaultComparison(fluid, Comparison.compareData(stack -> {
-					final var typed = JemiUtil.getTyped(stack).orElse(null);
+					final var typed = getTypedIngredient(stack).orElse(null);
 					if (typed != null) {
 						return runtime.subtypeManager.getSubtypeInfo(type, typed.getIngredient(), UidContext.Recipe);
 					}

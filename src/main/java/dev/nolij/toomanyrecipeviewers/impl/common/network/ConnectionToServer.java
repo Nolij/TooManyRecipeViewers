@@ -16,7 +16,7 @@ public class ConnectionToServer implements IConnectionToServer {
 	
 	@Override
 	public boolean isJeiOnServer() {
-		return true;
+		return EmiClient.onServer;
 	}
 	
 	@Override

@@ -168,9 +168,10 @@ dependencies {
 	runtimeOnly("curse.maven:apothic-enchanting-1063926:6084297")
 	runtimeOnly("curse.maven:apothic-spawners-986583:6058055")
 	runtimeOnly("maven.modrinth:c2me-neoforge:0.3.0+alpha.0.47+1.21.1")
-	runtimeOnly("maven.modrinth:sophisticated-core:1.21.1-1.1.3.836")
-	runtimeOnly("maven.modrinth:sophisticated-storage:1.21.1-1.2.6.1038")
-	runtimeOnly("maven.modrinth:sophisticated-backpacks:1.21.1-3.22.5.1173")
+	runtimeOnly("curse.maven:sophisticated-core-618298:6218335")
+	runtimeOnly("curse.maven:sophisticated-storage-619320:6217937")
+	runtimeOnly("curse.maven:sophisticated-backpacks-422301:6218333")
+	runtimeOnly("curse.maven:sophisticated-storage-in-motion-1166930:6202352")
 	runtimeOnly("curse.maven:moderately-enough-effect-descriptions-meed-918638:6100615")
 	runtimeOnly("maven.modrinth:geckolib:oNBe6h9g")
 	runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
@@ -183,6 +184,9 @@ dependencies {
 	runtimeOnly("curse.maven:athena-841890:5629395")
 	runtimeOnly("curse.maven:farmers-delight-398521:6154807")
 	runtimeOnly("curse.maven:fruits-delight-943774:6095147")
+	runtimeOnly("curse.maven:puzzles-lib-495476:6095894")
+	runtimeOnly("curse.maven:visual-workbench-500273:5714956")
+	runtimeOnly("curse.maven:immersive-engineering-231951:5828000")
 }
 
 tasks.jar {

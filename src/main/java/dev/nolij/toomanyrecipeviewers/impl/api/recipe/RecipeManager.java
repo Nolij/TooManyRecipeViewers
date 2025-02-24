@@ -23,6 +23,8 @@ import dev.emi.emi.recipe.EmiBrewingRecipe;
 import dev.emi.emi.recipe.EmiCompostingRecipe;
 import dev.emi.emi.recipe.EmiCookingRecipe;
 import dev.emi.emi.recipe.EmiFuelRecipe;
+import dev.emi.emi.recipe.EmiShapedRecipe;
+import dev.emi.emi.recipe.EmiShapelessRecipe;
 import dev.emi.emi.recipe.EmiSmithingRecipe;
 import dev.emi.emi.recipe.EmiStonecuttingRecipe;
 import dev.emi.emi.registry.EmiRecipes;
@@ -70,7 +72,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
@@ -772,12 +777,17 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private @Nullable ResourceLocation originalID = null;
 			private @Nullable ResourceLocation id = null;
 			
-			private @Nullable RecipeLayoutBuilder recipeLayoutBuilder = null;
-			private @Nullable List<EmiIngredient> emiInputs;
-			private @Nullable List<EmiStack> emiOutputs;
+			private record ExtractedRecipeData(
+				List<EmiIngredient> emiInputs,
+				List<EmiStack> emiOutputs,
+				boolean shapeless,
+				int ingredientsHash
+			) {}
+			
+			private @Nullable ExtractedRecipeData extractedRecipeData = null;
 			
 			private synchronized boolean extractJEIRecipeData() {
-				if (recipeLayoutBuilder != null)
+				if (extractedRecipeData != null)
 					return true;
 				
 				if (jeiRecipe == null)
@@ -787,26 +797,29 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				if (jeiCategory == null)
 					return false;
 				
-				recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager);
+				final var recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager);
 				jeiCategory.setRecipe(recipeLayoutBuilder, jeiRecipe, runtime.jeiHelpers.getFocusFactory().getEmptyFocusGroup());
 				
-				emiInputs =
+				extractedRecipeData = new ExtractedRecipeData(
 					recipeLayoutBuilder.inputs.stream()
 						.map(ingredientManager::getEMIStack)
 						.map(EmiIngredient.class::cast)
-						.toList();
-				emiOutputs =
+						.toList(),
 					recipeLayoutBuilder.outputs.stream()
 						.map(ingredientManager::getEMIStack)
-						.toList();
+						.toList(),
+					recipeLayoutBuilder.shapeless,
+					recipeLayoutBuilder.hashIngredients()
+				);
 				
 				return true;
 			}
 			
+			@SuppressWarnings("DataFlowIssue")
 			private @Nullable ResourceLocation generateID() {
 				if (jeiRecipeType != null && extractJEIRecipeData()) {
 					final var typeID = jeiRecipeType.getUid();
-					return ResourceLocation.fromNamespaceAndPath(MOD_ID, "/tmrv_autogen_v0/%s/%x".formatted(EmiUtil.subId(typeID), Objects.requireNonNull(recipeLayoutBuilder).hashIngredients()));
+					return ResourceLocation.fromNamespaceAndPath(MOD_ID, "/tmrv_autogen_v0/%s/%x".formatted(EmiUtil.subId(typeID), extractedRecipeData.ingredientsHash));
 				}
 				
 				return null;
@@ -893,9 +906,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					emiRecipeMap.put(emiRecipe, this);
 				}
 				
-				recipeLayoutBuilder = null;
-				emiInputs = null;
-				emiOutputs = null;
+				extractedRecipeData = null;
 				
 				return emiRecipe;
 			}
@@ -936,18 +947,42 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCraftingRecipe convertEMICraftingRecipe() {
-				extractJEIRecipeData();
-				final var emiInputs = this.emiInputs;
-				final var emiOutputs = this.emiOutputs;
+				final var recipeID = getID();
 				
-				if (recipeLayoutBuilder.outputs.size() == 1) {
+				//noinspection unchecked
+				final var craftingRecipeHolder = (RecipeHolder<CraftingRecipe>) this.jeiRecipe;
+				final var craftingRecipe = craftingRecipeHolder.value();
+				
+				if (craftingRecipe.canCraftInDimensions(3, 3)) {
+					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
+						return new EmiShapelessRecipe(shapelessRecipe) {
+							@Override
+							public ResourceLocation getId() {
+								return recipeID;
+							}
+						};
+					} else if (craftingRecipe instanceof ShapedRecipe shapedRecipe) {
+						return new EmiShapedRecipe(shapedRecipe) {
+							@Override
+							public ResourceLocation getId() {
+								return recipeID;
+							}
+						};
+					}
+				}
+				
+				extractJEIRecipeData();
+				final var emiInputs = extractedRecipeData.emiInputs;
+				final var emiOutputs = extractedRecipeData.emiOutputs;
+				
+				if (emiOutputs.size() == 1) {
 					return new EmiCraftingRecipe(
 						emiInputs,
 						emiOutputs.getFirst(), 
-						getID(), 
-						recipeLayoutBuilder.shapeless);
+						recipeID,
+						extractedRecipeData.shapeless);
 				} else {
-					return new EmiPatternCraftingRecipe(emiInputs, EmiStack.EMPTY, getID(), recipeLayoutBuilder.shapeless) {
+					return new EmiPatternCraftingRecipe(emiInputs, EmiStack.EMPTY, recipeID, extractedRecipeData.shapeless) {
 						@Override
 						public List<EmiStack> getOutputs() {
 							return emiOutputs;
@@ -1030,8 +1065,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiSmithingRecipe convertEMISmithingRecipe() {
 				extractJEIRecipeData();
-				final var emiInputs = this.emiInputs;
-				final var emiOutputs = this.emiOutputs;
+				final var emiInputs = extractedRecipeData.emiInputs;
+				final var emiOutputs = extractedRecipeData.emiOutputs;
 				
 				// TODO: smithing trim recipes?
 				// TODO: IExtendableSmithingRecipeCategory?
@@ -1112,10 +1147,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiFuelRecipe convertEMIFuelRecipe() {
 				final var jeiRecipe = (IJeiFuelingRecipe) this.jeiRecipe;
-				extractJEIRecipeData();
-				final var emiInputs = this.emiInputs;
 				
-				return new EmiFuelRecipe(emiInputs.getFirst(), jeiRecipe.getBurnTime(), getID());
+				return new EmiFuelRecipe(ingredientManager.getEMIIngredient(jeiRecipe.getInputs().stream()), jeiRecipe.getBurnTime(), getID());
 			}
 			
 			@SuppressWarnings("DataFlowIssue")

@@ -1139,7 +1139,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 				return new EmiBrewingRecipe(
 					ingredientManager.getEMIStack(jeiRecipe.getPotionInputs().getFirst()),
-					ingredientManager.getEMIStack(jeiRecipe.getIngredients().getFirst()),
+					ingredientManager.getEMIIngredient(jeiRecipe.getIngredients().stream()),
 					ingredientManager.getEMIStack(jeiRecipe.getPotionOutput()),
 					getID());
 			}
@@ -1155,8 +1155,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private @NotNull EmiCompostingRecipe convertEMICompostingRecipe() {
 				final var jeiRecipe = (IJeiCompostingRecipe) this.jeiRecipe;
 				
-				// TODO: support multiple inputs?
-				return new EmiCompostingRecipe(ingredientManager.getEMIStack(jeiRecipe.getInputs().getFirst()), jeiRecipe.getChance(), getID());
+				return new EmiCompostingRecipe(ingredientManager.getEMIIngredient(jeiRecipe.getInputs().stream()), jeiRecipe.getChance(), getID());
 			}
 			//endregion
 			

@@ -16,6 +16,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -23,6 +24,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class ConnectionToServer implements IConnectionToServer {
+	
+	private final boolean serverHasJEI;
+	
+	public ConnectionToServer() {
+		final var connection = Minecraft.getInstance().getConnection();
+		if (connection != null)
+			serverHasJEI = connection.hasChannel(PacketRecipeTransfer.TYPE);
+		else
+			serverHasJEI = true;
+	}
 	
 	@Override
 	public boolean isJeiOnServer() {
@@ -33,6 +44,11 @@ public class ConnectionToServer implements IConnectionToServer {
 	public <T extends PlayToServerPacket<T>> void sendPacketToServer(@NotNull T packet) {
 		if (!(packet instanceof PacketRecipeTransfer recipeTransferPacket))
 			return;
+		
+		if (serverHasJEI) {
+			PacketDistributor.sendToServer(recipeTransferPacket);
+			return;
+		}
 		
 		final var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof AbstractContainerScreen<?> containerScreen))

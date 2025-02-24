@@ -1,2 +1,3 @@
+- improved recipe filling on servers that don't have EMI
 - JEI plugins are now immediately unloaded on logout
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

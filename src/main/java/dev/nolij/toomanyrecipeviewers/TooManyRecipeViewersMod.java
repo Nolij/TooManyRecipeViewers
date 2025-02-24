@@ -3,14 +3,16 @@ package dev.nolij.toomanyrecipeviewers;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.nolij.libnolij.refraction.Refraction;
 import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
-import dev.nolij.toomanyrecipeviewers.impl.common.network.ConnectionToServer;
 import mezz.jei.common.Internal;
+import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.HandlerThread;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,7 +32,6 @@ public class TooManyRecipeViewersMod {
 		Internal.setKeyMappings(jeiKeyMappings);
 		JemiPlugin.runtime = staticJEIRuntime;
 		
-		Internal.setServerConnection(new ConnectionToServer());
 		Internal.setJeiClientConfigs(new JEIClientConfigs());
 		
 		LOGGER.info("Loading JEI Plugins: [{}]", JEIPlugins.allPlugins.stream().map(x -> x.getPluginUid().toString()).collect(Collectors.joining(", ")));
@@ -38,10 +39,19 @@ public class TooManyRecipeViewersMod {
 		
 		modEventBus.addListener(this::onRegisterClientReloadListeners);
 		NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> EMIPlugin.onRuntimeUnavailable());
+		
+		modEventBus.addListener(this::onRegisterPayloadHandlersEvent);
 	}
 	
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
 		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
+	}
+	
+	private void onRegisterPayloadHandlersEvent(RegisterPayloadHandlersEvent event) {
+		event.registrar("3")
+			.executesOn(HandlerThread.MAIN)
+			.optional()
+			.playToServer(PacketRecipeTransfer.TYPE, PacketRecipeTransfer.STREAM_CODEC, (e, context) -> {});
 	}
 	
 }

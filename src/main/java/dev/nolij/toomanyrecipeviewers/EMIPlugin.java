@@ -18,6 +18,7 @@ import dev.nolij.toomanyrecipeviewers.impl.api.registration.RecipeRegistration;
 import dev.nolij.toomanyrecipeviewers.impl.api.registration.RuntimeRegistration;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
+import dev.nolij.toomanyrecipeviewers.impl.common.network.ConnectionToServer;
 import dev.nolij.toomanyrecipeviewers.impl.library.config.ModIDFormatConfig;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
@@ -67,6 +68,8 @@ public final class EMIPlugin implements EmiPlugin {
 		JEIPlugins.resetLoadTimes();
 		
 		runtime = new TooManyRecipeViewers();
+		
+		Internal.setServerConnection(new ConnectionToServer());
 	}
 	
 	@Override
@@ -106,6 +109,7 @@ public final class EMIPlugin implements EmiPlugin {
 		if (runtime != null) {
 			runtime = null;
 			Internal.setRuntime(null);
+			Internal.setServerConnection(null);
 			
 			JEIPlugins.onRuntimeUnavailable();
 		}

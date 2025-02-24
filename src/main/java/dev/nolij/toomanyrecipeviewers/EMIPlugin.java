@@ -10,7 +10,6 @@ import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.jemi.JemiRecipeHandler;
 import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiStackSerializer;
-import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
@@ -103,7 +102,7 @@ public final class EMIPlugin implements EmiPlugin {
 		});
 	}
 	
-	private void onRuntimeUnavailable() {
+	public static void onRuntimeUnavailable() {
 		if (runtime != null) {
 			runtime = null;
 			Internal.setRuntime(null);

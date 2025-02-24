@@ -8,7 +8,9 @@ import mezz.jei.common.Internal;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +37,7 @@ public class TooManyRecipeViewersMod {
 		JEIPlugins.onConfigManagerAvailable(jeiConfigManager);
 		
 		modEventBus.addListener(this::onRegisterClientReloadListeners);
+		NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> EMIPlugin.onRuntimeUnavailable());
 	}
 	
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {

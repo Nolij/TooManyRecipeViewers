@@ -175,7 +175,7 @@ dependencies {
 	runtimeOnly("curse.maven:moderately-enough-effect-descriptions-meed-918638:6100615")
 	runtimeOnly("maven.modrinth:geckolib:oNBe6h9g")
 	runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
-	runtimeOnly("curse.maven:ars-nouveau-401955:6123623")
+	runtimeOnly("curse.maven:ars-nouveau-401955:6228434")
 	runtimeOnly("curse.maven:polymorph-388800:5995380")
 	runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
 	runtimeOnly("curse.maven:laserio-626839:5730007")
@@ -198,6 +198,7 @@ dependencies {
 	runtimeOnly("curse.maven:minecolonies-245506:6195917")
 	runtimeOnly("curse.maven:playeranimator-658587:6024462")
 	runtimeOnly("curse.maven:irons-spells-n-spellbooks-855414:6197625")
+	runtimeOnly("maven.modrinth:jei-multiblocks:1.21.1-1.0.4")
 }
 
 tasks.jar {

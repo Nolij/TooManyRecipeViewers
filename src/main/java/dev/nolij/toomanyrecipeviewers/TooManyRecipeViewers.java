@@ -105,6 +105,7 @@ public final class TooManyRecipeViewers {
 		registrationLocked = true;
 		
 		lockAfterRegistration.forEach(ILockable::lock);
+		lockAfterRegistration.clear();
 	}
 	
 	//region Static Storage

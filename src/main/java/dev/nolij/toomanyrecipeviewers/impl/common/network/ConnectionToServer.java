@@ -1,33 +1,36 @@
 package dev.nolij.toomanyrecipeviewers.impl.common.network;
 
+import dev.emi.emi.api.recipe.EmiRecipe;
+import dev.emi.emi.api.recipe.handler.EmiCraftContext;
+import dev.emi.emi.api.recipe.handler.StandardRecipeHandler;
 import dev.emi.emi.network.EmiNetwork;
 import dev.emi.emi.network.FillRecipeC2SPacket;
 import dev.emi.emi.platform.EmiClient;
+import dev.emi.emi.registry.EmiRecipeFiller;
 import mezz.jei.common.network.IConnectionToServer;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import mezz.jei.common.network.packets.PlayToServerPacket;
 import mezz.jei.common.transfer.TransferOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ConnectionToServer implements IConnectionToServer {
 	
 	@Override
 	public boolean isJeiOnServer() {
-		return EmiClient.onServer;
+		return true;
 	}
 	
 	@Override
 	public <T extends PlayToServerPacket<T>> void sendPacketToServer(@NotNull T packet) {
-		if (!EmiClient.onServer)
-			return; // TODO: use EmiRecipeFiller.clientFill()
-		
 		if (!(packet instanceof PacketRecipeTransfer recipeTransferPacket))
 			return;
 		
@@ -60,7 +63,27 @@ public class ConnectionToServer implements IConnectionToServer {
 				.orElse(ItemStack.EMPTY));
 		}
 		
-		EmiNetwork.sendToServer(new FillRecipeC2SPacket(containerMenu, 0, inventorySlots, craftingSlots, null, stacks));
+		if (EmiClient.onServer) {
+			EmiNetwork.sendToServer(new FillRecipeC2SPacket(containerMenu, 0, inventorySlots, craftingSlots, null, stacks));
+		} else {
+			//noinspection rawtypes,unchecked
+			EmiRecipeFiller.clientFill(new StandardRecipeHandler() {
+				@Override
+				public List<Slot> getInputSources(AbstractContainerMenu handler) {
+					return inventorySlots;
+				}
+				
+				@Override
+				public List<Slot> getCraftingSlots(AbstractContainerMenu handler) {
+					return craftingSlots;
+				}
+				
+				@Override
+				public boolean supportsRecipe(EmiRecipe recipe) {
+					return true;
+				}
+			}, null, containerScreen, stacks, EmiCraftContext.Destination.NONE);
+		}
 	}
 	
 }

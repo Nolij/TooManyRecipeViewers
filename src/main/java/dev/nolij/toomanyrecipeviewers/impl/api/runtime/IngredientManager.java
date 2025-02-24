@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
+import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
@@ -12,6 +13,7 @@ import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
+import dev.nolij.toomanyrecipeviewers.util.IJEMIStack;
 import dev.nolij.toomanyrecipeviewers.util.LazyMappedCollection;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
@@ -32,15 +34,19 @@ import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.core.util.WeakList;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
+import mezz.jei.library.ingredients.itemStacks.TypedItemStack;
 import mezz.jei.library.ingredients.itemStacks.TypedItemStackExtension;
 import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -52,6 +58,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
@@ -104,46 +111,90 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			.forEach(fluidStacks::add);
 	}
 	
+	public EmiIngredient getEMIIngredient(Stream<ItemStack> itemStackStream) {
+		return EmiIngredient.of(itemStackStream.map(EmiStack::of).toList());
+	}
+	
 	@SuppressWarnings("UnstableApiUsage")
 	public EmiStack getEMIStack(ItemStack stack) {
-		if (stack == null)
+		if (stack == null || stack.isEmpty())
 			return ItemEmiStack.EMPTY;
 		
 		return ItemEmiStack.of(stack);
 	}
 	
+	@SuppressWarnings("UnstableApiUsage")
+	public EmiStack getEMIStack(FluidStack stack) {
+		if (stack == null || stack.isEmpty())
+			return FluidEmiStack.EMPTY;
+		
+		return FluidEmiStack.of(stack.getFluid(), stack.getComponentsPatch(), stack.getAmount());
+	}
+	
 	public <T> EmiStack getEMIStack(IIngredientType<T> ingredientType, T ingredient) {
+		//noinspection IfCanBeSwitch
 		if (ingredient == null)
 			return EmiStack.EMPTY;
 		
 		if (ingredient instanceof ItemStack itemStack)
 			return getEMIStack(itemStack);
+		else if (ingredient instanceof FluidStack fluidStack)
+			return getEMIStack(fluidStack);
 		
-		return JemiUtil.getStack(ingredientType, ingredient);
+		//noinspection unchecked
+		final var ingredientInfo = (IngredientInfo<T>) typeInfoMap.get(ingredientType);
+		if (ingredientInfo == null)
+			return EmiStack.EMPTY;
+		
+		return new JemiStack<>(ingredientType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
 	}
 	
 	@SuppressWarnings("UnstableApiUsage")
-	public EmiStack getEMIStack(ITypedIngredient<?> typedIngredient) {
+	public <T> EmiStack getEMIStack(ITypedIngredient<T> typedIngredient) {
 		if (typedIngredient == null)
 			return EmiStack.EMPTY;
 			
 		if (typedIngredient instanceof IJEITypedItemStack typedItemStack)
 			return ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
 		
-		return JemiUtil.getStack(typedIngredient);
+		return getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 	}
 	
-	@SuppressWarnings("UnstableApiUsage")
+	@SuppressWarnings({"UnstableApiUsage", "rawtypes"})
 	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
-		if (emiStack instanceof ItemEmiStack itemEmiStack)
-			try {
-				return Optional.of(TypedItemStackExtension.create((Item) itemEmiStack.getKey(), (int) itemEmiStack.getAmount(), itemEmiStack.getComponentChanges()));
-			} catch (Throwable t) {
-				LOGGER.error("Error converting ItemEmiStack to JEI TypedItemStack: ", t);
+		try {
+			if (emiStack instanceof ItemEmiStack itemEmiStack)
+				return Optional.of(TypedItemStackExtension.create(
+					(Item) itemEmiStack.getKey(), 
+					(int) itemEmiStack.getAmount(), 
+					itemEmiStack.getComponentChanges()
+				));
+			else if (emiStack instanceof FluidEmiStack fluidEmiStack)
+				//noinspection unchecked
+				return Optional.of(TypedIngredient.createUnvalidated(
+					(IIngredientType) fluidHelper.getFluidIngredientType(),
+					fluidHelper.create(
+						Holder.direct((Fluid) fluidEmiStack.getKey()),
+						fluidEmiStack.getAmount(),
+						fluidEmiStack.getComponentChanges()
+					)
+				));
+			else if (emiStack instanceof IJEMIStack<?> jemiStack)
+				//noinspection unchecked
+				return Optional.of(TypedIngredient.createUnvalidated(
+					(IIngredientType) jemiStack.tmrv$getType(), 
+					jemiStack.tmrv$getIngredient()
+				));
+			
+			final var itemStack = emiStack.getItemStack();
+			if (itemStack == null || itemStack.isEmpty())
 				return Optional.empty();
-			}
-		
-		return JemiUtil.getTyped(emiStack);
+			
+			return Optional.of(TypedItemStack.create(itemStack));
+		} catch (Throwable t) {
+			LOGGER.error("Error converting EmiStack to JEI ITypedIngredient: ", t);
+			return Optional.empty();
+		}
 	}
 	
 	//region IIngredientManager

@@ -190,6 +190,14 @@ dependencies {
 	runtimeOnly("curse.maven:guideme-1173950:6223759")
 	runtimeOnly("curse.maven:applied-energistics-2-223794:6225422")
 	runtimeOnly("curse.maven:ae2-jei-integration-1074338:5748513")
+	runtimeOnly("curse.maven:blockui-522992:6150484")
+	runtimeOnly("curse.maven:domum-ornamentum-527361:5764083")
+	runtimeOnly("curse.maven:multi-piston-303278:5783614")
+	runtimeOnly("curse.maven:structurize-298744:6220899")
+	runtimeOnly("curse.maven:towntalk-900364:5653504")
+	runtimeOnly("curse.maven:minecolonies-245506:6195917")
+	runtimeOnly("curse.maven:playeranimator-658587:6024462")
+	runtimeOnly("curse.maven:irons-spells-n-spellbooks-855414:6197625")
 }
 
 tasks.jar {

@@ -784,31 +784,24 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				boolean shapeless
 			) {}
 			
-			private @Nullable ExtractedRecipeData extractedRecipeData = null;
-			
-			private synchronized void extractJEIRecipeData() {
-				if (extractedRecipeData != null)
-					return;
-				
+			private ExtractedRecipeData extractJEIRecipeData() {
 				if (jeiRecipe == null)
 					throw new IllegalStateException();
 				
 				if (jeiRecipe instanceof RecipeHolder<?> recipeHolder &&
 					recipeHolder.value() instanceof CraftingRecipe craftingRecipe) {
 					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
-						extractedRecipeData = new ExtractedRecipeData(
+						return new ExtractedRecipeData(
 							shapelessRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
 							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapelessRecipe))),
 							true
 						);
-						return;
 					} else if (craftingRecipe instanceof ShapedRecipe shapedRecipe) {
-						extractedRecipeData = new ExtractedRecipeData(
+						return new ExtractedRecipeData(
 							shapedRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
 							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapedRecipe))),
 							false
 						);
-						return;
 					}
 				}
 				
@@ -819,7 +812,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager);
 				jeiCategory.setRecipe(recipeLayoutBuilder, jeiRecipe, runtime.jeiHelpers.getFocusFactory().getEmptyFocusGroup());
 				
-				extractedRecipeData = new ExtractedRecipeData(
+				return new ExtractedRecipeData(
 					recipeLayoutBuilder.inputs.stream()
 						.map(ingredientManager::getEMIStack)
 						.map(EmiIngredient.class::cast)
@@ -907,8 +900,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					emiRecipeMap.put(emiRecipe, this);
 				}
 				
-				extractedRecipeData = null;
-				
 				return emiRecipe;
 			}
 			
@@ -972,7 +963,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					}
 				}
 				
-				extractJEIRecipeData();
+				final var extractedRecipeData = extractJEIRecipeData();
 				final var emiInputs = extractedRecipeData.emiInputs;
 				final var emiOutputs = extractedRecipeData.emiOutputs;
 				
@@ -1063,9 +1054,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				};
 			}
 			
-			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiSmithingRecipe convertEMISmithingRecipe() {
-				extractJEIRecipeData();
+				final var extractedRecipeData = extractJEIRecipeData();
 				final var emiInputs = extractedRecipeData.emiInputs;
 				final var emiOutputs = extractedRecipeData.emiOutputs;
 				

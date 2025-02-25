@@ -39,17 +39,17 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 ### Load Times
 
-|           | TMRV                                                    | JEMI                                                         | Comparison                                                                                                                                                      |
-|-----------|---------------------------------------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Craftoria | 3858ms (0ms before world load, 3858ms after world load) | 5712ms (4909ms before world load, 803ms after world load)    | <span style="color:green">-1854ms</span> (<span style="color:green">-4909ms</span> before world load, <span style="color:red">+3055ms</span> after world load)  |
-| ATM10     | 9660ms (0ms before world load, 9660ms after world load) | 16713ms (14190ms before world load, 2523ms after world load) | <span style="color:green">-7053ms</span> (<span style="color:green">-14190ms</span> before world load, <span style="color:red">+7137ms</span> after world load) |
+|           | TMRV                                                    | JEMI                                                         | Comparison                                                     |
+|-----------|---------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------|
+| Craftoria | 2732ms (2ms before world load, 2730ms after world load) | 6895ms (5559ms before world load, 1336ms after world load)   | -4163ms (-5557ms before world load, +1594ms after world load)  |
+| ATM10     | 8214ms (3ms before world load, 8211ms after world load) | 17468ms (14670ms before world load, 2798ms after world load) | -9254ms (-14667ms before world load, +5413ms after world load) |
 
 ### Memory Usage
 
-|           | TMRV     | JEMI     | Comparison                               |
-|-----------|----------|----------|------------------------------------------|
-| Craftoria | 2,480 MB | 2,537 MB | <span style="color:green">-57 MB</span>  |
-| ATM10     | 3,792 MB | 4,065 MB | <span style="color:green">-273 MB</span> |
+|           | TMRV     | JEMI     | Comparison             |
+|-----------|----------|----------|------------------------|
+| Craftoria | 5.28 GiB | 5.36 GiB | -80 MiB (approximate)  |
+| ATM10     | 5.05 GiB | 5.3 GiB  | -250 MiB (approximate) |
 
 # Known API Limitations
 

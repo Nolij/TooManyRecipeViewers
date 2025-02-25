@@ -41,15 +41,15 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 |                             | TMRV                                                                      | JEMI                                                                           | Comparison                                                     |
 |-----------------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 3858ms (0ms before world load, 3858ms after world load)&nbsp;&nbsp;&nbsp; | 5712ms (4909ms before world load, 803ms after world load)&nbsp;&nbsp;&nbsp;    | -1854ms (-4909ms before world load, +3055ms after world load)  |
-| ATM10&nbsp;&nbsp;&nbsp;     | 9660ms (0ms before world load, 9660ms after world load)&nbsp;&nbsp;&nbsp; | 16713ms (14190ms before world load, 2523ms after world load)&nbsp;&nbsp;&nbsp; | -7053ms (-14190ms before world load, +7137ms after world load) |
+| Craftoria&nbsp;&nbsp;&nbsp; | 2732ms (2ms before world load, 2730ms after world load)&nbsp;&nbsp;&nbsp; | 6895ms (5559ms before world load, 1336ms after world load)&nbsp;&nbsp;&nbsp;   | -4163ms (-5557ms before world load, +1594ms after world load)  |
+| ATM10&nbsp;&nbsp;&nbsp;     | 8214ms (3ms before world load, 8211ms after world load)&nbsp;&nbsp;&nbsp; | 17468ms (14670ms before world load, 2798ms after world load)&nbsp;&nbsp;&nbsp; | -9254ms (-14667ms before world load, +5413ms after world load) |
 
 ### Memory Usage
 
-|                             | TMRV                       | JEMI                       | Comparison |
-|-----------------------------|----------------------------|----------------------------|------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 2,480 MB&nbsp;&nbsp;&nbsp; | 2,537 MB&nbsp;&nbsp;&nbsp; | -57 MB     |
-| ATM10&nbsp;&nbsp;&nbsp;     | 3,792 MB&nbsp;&nbsp;&nbsp; | 4,065 MB&nbsp;&nbsp;&nbsp; | -273 MB    |
+|                             | TMRV                       | JEMI                       | Comparison             |
+|-----------------------------|----------------------------|----------------------------|------------------------|
+| Craftoria&nbsp;&nbsp;&nbsp; | 5.28 GiB&nbsp;&nbsp;&nbsp; | 5.36 GiB&nbsp;&nbsp;&nbsp; | -80 MiB (approximate)  |
+| ATM10&nbsp;&nbsp;&nbsp;     | 5.05 GiB&nbsp;&nbsp;&nbsp; | 5.3 GiB&nbsp;&nbsp;&nbsp;  | -250 MiB (approximate) |
 
 # Known API Limitations
 

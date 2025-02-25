@@ -29,6 +29,7 @@ import dev.emi.emi.recipe.EmiShapelessRecipe;
 import dev.emi.emi.recipe.EmiSmithingRecipe;
 import dev.emi.emi.recipe.EmiStonecuttingRecipe;
 import dev.emi.emi.registry.EmiRecipes;
+import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.gui.builder.RecipeLayoutBuilder;
@@ -615,8 +616,10 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	public synchronized void lock() throws IllegalStateException {
 		if (locked)
 			throw new IllegalStateException();
-		
 		locked = true;
+		
+		EmiReloadManager.step(Component.literal("[TMRV] Locking JEI Recipe Registry..."), 100L);
+		
 		registry.removeRecipes(x ->
 			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
 			hiddenRecipeIDs.contains(x.getId()) ||

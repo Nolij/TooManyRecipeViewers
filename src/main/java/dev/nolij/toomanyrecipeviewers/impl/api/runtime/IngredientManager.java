@@ -11,6 +11,7 @@ import dev.emi.emi.api.stack.ItemEmiStack;
 import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
+import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
 import dev.nolij.toomanyrecipeviewers.util.IJEMIStack;
@@ -644,8 +645,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	public synchronized void lock() throws IllegalStateException {
 		if (locked)
 			throw new IllegalStateException();
-		
 		locked = true;
+		
+		EmiReloadManager.step(Component.literal("[TMRV] Locking JEI Ingredient Registry..."), 100L);
 		
 		if (!removedStacks.isEmpty())
 			runtime.emiRegistry.removeEmiStacks(removedStacks::contains);

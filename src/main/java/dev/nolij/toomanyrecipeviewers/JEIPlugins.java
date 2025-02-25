@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers;
 
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
+import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.libnolij.collect.InverseSet;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -24,6 +25,7 @@ import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.library.plugins.jei.JeiInternalPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.neoforged.fml.ModList;
 import org.objectweb.asm.Type;
 
@@ -124,9 +126,10 @@ public final class JEIPlugins {
 		final var pluginTimestamp = System.currentTimeMillis();
 		long dispatchTime;
 		try {
+			EmiReloadManager.step(Component.literal("[TMRV] %s: %s...".formatted(callerMethod, pluginId.toString())));
 			dispatcher.accept(plugin);
 			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
-			LOGGER.info("[{}] {} took {}ms", pluginId, callerMethod, dispatchTime);
+			EmiReloadManager.step(Component.literal("[TMRV] %s: %s took %dms".formatted(callerMethod, pluginId.toString(), dispatchTime)));
 		} catch (Throwable t) {
 			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
 			LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);

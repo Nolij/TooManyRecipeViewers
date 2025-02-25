@@ -12,6 +12,7 @@ import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiStackSerializer;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
+import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.recipe.advanced.RecipeManagerPluginHelper;
 import dev.nolij.toomanyrecipeviewers.impl.api.registration.RecipeRegistration;
@@ -47,6 +48,7 @@ import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -65,6 +67,7 @@ public final class EMIPlugin implements EmiPlugin {
 	public void initialize(EmiInitRegistry registry) {
 		onRuntimeUnavailable();
 		
+		EmiReloadManager.step(Component.literal("[TMRV] Initializing..."), 10L);
 		JEIPlugins.resetLoadTimes();
 		
 		runtime = new TooManyRecipeViewers();

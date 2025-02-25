@@ -3,9 +3,7 @@ package dev.nolij.toomanyrecipeviewers.util;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.item.Item;
 
-import java.util.Objects;
-
-public interface IJEITypedItemStack extends IJEITypedIngredient {
+public interface IJEITypedItemStack extends ITMRVHashable {
 	
 	Item tmrv$getItem();
 	
@@ -18,8 +16,8 @@ public interface IJEITypedItemStack extends IJEITypedIngredient {
 	}
 	
 	@Override
-	default int tmrv$hashIngredient() {
-		return Objects.hash(tmrv$getItem(), tmrv$getDataComponentPatch(), tmrv$getCount());
+	default int tmrv$hash() {
+		return ITMRVHashable.hash(tmrv$getItem(), tmrv$getDataComponentPatch(), tmrv$getCount());
 	}
 	
 }

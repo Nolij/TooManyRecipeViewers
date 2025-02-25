@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers.impl.api.recipe;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import dev.emi.emi.EmiPort;
 import dev.emi.emi.EmiUtil;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.EmiRegistry;
@@ -31,6 +32,7 @@ import dev.emi.emi.registry.EmiRecipes;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.util.ITMRVHashable;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -782,7 +784,15 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				List<EmiStack> emiOutputs,
 				boolean shapeless,
 				int ingredientsHash
-			) {}
+			) {
+				ExtractedRecipeData(List<EmiIngredient> emiInputs, List<EmiStack> emiOutputs, boolean shapeless) {
+					this(emiInputs, emiOutputs, shapeless, ITMRVHashable.hash(
+						emiInputs,
+						emiOutputs,
+						shapeless
+					));
+				}
+			}
 			
 			private @Nullable ExtractedRecipeData extractedRecipeData = null;
 			
@@ -792,6 +802,25 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 				if (jeiRecipe == null)
 					return false;
+				
+				if (jeiRecipe instanceof RecipeHolder<?> recipeHolder &&
+					recipeHolder.value() instanceof CraftingRecipe craftingRecipe) {
+					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
+						extractedRecipeData = new ExtractedRecipeData(
+							shapelessRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
+							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapelessRecipe))),
+							true
+						);
+						return true;
+					} else if (craftingRecipe instanceof ShapedRecipe shapedRecipe) {
+						extractedRecipeData = new ExtractedRecipeData(
+							shapedRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
+							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapedRecipe))),
+							false
+						);
+						return true;
+					}
+				}
 				
 				final var jeiCategory = getJEICategory();
 				if (jeiCategory == null)
@@ -809,7 +838,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 						.map(ingredientManager::getEMIStack)
 						.toList(),
 					recipeLayoutBuilder.shapeless,
-					recipeLayoutBuilder.hashIngredients()
+					recipeLayoutBuilder.tmrv$hash()
 				);
 				
 				return true;

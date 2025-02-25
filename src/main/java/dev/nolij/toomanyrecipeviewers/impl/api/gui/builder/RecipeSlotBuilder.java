@@ -148,4 +148,5 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	public int getHeight() {
 		return 0;
 	}
+	
 }

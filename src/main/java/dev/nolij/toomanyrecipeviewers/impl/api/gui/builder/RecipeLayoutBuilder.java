@@ -1,6 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.gui.builder;
 
-import dev.nolij.toomanyrecipeviewers.util.ITMRVHashable;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
@@ -8,9 +7,10 @@ import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IIngredientManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class RecipeLayoutBuilder implements IRecipeLayoutBuilder, ITMRVHashable {
+public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	
 	private final IIngredientManager ingredientManager;
 	
@@ -58,16 +58,6 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder, ITMRVHashable 
 	@Override
 	public void createFocusLink(IIngredientAcceptor<?>... ingredientAcceptors) {
 		
-	}
-	
-	@Override
-	public int tmrv$hash() {
-		return ITMRVHashable.hash(
-			inputs,
-			catalysts,
-			outputs,
-			shapeless
-		);
 	}
 	
 }

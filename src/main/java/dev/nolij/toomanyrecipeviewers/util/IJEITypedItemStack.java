@@ -3,7 +3,7 @@ package dev.nolij.toomanyrecipeviewers.util;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.item.Item;
 
-public interface IJEITypedItemStack extends ITMRVHashable {
+public interface IJEITypedItemStack {
 	
 	Item tmrv$getItem();
 	
@@ -13,11 +13,6 @@ public interface IJEITypedItemStack extends ITMRVHashable {
 	
 	default long tmrv$getCount() {
 		return 1;
-	}
-	
-	@Override
-	default int tmrv$hash() {
-		return ITMRVHashable.hash(tmrv$getItem(), tmrv$getDataComponentPatch(), tmrv$getCount());
 	}
 	
 }

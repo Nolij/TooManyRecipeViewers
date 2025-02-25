@@ -5,15 +5,11 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"EmiAgnosMixin",
-		"EmiIngredientMixin",
 		"EmiReloadManager$ReloadWorkerMixin",
-		"EmiStackMixin",
 		"FullTypedItemStackMixin",
-		"ItemEmiStackMixin",
 		"JemiStackMixin",
 		"JemiUtilMixin",
 		"NormalizedTypedItemStackMixin",
-		"TypedIngredientMixin",
 		"TypedItemStackMixin"
 	],
 	"injectors": {

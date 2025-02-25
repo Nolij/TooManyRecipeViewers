@@ -32,7 +32,6 @@ import dev.emi.emi.registry.EmiRecipes;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.gui.builder.RecipeLayoutBuilder;
-import dev.nolij.toomanyrecipeviewers.util.ITMRVHashable;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -782,26 +781,17 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private record ExtractedRecipeData(
 				List<EmiIngredient> emiInputs,
 				List<EmiStack> emiOutputs,
-				boolean shapeless,
-				int ingredientsHash
-			) {
-				ExtractedRecipeData(List<EmiIngredient> emiInputs, List<EmiStack> emiOutputs, boolean shapeless) {
-					this(emiInputs, emiOutputs, shapeless, ITMRVHashable.hash(
-						emiInputs,
-						emiOutputs,
-						shapeless
-					));
-				}
-			}
+				boolean shapeless
+			) {}
 			
 			private @Nullable ExtractedRecipeData extractedRecipeData = null;
 			
-			private synchronized boolean extractJEIRecipeData() {
+			private synchronized void extractJEIRecipeData() {
 				if (extractedRecipeData != null)
-					return true;
+					return;
 				
 				if (jeiRecipe == null)
-					return false;
+					throw new IllegalStateException();
 				
 				if (jeiRecipe instanceof RecipeHolder<?> recipeHolder &&
 					recipeHolder.value() instanceof CraftingRecipe craftingRecipe) {
@@ -811,20 +801,20 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapelessRecipe))),
 							true
 						);
-						return true;
+						return;
 					} else if (craftingRecipe instanceof ShapedRecipe shapedRecipe) {
 						extractedRecipeData = new ExtractedRecipeData(
 							shapedRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
 							List.of(runtime.ingredientManager.getEMIStack(EmiPort.getOutput(shapedRecipe))),
 							false
 						);
-						return true;
+						return;
 					}
 				}
 				
 				final var jeiCategory = getJEICategory();
 				if (jeiCategory == null)
-					return false;
+					throw new IllegalStateException();
 				
 				final var recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager);
 				jeiCategory.setRecipe(recipeLayoutBuilder, jeiRecipe, runtime.jeiHelpers.getFocusFactory().getEmptyFocusGroup());
@@ -837,21 +827,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					recipeLayoutBuilder.outputs.stream()
 						.map(ingredientManager::getEMIStack)
 						.toList(),
-					recipeLayoutBuilder.shapeless,
-					recipeLayoutBuilder.tmrv$hash()
+					recipeLayoutBuilder.shapeless
 				);
-				
-				return true;
-			}
-			
-			@SuppressWarnings("DataFlowIssue")
-			private @Nullable ResourceLocation generateID() {
-				if (jeiRecipeType != null && extractJEIRecipeData()) {
-					final var typeID = jeiRecipeType.getUid();
-					return ResourceLocation.fromNamespaceAndPath(MOD_ID, "/tmrv_autogen_v0/%s/%x".formatted(EmiUtil.subId(typeID), extractedRecipeData.ingredientsHash));
-				}
-				
-				return null;
 			}
 			
 			public synchronized @Nullable ResourceLocation getOriginalID() {
@@ -868,9 +845,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					
 					if (id == null && getOriginalID() != null)
 						id = ResourceLocation.fromNamespaceAndPath(MOD_ID, "/" + EmiUtil.subId(getOriginalID()));
-					
-					if (id == null)
-						id = generateID();
 				}
 				
 				return id;
@@ -881,8 +855,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					if (emiRecipe == null)
 						throw new IllegalStateException();
 
-//					//noinspection unchecked
-//					jeiRecipe = (T) emiRecipe.getBackingRecipe();
 					return null;
 				}
 				

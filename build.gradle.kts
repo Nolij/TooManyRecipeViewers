@@ -126,6 +126,12 @@ val shade: Configuration by configurations.creating {
 unimined.minecraft {
 	version("minecraft_version"())
 
+	runs {
+		config("client") {
+			jvmArgs("-Xmx4G")
+		}
+	}
+	
 	neoForge {
 		loader("neoforge_version"())
 		mixinConfig("toomanyrecipeviewers.mixins.json")

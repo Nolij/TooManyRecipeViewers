@@ -29,7 +29,6 @@ import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,15 +113,13 @@ public final class JEIPlugins {
 	}
 	
 	public static void logLoadTimes() {
-		loadTimes
-			.entrySet()
-			.stream()
-			.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-			.forEach(x -> LOGGER.info("[{}] Loaded in {}ms", x.getKey().getPluginUid(), x.getValue()));
+		for (final var plugin : allPlugins) {
+			LOGGER.info("[{}] Loaded in {}ms", plugin.getPluginUid(), loadTimes.get(plugin));
+		}
 		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
 	}
 	
-	private static long dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
+	private static void dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
 		final var pluginId = plugin.getPluginUid();
 		final var pluginTimestamp = System.currentTimeMillis();
 		long dispatchTime;
@@ -135,14 +132,12 @@ public final class JEIPlugins {
 			LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);
 		}
 		
-		return dispatchTime;
+		loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
 	}
 	
 	private static void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
 		for (final var plugin : plugins) {
-			final long dispatchTime;
-			dispatchTime = dispatchInternal(plugin, dispatcher, callerMethod);
-			loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
+			dispatchInternal(plugin, dispatcher, callerMethod);
 		}
 	}
 	

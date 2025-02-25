@@ -138,18 +138,23 @@ public final class JEIPlugins {
 		return dispatchTime;
 	}
 	
+	private static void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
+		for (final var plugin : plugins) {
+			final long dispatchTime;
+			dispatchTime = dispatchInternal(plugin, dispatcher, callerMethod);
+			loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
+		}
+	}
+	
 	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
 		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
 		
 		final var timestamp = System.currentTimeMillis();
-		final Consumer<IModPlugin> dispatch = onMainThread 
-			? plugin -> Minecraft.getInstance().executeBlocking(() -> dispatcher.accept(plugin)) 
-			: dispatcher;
 		
-		for (final var plugin : plugins) {
-			final long dispatchTime;
-			dispatchTime = dispatchInternal(plugin, dispatch, callerMethod);
-			loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
+		if (onMainThread) {
+			Minecraft.getInstance().executeBlocking(() -> dispatchInternal(plugins, dispatcher, callerMethod));
+		} else {
+			dispatchInternal(plugins, dispatcher, callerMethod);
 		}
 		
 		final var totalDispatchTime = System.currentTimeMillis() - timestamp;

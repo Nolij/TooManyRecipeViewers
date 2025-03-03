@@ -108,7 +108,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		EmiStackList.stacks.stream()
 			.filter(FluidEmiStack.class::isInstance)
 			.map(FluidEmiStack.class::cast)
-			.map(FluidEmiStack::getKey)
+			.map(this::getRawIngredient)
 			.forEach(fluidStacks::add);
 	}
 	
@@ -161,31 +161,59 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 	}
 	
+	@SuppressWarnings({"UnstableApiUsage"})
+	public Object getRawIngredient(EmiStack emiStack) {
+		if (emiStack instanceof ItemEmiStack itemEmiStack) {
+			return itemEmiStack.getItemStack();
+		} else if (emiStack instanceof FluidEmiStack fluidEmiStack) {
+			var amount = fluidEmiStack.getAmount();
+			if (amount == 0L)
+				amount = 1000L;
+			return fluidHelper.create(
+				Holder.direct((Fluid) fluidEmiStack.getKey()),
+				amount,
+				fluidEmiStack.getComponentChanges()
+			);
+		} else if (emiStack instanceof IJEMIStack<?> jemiStack) {
+			return jemiStack.tmrv$getIngredient();
+		}
+		
+		final var itemStack = emiStack.getItemStack();
+		if (itemStack == null || itemStack.isEmpty())
+			return null;
+		
+		return itemStack;
+	}
+	
 	@SuppressWarnings({"UnstableApiUsage", "rawtypes"})
 	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
 		try {
-			if (emiStack instanceof ItemEmiStack itemEmiStack)
+			if (emiStack instanceof ItemEmiStack itemEmiStack) {
 				return Optional.of(TypedItemStackExtension.create(
-					(Item) itemEmiStack.getKey(), 
-					(int) itemEmiStack.getAmount(), 
+					(Item) itemEmiStack.getKey(),
+					(int) itemEmiStack.getAmount(),
 					itemEmiStack.getComponentChanges()
 				));
-			else if (emiStack instanceof FluidEmiStack fluidEmiStack)
+			} else if (emiStack instanceof FluidEmiStack fluidEmiStack) {
+				var amount = fluidEmiStack.getAmount();
+				if (amount == 0L)
+					amount = 1000L;
 				//noinspection unchecked
 				return Optional.of(TypedIngredient.createUnvalidated(
 					(IIngredientType) fluidHelper.getFluidIngredientType(),
 					fluidHelper.create(
 						Holder.direct((Fluid) fluidEmiStack.getKey()),
-						fluidEmiStack.getAmount(),
+						amount,
 						fluidEmiStack.getComponentChanges()
 					)
 				));
-			else if (emiStack instanceof IJEMIStack<?> jemiStack)
+			} else if (emiStack instanceof IJEMIStack<?> jemiStack) {
 				//noinspection unchecked
 				return Optional.of(TypedIngredient.createUnvalidated(
-					(IIngredientType) jemiStack.tmrv$getType(), 
+					(IIngredientType) jemiStack.tmrv$getType(),
 					jemiStack.tmrv$getIngredient()
 				));
+			}
 			
 			final var itemStack = emiStack.getItemStack();
 			if (itemStack == null || itemStack.isEmpty())
@@ -212,7 +240,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
 					.filter(ItemEmiStack.class::isInstance)
 					.map(ItemEmiStack.class::cast)
-					.toList(), ItemEmiStack::getItemStack);
+					.toList(), this::getRawIngredient);
 			}
 		} else if (ingredientType == fluidHelper.getFluidIngredientType()) {
 			if (fluidStacks != null) {
@@ -221,7 +249,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
 					.filter(FluidEmiStack.class::isInstance)
 					.map(FluidEmiStack.class::cast)
-					.toList(), FluidEmiStack::getKey);
+					.toList(), this::getRawIngredient);
 			}
 		}
 		

@@ -1,5 +1,2 @@
-- improved performance substantially in big packs by batching blocking JEI plugin calls
-- improved recipe filling on servers that don't have EMI
-- removed recipe ID generation (hurts performance and not very useful)
-- JEI plugins are now immediately unloaded on logout
+- fixed error registering recipes from Create
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

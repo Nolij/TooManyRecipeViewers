@@ -205,6 +205,7 @@ dependencies {
 	runtimeOnly("curse.maven:playeranimator-658587:6024462")
 	runtimeOnly("curse.maven:irons-spells-n-spellbooks-855414:6197625")
 	runtimeOnly("maven.modrinth:jei-multiblocks:1.21.1-1.0.4")
+	runtimeOnly("curse.maven:create-328085:6255497")
 }
 
 tasks.jar {

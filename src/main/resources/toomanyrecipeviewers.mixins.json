@@ -4,6 +4,7 @@
 	"package": "dev.nolij.toomanyrecipeviewers.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"CreateRecipeCategoryMixin",
 		"EmiAgnosMixin",
 		"EmiReloadManager$ReloadWorkerMixin",
 		"FullTypedItemStackMixin",

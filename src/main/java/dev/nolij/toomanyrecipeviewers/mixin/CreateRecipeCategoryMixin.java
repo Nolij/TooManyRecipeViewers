@@ -5,7 +5,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(CreateRecipeCategory.class)
+@Mixin(value = CreateRecipeCategory.class, remap = false)
 public class CreateRecipeCategoryMixin {
 	
 	/**

@@ -23,7 +23,7 @@ jobs:
       - name: :build
         run: ./gradlew :build
       - name: :publishMods
-        run: ./gradlew publishMods -Prelease_channel=RELEASE --no-daemon
+        run: ./gradlew :taugradle_publish -Prelease_channel=RELEASE --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}

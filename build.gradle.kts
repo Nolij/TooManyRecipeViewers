@@ -16,6 +16,7 @@ import java.nio.file.Files
 
 plugins {
 	id("java")
+	id("idea")
 	id("maven-publish")
 	id("com.gradleup.shadow")
 	id("xyz.wagyourtail.unimined")
@@ -27,6 +28,11 @@ plugins {
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
+
+idea.module {
+	isDownloadJavadoc = true
+	isDownloadSources = true
+}
 
 rootProject.group = "maven_group"()
 rootProject.version = tau.versioning.version("mod_version"(), rootProject.properties["release_channel"], "jei.${"jei_version"()}")

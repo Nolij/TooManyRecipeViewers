@@ -1,7 +1,13 @@
 import java.util.*
 
 plugins {
+	id("idea")
 	`kotlin-dsl`
+}
+
+idea.module {
+	isDownloadJavadoc = true
+	isDownloadSources = true
 }
 
 repositories {

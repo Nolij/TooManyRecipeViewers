@@ -1,18 +1,11 @@
-import kotlinx.serialization.encodeToString
-import me.modmuss50.mpp.HttpUtils
-import me.modmuss50.mpp.PublishModTask
-import me.modmuss50.mpp.ReleaseType
-import me.modmuss50.mpp.platforms.discord.DiscordAPI
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
-import org.eclipse.jgit.lib.Ref
 import org.taumc.gradle.compression.DeflateAlgorithm
 import org.taumc.gradle.compression.task.AdvzipTask
-import org.taumc.gradle.versioning.ReleaseChannel
+import org.taumc.gradle.publishing.api.PublishChannel
+import org.taumc.gradle.publishing.api.artifact.Relation
+import org.taumc.gradle.publishing.api.minecraft.ModEnvironment
+import org.taumc.gradle.publishing.api.minecraft.ModLoader
+import org.taumc.gradle.publishing.publishing
 import xyz.wagyourtail.unimined.api.unimined
-import java.nio.file.Files
 
 plugins {
 	id("java")
@@ -23,8 +16,7 @@ plugins {
 	id("com.github.gmazzo.buildconfig")
 	id("org.taumc.gradle.versioning")
 	id("org.taumc.gradle.compression")
-	id("me.modmuss50.mod-publish-plugin")
-	id("org.ajoberstar.grgit")
+	id("org.taumc.gradle.publishing")
 }
 
 operator fun String.invoke(): String = rootProject.properties[this] as? String ?: error("Property $this not found")
@@ -256,148 +248,64 @@ tasks.assemble {
 	dependsOn(outputJar, sourcesJar)
 }
 
-afterEvaluate {
-	publishing {
-		repositories {
-			if (!System.getenv("local_maven_url").isNullOrEmpty())
-				maven(System.getenv("local_maven_url"))
-		}
-
-		publications {
-			create<MavenPublication>("mod_id"()) {
-				artifact(tasks.shadowJar.get().archiveFile)
-				artifact(sourcesJar)
-			}
-		}
+tau.publishing.publish {
+	dependsOn(outputJar, sourcesJar)
+	
+	useTauGradleVersioning()
+	changelog = file("CHANGELOG.md").readText()
+	
+	modArtifact {
+		files(outputJar.archiveFile, project.provider { sourcesJar.get().archiveFile })
+		
+		minecraftVersionRange = "21.1"
+		javaVersions.add(JavaVersion.VERSION_21)
+		
+		environment = ModEnvironment.CLIENT_ONLY
+		modLoaders.add(ModLoader.NEOFORGE)
+		
+		relations.add(Relation(id = "emi", type = Relation.Type.REQUIRES))
+		relations.add(Relation(id = "jei", type = Relation.Type.BREAKS))
 	}
+	
+	github {
+		supportAllChannels()
 
-	tasks.withType<AbstractPublishToMaven> {
-		dependsOn(outputJar, sourcesJar)
+		accessToken = providers.environmentVariable("GITHUB_TOKEN")
+		repoURL = "Nolij/TooManyRecipeViewers"
+		tagName = tau.versioning.releaseTag
 	}
-
-	fun getChangelog(): String {
-		return file("CHANGELOG.md").readText()
+	
+	curseforge {
+		supportChannels(PublishChannel.RELEASE)
+		
+		accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+		projectID = 1194921
+		projectSlug = "tmrv"
 	}
-
-	publishMods {
-		file = outputJar.archiveFile
-		additionalFiles.from(sourcesJar.get().archiveFile)
-		type = if (tau.versioning.releaseChannel == ReleaseChannel.RELEASE) ReleaseType.STABLE else ReleaseType.ALPHA
-		displayName = tau.versioning.versionNoMetadata
-		version = tau.versioning.version
-		changelog = getChangelog()
-
-		modLoaders.addAll("neoforge")
-		dryRun = !tau.versioning.isRelease
-
-		val branchName = grgit.branch.current().name!!
-
-		github {
-			accessToken = providers.environmentVariable("GITHUB_TOKEN")
-			repository = "Nolij/TooManyRecipeViewers"
-			commitish = branchName
-			tagName = tau.versioning.releaseTag
-		}
-
-		if (dryRun.get() || tau.versioning.releaseChannel == ReleaseChannel.RELEASE) {
-			curseforge {
-				val cfAccessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-				accessToken = cfAccessToken
-				projectId = "1194921"
-				projectSlug = "tmrv"
-
-				minecraftVersions.add("1.21.1")
-				
-				requires("emi")
-				incompatible("jei")
-			}
-
-			discord {
-				webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK").orElse("")
-
-				username = "TooManyRecipeViewers Releases"
-
-				avatarUrl = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
-
-				content = changelog.map { changelog ->
-					"# TooManyRecipeViewers ${tau.versioning.version} has been released!\nChangelog: ```md\n${changelog}\n```"
-				}
-
-				setPlatforms(platforms["github"], platforms["curseforge"])
-			}
-		}
+	
+	val iconURL = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
+	
+	discord {
+		supportAllChannelsExcluding(PublishChannel.RELEASE)
+		
+		webhookURL = providers.environmentVariable("DISCORD_WEBHOOK")
+		username = "TooManyRecipeViewers Test Builds"
+		avatarURL = iconURL
+		
+		devBuildPresetMessage("TooManyRecipeViewers", "https://github.com/Nolij/TooManyRecipeViewers")
 	}
-
-	tasks.withType<PublishModTask> {
-		dependsOn(outputJar, sourcesJar)
-	}
-
-	tasks.publishMods {
-		doLast {
-			if (!publishMods.dryRun.get() && tau.versioning.releaseChannel != ReleaseChannel.RELEASE) {
-				val http = HttpUtils()
-
-				val currentTag: Ref? = tau.versioning.releaseTags.firstOrNull()
-				val buildChangeLog =
-					grgit.log {
-						if (currentTag != null)
-							excludes = listOf(currentTag.name)
-						includes = listOf("HEAD")
-					}.joinToString("\n") { commit ->
-						val id = commit.abbreviatedId
-						val message = commit.fullMessage.substringBefore('\n').trim()
-						val author = commit.author.name
-						"- [${id}] $message (${author})"
-					}
-
-				val compareStart = currentTag?.name ?: grgit.log().minBy { it.dateTime }.id
-				val compareEnd = tau.versioning.releaseTag
-				val compareLink = "https://github.com/Nolij/TooManyRecipeViewers/compare/${compareStart}...${compareEnd}"
-
-				val webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-				val releaseChangeLog = getChangelog()
-				val file = publishMods.file.asFile.get()
-
-				var content = "# [TooManyRecipeViewers Test Build ${publishMods.displayName.get()}]" +
-						"(<https://github.com/Nolij/TooManyRecipeViewers/releases/tag/${tau.versioning.releaseTag}>) has been released!\n" +
-						"Changes since last build: <${compareLink}>"
-
-				if (buildChangeLog.isNotBlank())
-					content += " ```\n${buildChangeLog}\n```"
-				content += "\nChanges since last release: ```md\n${releaseChangeLog}\n```"
-
-				val webhook = DiscordAPI.Webhook(
-					content,
-					"TooManyRecipeViewers Test Builds",
-					"https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
-				)
-
-				val bodyBuilder = MultipartBody.Builder()
-					.setType(MultipartBody.FORM)
-					.addFormDataPart("payload_json", http.json.encodeToString(webhook))
-					.addFormDataPart("files[0]", file.name, file.asRequestBody("application/java-archive".toMediaTypeOrNull()))
-
-				var fileIndex = 1
-				for (additionalFile in publishMods.additionalFiles) {
-					bodyBuilder.addFormDataPart(
-						"files[${fileIndex++}]",
-						additionalFile.name,
-						additionalFile.asRequestBody(Files.probeContentType(additionalFile.toPath()).toMediaTypeOrNull())
-					)
-				}
-
-				val requestBuilder = Request.Builder()
-					.url(webhookUrl.get())
-					.post(bodyBuilder.build())
-					.header("Content-Type", "multipart/form-data")
-
-				val request = requestBuilder.build()
-				val call = http.httpClient.newCall(request)
-				val response = call.execute()
-				if (!response.isSuccessful)
-					error(response.toString())
-				response.close()
-			}
+	
+	discord {
+		supportChannels(PublishChannel.RELEASE)
+		
+		webhookURL = providers.environmentVariable("DISCORD_WEBHOOK")
+		username = "TooManyRecipeViewers Releases"
+		avatarURL = iconURL
+		
+		message { displayVersion, version, changelog ->
+			"# TooManyRecipeViewers ${displayVersion} has been released!\n" +
+			"Changelog: ```md\n${changelog}\n```\n\n" +
+			"[GitHub](https://github.com/Nolij/TooManyRecipeViewers) | [CurseForge](https://legacy.curseforge.com/minecraft/mc-mods/tmrv)"
 		}
 	}
 }

@@ -82,6 +82,10 @@ tasks.processResources {
 		expand(props)
 	}
 
+	if (modLoader != ModLoader.LEXFORGE) {
+		exclude("pack.mcmeta")
+	}
+
 	doLast {
 		if (modLoader == ModLoader.LEXFORGE || (modLoader == ModLoader.NEOFORGE && minecraftVersion < "20.5")) {
 			fileTree(mapOf("dir" to tasks.processResources.get().outputs.files.asPath, "include" to "META-INF/neoforge.mods.toml")).onEach { file ->

@@ -18,7 +18,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY_PR }}
           cache-read-only: true
       - name: Build
-        run: ./gradlew :chiseledBuild --no-daemon
+        run: ./gradlew chiseledBuild --no-daemon
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

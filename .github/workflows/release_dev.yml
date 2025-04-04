@@ -21,9 +21,9 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
       - name: Build
-        run: ./gradlew :chiseledBuild -Prelease_channel=DEV_BUILD --stacktrace
+        run: ./gradlew chiseledBuild -Prelease_channel=DEV_BUILD --stacktrace
       - name: Publish
-        run: ./gradlew :taugradle_publish -Prelease_channel=DEV_BUILD --stacktrace
+        run: ./gradlew taugradle_publish -Prelease_channel=DEV_BUILD --stacktrace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_DEV_WEBHOOK }}

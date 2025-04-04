@@ -15,15 +15,17 @@ ${mod_description}
 """
 
 [[dependencies.toomanyrecipeviewers]]
-modId = "neoforge"
+modId = "${mod_loader}"
 type = "required"
-versionRange = "${neoforge_range}"
+mandatory = true
+versionRange = "${mod_loader_range}"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.toomanyrecipeviewers]]
 modId = "minecraft"
 type = "required"
+mandatory = true
 versionRange = "${minecraft_range}"
 ordering = "NONE"
 side = "CLIENT"
@@ -31,6 +33,7 @@ side = "CLIENT"
 [[dependencies.toomanyrecipeviewers]]
 modId = "emi"
 type = "required"
+mandatory = true
 versionRange = "${emi_range}"
 ordering = "NONE"
 side = "CLIENT"

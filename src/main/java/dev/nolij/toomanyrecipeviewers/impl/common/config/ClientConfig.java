@@ -6,7 +6,6 @@ import mezz.jei.common.config.IClientConfig;
 import mezz.jei.common.config.IngredientSortStage;
 import mezz.jei.common.config.RecipeSorterStage;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -53,7 +52,10 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
+	//? if >=21.1 {
 	public boolean getShowHiddenIngredients() {
+	//?} else
+	/*public boolean isShowHiddenItemsEnabled() {*/
 		return true;
 	}
 	
@@ -113,7 +115,10 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
+	//? if >=21.1 {
 	public boolean getHideSingleTagContentTooltipEnabled() {
+	//?} else
+	/*public boolean isHideSingleIngredientTagsEnabled() {*/
 		return false;
 	}
 	

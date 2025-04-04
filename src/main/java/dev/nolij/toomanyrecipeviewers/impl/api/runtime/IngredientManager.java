@@ -1,6 +1,7 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 
 import com.google.common.collect.Lists;
+//? if >=21.1
 import com.mojang.serialization.Codec;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
@@ -42,6 +43,7 @@ import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
+//? if >=21.1
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -83,9 +85,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerIngredientType(new IngredientInfo<>(
 			VanillaTypes.ITEM_STACK,
 			Collections.emptyList(),
-			new ItemStackHelper(runtime.stackHelper, runtime.colorHelper),
-			new ItemStackRenderer(),
-			ItemStack.STRICT_SINGLE_ITEM_CODEC
+			new ItemStackHelper(/*? if <21.1 {*//*runtime.subtypeManager, *//*?}*/ runtime.stackHelper, runtime.colorHelper),
+			new ItemStackRenderer()
+			//? if >=21.1
+			, ItemStack.STRICT_SINGLE_ITEM_CODEC
 		), Collections.emptyList());
 		
 		//noinspection UnstableApiUsage
@@ -100,8 +103,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			fluidHelper.getFluidIngredientType(),
 			Collections.emptyList(),
 			new FluidIngredientHelper<>(runtime.subtypeManager, runtime.colorHelper, fluidHelper),
-			new FluidTankRenderer<>(fluidHelper),
-			fluidHelper.getCodec()
+			new FluidTankRenderer<>(fluidHelper)
+			//? if >=21.1
+			, fluidHelper.getCodec()
 		), Collections.emptyList());
 		
 		//noinspection UnstableApiUsage
@@ -170,8 +174,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			if (amount == 0L)
 				amount = 1000L;
 			return fluidHelper.create(
-				Holder.direct((Fluid) fluidEmiStack.getKey()),
-				amount,
+				//? if >=21.1
+				Holder.direct(
+					(Fluid) fluidEmiStack.getKey()
+				//? if >=21.1
+				)
+				, amount,
 				fluidEmiStack.getComponentChanges()
 			);
 		} else if (emiStack instanceof IJEMIStack<?> jemiStack) {
@@ -202,8 +210,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				return Optional.of(TypedIngredient.createUnvalidated(
 					(IIngredientType) fluidHelper.getFluidIngredientType(),
 					fluidHelper.create(
-						Holder.direct((Fluid) fluidEmiStack.getKey()),
-						amount,
+						//? if >=21.1
+						Holder.direct(
+						(Fluid) fluidEmiStack.getKey()
+						//? if >=21.1
+						)
+						, amount,
 						fluidEmiStack.getComponentChanges()
 					)
 				));
@@ -283,11 +295,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return (IIngredientRenderer<V>) typeInfoMap.get(ingredientType).getIngredientRenderer();
 	}
 	
+	//? if >=21.1 {
 	@Override
 	public <V> Codec<V> getIngredientCodec(IIngredientType<V> ingredientType) {
 		//noinspection unchecked
 		return (Codec<V>) typeInfoMap.get(ingredientType).getIngredientCodec();
 	}
+	//?}
 	
 	@Override
 	public @Unmodifiable Collection<IIngredientType<?>> getRegisteredIngredientTypes() {
@@ -354,11 +368,18 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 		
 		if (!this.listeners.isEmpty()) {
+			//? if >=21.1 {
 			final var typedIngredients = TypedIngredient.createAndFilterInvalidNonnullList(this, ingredientType, ingredients, false);
+			//?} else {
+			/*final var typedIngredients = ingredients.stream()
+				.flatMap(i -> TypedIngredient.createAndFilterInvalid(this, ingredientType, i, false).stream())
+				.toList();
+			*///?}
 			this.listeners.forEach(listener -> listener.onIngredientsRemoved(ingredientHelper, typedIngredients));
 		}
 	}
 	
+	//? if >=21.1
 	@Override
 	public @Nullable <V> IIngredientType<V> getIngredientType(V ingredient) {
 		//noinspection unchecked
@@ -382,31 +403,42 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.ofNullable((IIngredientType<V>) classTypeMap.get(ingredientClass));
 	}
 	
+	//? if <21.1
+	/*@SuppressWarnings("UnnecessaryLocalVariable")*/
 	@Override
 	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> ingredientType, V ingredient) {
-		ITypedIngredient<V> result = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, false);
+		final var result = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, false);
+		//? if >=21.1 {
 		return Optional.ofNullable(result);
+		//?} else
+		/*return result;*/
 	}
 	
 	@Override
 	public <V> ITypedIngredient<V> normalizeTypedIngredient(ITypedIngredient<V> typedIngredient) {
-		IIngredientType<V> type = typedIngredient.getType();
-		IIngredientHelper<V> ingredientHelper = getIngredientHelper(type);
+		final var type = typedIngredient.getType();
+		final var ingredientHelper = getIngredientHelper(type);
 		return TypedIngredient.normalize(typedIngredient, ingredientHelper);
 	}
 	
 	@Override
 	public <V> Optional<IClickableIngredient<V>> createClickableIngredient(IIngredientType<V> ingredientType, V ingredient, Rect2i area, boolean normalize) {
-		ITypedIngredient<V> typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, normalize);
+		final var typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, normalize)
+			//? if <21.1
+			/*.orElse(null)*/
+			;
 		if (typedIngredient == null) {
 			return Optional.empty();
 		}
-		ImmutableRect2i slotArea = new ImmutableRect2i(area);
-		ClickableIngredient<V> clickableIngredient = new ClickableIngredient<>(typedIngredient, slotArea);
+		final var slotArea = new ImmutableRect2i(area);
+		final var clickableIngredient = new ClickableIngredient<>(typedIngredient, slotArea);
 		return Optional.of(clickableIngredient);
 	}
 	
 	private <V> Object getUid(IIngredientType<V> ingredientType, V ingredient) {
+		//? if <21.1 {
+		/*return getLegacyUid(ingredientType, ingredient);
+		*///?} else {
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
@@ -421,15 +453,17 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			}
 			return null;
 		}
+		//?}
 	}
 	
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	private <V> Object getLegacyUid(IIngredientType<V> ingredientType, V ingredient) {
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
 		
 		try {
-			//noinspection removal
 			return ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient);
 		} catch (Throwable throwable) {
 			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
@@ -437,6 +471,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	
+	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<V> getIngredientByUid(IIngredientType<V> ingredientType, String uid) {
@@ -445,13 +480,19 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			.findFirst();
 	}
 	
+	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> ingredientType, String uid) {
 		return getIngredientByUid(ingredientType, uid)
 			.flatMap(i -> {
-				ITypedIngredient<V> typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, i, true);
+				//? if <21.1
+				/*@SuppressWarnings("UnnecessaryLocalVariable")*/ 
+				final var typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, i, true);
+				//? if >=21.1 {
 				return Optional.ofNullable(typedIngredient);
+				 //?} else
+				/*return typedIngredient;*/
 			});
 	}
 	
@@ -487,15 +528,19 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return runtime.colorHelper;
 	}
 	
+	//? if >=21.1 {
 	@Override
 	public <V> void register(IIngredientType<V> ingredientType, Collection<V> ingredients, IIngredientHelper<V> ingredientHelper, IIngredientRenderer<V> ingredientRenderer, Codec<V> codec) {
 		registerIngredientType(new IngredientInfo<>(ingredientType, Collections.emptyList(), ingredientHelper, ingredientRenderer, codec), ingredients);
 	}
 	
-	@SuppressWarnings("removal")
+	@SuppressWarnings("removal") //?}
 	@Override
 	public <V> void register(IIngredientType<V> ingredientType, Collection<V> ingredients, IIngredientHelper<V> ingredientHelper, IIngredientRenderer<V> ingredientRenderer) {
-		registerIngredientType(new IngredientInfo<>(ingredientType, Collections.emptyList(), ingredientHelper, ingredientRenderer, null), ingredients);
+		registerIngredientType(new IngredientInfo<>(ingredientType, Collections.emptyList(), ingredientHelper, ingredientRenderer
+			//? if >=21.1
+			, null
+		), ingredients);
 	}
 	//endregion
 	
@@ -612,10 +657,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerIngredients(ingredientType, ingredients);
 	}
 	
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	private void registerItemStackDefaultComparison() {
 		for (final var item : EmiPort.getItemRegistry()) {
 			if (runtime.subtypeManager.hasSubtypes(VanillaTypes.ITEM_STACK, item.getDefaultInstance())) {
-				//noinspection removal
 				runtime.emiRegistry.setDefaultComparison(item, Comparison.compareData(stack ->
 					runtime.subtypeManager.getSubtypeInfo(stack.getItemStack(), UidContext.Recipe)));
 			}
@@ -627,7 +673,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			//noinspection unchecked
 			final var type = (IIngredientTypeWithSubtypes<Object, Object>) JemiUtil.getFluidType();
 			//noinspection deprecation
-			if (runtime.subtypeManager.hasSubtypes(type, fluidHelper.create(fluid.builtInRegistryHolder(), 1000L))) {
+			if (runtime.subtypeManager.hasSubtypes(type, fluidHelper.create(fluid.builtInRegistryHolder()/*? if <21.1 {*//*.value()*//*?}*/, 1000L))) {
 				runtime.emiRegistry.setDefaultComparison(fluid, Comparison.compareData(stack -> {
 					final var typed = getTypedIngredient(stack).orElse(null);
 					if (typed != null) {

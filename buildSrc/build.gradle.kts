@@ -1,4 +1,4 @@
-import java.util.*
+import java.util.Properties
 
 plugins {
 	id("idea")
@@ -20,6 +20,7 @@ repositories {
 	maven("https://maven.wagyourtail.xyz/releases")
 	maven("https://maven.wagyourtail.xyz/snapshots")
 	maven("https://maven.taumc.org/releases")
+	mavenLocal()
 }
 
 kotlin {
@@ -39,6 +40,10 @@ val gradleProperties = Properties().apply {
 operator fun String.invoke(): String = gradleProperties.getProperty(this) ?: error("Property $this not found")
 
 dependencies {
+	constraints {
+		api("commons-io:commons-io:${"commons_io_constraint"()}")
+	}
+	
 	implementation("org.ow2.asm:asm-tree:${"asm_version"()}")
 	implementation("org.apache.ant:ant:${"shadow_ant_version"()}")
 	

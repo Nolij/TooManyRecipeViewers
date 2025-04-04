@@ -8,6 +8,7 @@ import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIKeyMappings;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.api.runtime.config.JEIConfigManager;
+//? if >=21.1
 import mezz.jei.api.helpers.ICodecHelper;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -66,6 +67,7 @@ public final class TooManyRecipeViewers {
 	public volatile IngredientManager ingredientManager = null;
 	public volatile GuiHelper guiHelper = null;
 	public volatile IFocusFactory focusFactory = null;
+	//? if >=21.1
 	public volatile ICodecHelper codecHelper = null;
 	public volatile IVanillaRecipeFactory vanillaRecipeFactory = null;
 	public volatile IngredientBlacklistInternal blacklist = null;
@@ -152,6 +154,7 @@ public final class TooManyRecipeViewers {
 			return runtime.recipeManager.getRecipeType(recipeUid, recipeClass);
 		}
 		
+		@SuppressWarnings("removal")
 		@Override
 		public Optional<RecipeType<?>> getRecipeType(ResourceLocation recipeUid) {
 			if (runtime == null || runtime.recipeManager == null)
@@ -173,10 +176,12 @@ public final class TooManyRecipeViewers {
 			return runtime.ingredientManager;
 		}
 		
+		//? if >=21.1 {
 		@Override
 		public ICodecHelper getCodecHelper() {
 			return runtime.codecHelper;
 		}
+		//?}
 		
 		@Override
 		public IVanillaRecipeFactory getVanillaRecipeFactory() {

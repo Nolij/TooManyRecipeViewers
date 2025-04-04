@@ -28,8 +28,8 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           
-      - name: :build
-        run: ./gradlew build --stacktrace --no-daemon
+      - name: Build
+        run: ./gradlew :chiseledBuild --stacktrace --no-daemon
         
       - name: Upload artifacts
         if: always()

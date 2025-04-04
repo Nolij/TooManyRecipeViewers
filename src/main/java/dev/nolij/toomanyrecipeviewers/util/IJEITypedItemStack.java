@@ -7,8 +7,8 @@ public interface IJEITypedItemStack {
 	
 	Item tmrv$getItem();
 	
-	default DataComponentPatch tmrv$getDataComponentPatch() {
-		return DataComponentPatch.EMPTY;
+	default /*? if >=21.1 {*/ DataComponentPatch /*?} else {*/ /*CompoundTag *//*?}*/ tmrv$getDataComponentPatch() {
+		return /*? if >=21.1 {*/ DataComponentPatch.EMPTY /*?} else {*/ /*null *//*?}*/;
 	}
 	
 	default long tmrv$getCount() {

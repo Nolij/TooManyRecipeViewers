@@ -8,7 +8,10 @@ import dev.emi.emi.network.FillRecipeC2SPacket;
 import dev.emi.emi.platform.EmiClient;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import mezz.jei.common.network.IConnectionToServer;
+//? if <21.1
+/*import mezz.jei.common.network.packets.PacketJei;*/
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
+//? if >=21.1
 import mezz.jei.common.network.packets.PlayToServerPacket;
 import mezz.jei.common.transfer.TransferOperation;
 import net.minecraft.client.Minecraft;
@@ -16,8 +19,10 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+//? if >=21.1 {
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+//?}
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +30,16 @@ import java.util.Optional;
 
 public class ConnectionToServer implements IConnectionToServer {
 	
+	//? if <21.1
+	/*@SuppressWarnings("FieldCanBeLocal")*/
 	private final boolean serverHasJEI;
 	
 	public ConnectionToServer() {
+		//? if >=21.1 {
 		final var connection = Minecraft.getInstance().getConnection();
 		if (connection != null)
 			serverHasJEI = connection.hasChannel(PacketRecipeTransfer.TYPE);
-		else
+		else //?}
 			serverHasJEI = true;
 	}
 	
@@ -41,22 +49,33 @@ public class ConnectionToServer implements IConnectionToServer {
 	}
 	
 	@Override
+	//? if >=21.1 {
 	public <T extends PlayToServerPacket<T>> void sendPacketToServer(@NotNull T packet) {
+	//?} else
+	/*public void sendPacketToServer(PacketJei packet) {*/
 		if (!(packet instanceof PacketRecipeTransfer recipeTransferPacket))
 			return;
 		
+		//? if >=21.1 {
 		if (serverHasJEI) {
 			PacketDistributor.sendToServer(recipeTransferPacket);
 			return;
 		}
+		//?}
 		
 		final var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof AbstractContainerScreen<?> containerScreen))
 			return;
 		
 		final var containerMenu = containerScreen.getMenu();
-		final var inventorySlots = recipeTransferPacket.inventorySlots.stream().map(containerMenu::getSlot).toList();
-		final var craftingSlots = recipeTransferPacket.craftingSlots.stream().map(containerMenu::getSlot).toList();
+		final var inventorySlots = recipeTransferPacket.inventorySlots.stream()
+			//? if <21.1
+			/*.map(x -> x.index)*/
+			.map(containerMenu::getSlot).toList();
+		final var craftingSlots = recipeTransferPacket.craftingSlots.stream()
+			//? if <21.1
+			/*.map(x -> x.index)*/
+			.map(containerMenu::getSlot).toList();
 		
 		final var craftingSlotIndex = new int[craftingSlots.size()];
 		for (int i = 0; i < craftingSlotIndex.length; i++)

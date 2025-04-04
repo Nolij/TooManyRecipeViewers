@@ -38,6 +38,7 @@ import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
 import mezz.jei.api.gui.drawable.IScalableDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
+//? if >=21.1
 import mezz.jei.api.ingredients.IIngredientSupplier;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -58,14 +59,18 @@ import mezz.jei.api.recipe.vanilla.IJeiCompostingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiFuelingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.runtime.IIngredientVisibility;
+//? if >=21.1 {
 import mezz.jei.common.Internal;
 import mezz.jei.common.gui.elements.DrawableBlank;
+//?}
 import mezz.jei.common.util.ErrorUtil;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
 import mezz.jei.library.gui.recipes.RecipeLayout;
+//? if >=21.1
 import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
 import mezz.jei.library.gui.recipes.layout.builder.RecipeSlotBuilder;
+//? if >=21.1
 import mezz.jei.library.util.IngredientSupplierHelper;
 import mezz.jei.library.util.RecipeErrorUtil;
 import net.minecraft.network.chat.Component;
@@ -75,6 +80,7 @@ import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+//? if >=21.1
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
@@ -309,6 +315,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		hiddenCategories.remove(category(recipeType).getEMICategory());
 	}
 	
+	//? if >=21.1 {
 	@Override
 	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
 		ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
@@ -340,6 +347,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			)
 			.orElseGet(() -> new RecipeLayoutDrawableErrored<>(recipeCategory, recipe, recipeBackground, borderPadding));
 	}
+	//?}
 	
 	@Override
 	public <T> Optional<IRecipeLayoutDrawable<T>> createRecipeLayoutDrawable(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
@@ -350,6 +358,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		final var recipeType = recipeCategory.getRecipeType();
 		final var decorators = getRecipeCategoryDecorators(recipeType);
 		
+		//? if >=21.1 {
 		final IScalableDrawable recipeBackground;
 		final int borderPadding;
 		if (recipeCategory.needsRecipeBorder()) {
@@ -359,6 +368,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			recipeBackground = DrawableBlank.EMPTY;
 			borderPadding = 0;
 		}
+		//?}
 		
 		return 
 			RecipeLayout.create(
@@ -366,9 +376,11 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				decorators,
 				recipe,
 				focusGroup,
-				ingredientManager,
-				recipeBackground,
+				ingredientManager
+				//? if >=21.1 {
+				, recipeBackground,
 				borderPadding
+				//?}
 			);
 	}
 	
@@ -407,10 +419,12 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		return result.second();
 	}
 	
+	//? if >=21.1 {
 	@Override
 	public <T> IIngredientSupplier getRecipeIngredients(IRecipeCategory<T> jeiCategory, T recipe) {
 		return IngredientSupplierHelper.getIngredientSupplier(recipe, jeiCategory, ingredientManager);
 	}
+	//?}
 	
 	@Override
 	public <T> Optional<RecipeType<T>> getRecipeType(ResourceLocation recipeUid, Class<? extends T> recipeClass) {
@@ -791,8 +805,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				if (jeiRecipe == null)
 					throw new IllegalStateException();
 				
-				if (jeiRecipe instanceof RecipeHolder<?> recipeHolder &&
-					recipeHolder.value() instanceof CraftingRecipe craftingRecipe) {
+				if (jeiRecipe /*? if >=21.1 {*/ instanceof RecipeHolder<?> recipeHolder &&
+					recipeHolder.value() /*?}*/ instanceof CraftingRecipe craftingRecipe) {
 					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
 						return new ExtractedRecipeData(
 							shapelessRecipe.getIngredients().stream().map(EmiIngredient::of).toList(),
@@ -943,10 +957,13 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCraftingRecipe convertEMICraftingRecipe() {
 				final var recipeID = getID();
-				
-				//noinspection unchecked
+
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
 				final var craftingRecipeHolder = (RecipeHolder<CraftingRecipe>) this.jeiRecipe;
 				final var craftingRecipe = craftingRecipeHolder.value();
+				//?} else
+				/*final var craftingRecipe = (CraftingRecipe) this.jeiRecipe;*/
 				
 				if (craftingRecipe.canCraftInDimensions(3, 3)) {
 					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
@@ -1012,44 +1029,64 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 			}
 			
+			//? if >=21.1
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMISmeltingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<SmeltingRecipe>) this.jeiRecipe;
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<SmeltingRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (SmeltingRecipe) this.jeiRecipe;*/
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.SMELTING, 1, false, getID());
+				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.SMELTING, 1, false, getID());
 			}
 			
+			//? if >=21.1
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMIBlastingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<BlastingRecipe>) this.jeiRecipe;
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<BlastingRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (BlastingRecipe) this.jeiRecipe;*/
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.BLASTING, 2, false, getID());
+				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.BLASTING, 2, false, getID());
 			}
 			
+			//? if >=21.1
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMISmokingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<SmokingRecipe>) this.jeiRecipe;
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<SmokingRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (SmokingRecipe) this.jeiRecipe;*/
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.SMOKING, 2, false, getID());
+				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.SMOKING, 2, false, getID());
 			}
 			
+			//? if >=21.1
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiCookingRecipe convertEMICampfireRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<CampfireCookingRecipe>) this.jeiRecipe;
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<CampfireCookingRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (CampfireCookingRecipe) this.jeiRecipe;*/
 				
-				return new EMICookingRecipeWithCustomID(jeiRecipe.value(), VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, getID());
+				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, getID());
 			}
 			
+			//? if >=21.1
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiStonecuttingRecipe convertEMIStonecuttingRecipe() {
-				//noinspection unchecked
-				final var jeiRecipe = (RecipeHolder<StonecutterRecipe>) this.jeiRecipe;
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<StonecutterRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (StonecutterRecipe) this.jeiRecipe;*/
 				
-				return new EmiStonecuttingRecipe(jeiRecipe.value()) {
+				return new EmiStonecuttingRecipe(recipe) {
 					@Override
 					public ResourceLocation getId() {
 						return getID();

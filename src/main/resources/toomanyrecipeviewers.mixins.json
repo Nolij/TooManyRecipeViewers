@@ -2,18 +2,18 @@
 	"required": true,
 	"minVersion": "0.8",
 	"package": "dev.nolij.toomanyrecipeviewers.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "${mixin_java_version}",
 	"client": [
 		"EmiAgnosMixin",
-		"EmiReloadManager$ReloadWorkerMixin",
+		"EmiReloadManager_ReloadWorkerMixin",
 		"FullTypedItemStackMixin",
 		"JemiStackMixin",
 		"JemiUtilMixin",
+		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
 		"TypedItemStackMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
-	},
-	"refmap": "toomanyrecipeviewers-refmap.json"
+	}
 }

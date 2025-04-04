@@ -84,13 +84,19 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	
 	@Override
 	public <I> IRecipeSlotBuilder addIngredients(IIngredientType<I> type, List<@Nullable I> ingredients) {
-		collectedIngredients.addAll(TypedIngredient.createAndFilterInvalidList(ingredientManager, type, ingredients, false));
+		collectedIngredients.addAll(TypedIngredient.createAndFilterInvalidList(ingredientManager, type, ingredients, false)
+			//? if <21.1
+			/*.stream().map(Optional::orElseThrow).toList()*/
+		);
 		return this;
 	}
 	
 	@Override
 	public <I> IRecipeSlotBuilder addIngredient(IIngredientType<I> type, I ingredient) {
-		collectedIngredients.add(TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false));
+		collectedIngredients.add(TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
+			//? if <21.1
+			/*.orElseThrow()*/
+		);
 		return this;
 	}
 	
@@ -98,6 +104,8 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	public IRecipeSlotBuilder addIngredientsUnsafe(List<?> ingredients) {
 		collectedIngredients.addAll(ingredients.stream()
 			.map(x -> TypedIngredient.createAndFilterInvalid(ingredientManager, x, false))
+			//? if <21.1
+			/*.map(Optional::orElseThrow)*/
 			.toList());
 		return this;
 	}
@@ -106,6 +114,8 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	public IRecipeSlotBuilder addTypedIngredients(List<ITypedIngredient<?>> ingredients) {
 		collectedIngredients.addAll(ingredients.stream()
 			.map(x -> TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, x))
+			//? if <21.1
+			/*.map(Optional::orElseThrow)*/
 			.toList());
 		return this;
 	}
@@ -120,18 +130,18 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	
 	@Override
 	public IRecipeSlotBuilder addFluidStack(Fluid fluid) {
-		return this.addFluidStack(fluid, fluidHelper.bucketVolume(), DataComponentPatch.EMPTY);
+		return this.addFluidStack(fluid, fluidHelper.bucketVolume(), /*? if >=21.1 {*/ DataComponentPatch.EMPTY /*?} else {*/ /*null *//*?}*/);
 	}
 	
 	@Override
 	public IRecipeSlotBuilder addFluidStack(Fluid fluid, long amount) {
-		return this.addFluidStack(fluid, amount, DataComponentPatch.EMPTY);
+		return this.addFluidStack(fluid, amount, /*? if >=21.1 {*/ DataComponentPatch.EMPTY /*?} else {*/ /*null *//*?}*/);
 	}
 	
 	@Override
-	public IRecipeSlotBuilder addFluidStack(Fluid fluid, long amount, DataComponentPatch componentPatch) {
+	public IRecipeSlotBuilder addFluidStack(Fluid fluid, long amount, DataComponentPatch dataComponentPatch) {
 		//noinspection deprecation,unchecked
-		return this.addIngredient((IIngredientType<Object>) fluidHelper.getFluidIngredientType(), fluidHelper.create(fluid.builtInRegistryHolder(), amount, componentPatch));
+		return this.addIngredient((IIngredientType<Object>) fluidHelper.getFluidIngredientType(), fluidHelper.create(fluid.builtInRegistryHolder()/*? if <21.1 {*//*.value()*//*?}*/, amount, dataComponentPatch));
 	}
 	
 	@Override

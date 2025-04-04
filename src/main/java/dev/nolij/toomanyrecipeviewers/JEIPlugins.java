@@ -11,6 +11,7 @@ import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.registration.IExtraIngredientRegistration;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IIngredientAliasRegistration;
+//? if >=21.1
 import mezz.jei.api.registration.IModInfoRegistration;
 import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
@@ -180,9 +181,11 @@ public final class JEIPlugins {
 		dispatch(modPlugins, x -> x.registerIngredientAliases(registration), false);
 	}
 	
+	//? if >=21.1 {
 	public static void registerModInfo(IModInfoRegistration modAliasRegistration) {
 		dispatch(modPlugins, x -> x.registerModInfo(modAliasRegistration), false);
 	}
+	//?}
 	
 	public static void registerCategories(IRecipeCategoryRegistration registration) {
 		dispatch(allPlugins, x -> x.registerCategories(registration), false);

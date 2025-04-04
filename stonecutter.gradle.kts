@@ -1,8 +1,4 @@
-import org.taumc.gradle.minecraft.MinecraftVersion
-import org.taumc.gradle.minecraft.ModEnvironment
-import org.taumc.gradle.minecraft.ModLoader
 import org.taumc.gradle.publishing.api.PublishChannel
-import org.taumc.gradle.publishing.api.artifact.Relation
 import org.taumc.gradle.publishing.publishing
 
 plugins {
@@ -37,28 +33,6 @@ tasks.register("runClientActive") {
 tau.publishing.publish {
 	useTauGradleVersioning()
 	changelog = rootProject.file("CHANGELOG.md").readText()
-	
-	stonecutter.tree.versions.forEach { version -> 
-		val project = project(version.project)
-		val minecraftVersion = MinecraftVersion.get(project.properties["minecraft_version"] as String) ?: error("Invalid `minecraft_version`!")
-		val modLoader = ModLoader.get(project.properties["mod_loader"] as String) ?: error("Invalid `mod_loader`!")
-
-		modArtifact {
-			files(
-				project.provider { project.tasks.named<AbstractArchiveTask>("compressJar").get().archiveFile },
-				project.provider { project.tasks.named<AbstractArchiveTask>("sourcesJar").get().archiveFile },
-			)
-
-			minecraftVersionRange = minecraftVersion.mojangName
-			javaVersions.add(JavaVersion.VERSION_21)
-
-			environment = ModEnvironment.CLIENT_ONLY
-			modLoaders.add(modLoader)
-
-			relations.add(Relation(id = "emi", type = Relation.Type.REQUIRES))
-			relations.add(Relation(id = "jei", type = Relation.Type.BREAKS))
-		}
-	}
 
 	github {
 		supportAllChannels()

@@ -1,7 +1,10 @@
 import org.taumc.gradle.compression.DeflateAlgorithm
 import org.taumc.gradle.compression.task.AdvzipTask
 import org.taumc.gradle.minecraft.MinecraftVersion
+import org.taumc.gradle.minecraft.ModEnvironment
 import org.taumc.gradle.minecraft.ModLoader
+import org.taumc.gradle.publishing.api.artifact.Relation
+import org.taumc.gradle.publishing.publishing
 import xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask
 import xyz.wagyourtail.unimined.api.unimined
 import java.nio.file.Files
@@ -285,4 +288,17 @@ val outputJar = compressJar
 
 tasks.assemble {
 	dependsOn(outputJar, sourcesJar)
+}
+
+rootProject.tau.publishing.modArtifact {
+	files(outputJar.archiveFile, provider { sourcesJar.get().archiveFile })
+
+	minecraftVersionRange = minecraftVersion.mojangName
+	javaVersions.add(JavaVersion.VERSION_21)
+
+	environment = ModEnvironment.CLIENT_ONLY
+	modLoaders.add(modLoader)
+
+	relations.add(Relation(id = "emi", type = Relation.Type.REQUIRES))
+	relations.add(Relation(id = "jei", type = Relation.Type.BREAKS))
 }

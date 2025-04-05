@@ -5,8 +5,6 @@ import org.taumc.gradle.minecraft.ModEnvironment
 import org.taumc.gradle.minecraft.ModLoader
 import org.taumc.gradle.publishing.api.artifact.Relation
 import org.taumc.gradle.publishing.publishing
-import xyz.wagyourtail.jvmdg.gradle.task.DowngradeJar
-import xyz.wagyourtail.jvmdg.gradle.task.ShadeJar
 import xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask
 import xyz.wagyourtail.unimined.api.unimined
 import java.nio.file.Files

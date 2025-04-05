@@ -183,7 +183,7 @@ dependencies {
 	minecraftLibraries.isTransitive = true
 	val modImplementation by configurations.getting
 	val include by configurations.getting
-	
+
 	shade("dev.nolij:libnolij:${"libnolij_version"()}")
 	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
 	
@@ -248,6 +248,8 @@ dependencies {
 		compileOnly("io.github.llamalad7:mixinextras-common:${"mixinextras_version"()}")
 		include("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
 		implementation("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
+
+		modImplementation("curse.maven:actually-subtractions-1083685:6223947")
 	}
 }
 

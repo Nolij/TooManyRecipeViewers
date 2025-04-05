@@ -18,6 +18,7 @@ import net.neoforged.neoforge.network.registration.HandlerThread;
 /*import net.minecraftforge.common.MinecraftForge;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.fml.loading.FMLEnvironment;
 *///?}
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,8 +36,12 @@ public class TooManyRecipeViewersMod {
 	public static final Refraction REFRACTION = new Refraction(MethodHandles.lookup());
 	
 	public TooManyRecipeViewersMod(/*? if >=21.1 {*/IEventBus modEventBus/*?}*/) {
-		//? if <21.1
-		/*@SuppressWarnings("removal") final var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();*/
+		//? if <21.1 {
+		/*if (!FMLEnvironment.dist.isClient())
+			return;
+		
+		@SuppressWarnings("removal") final var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		*///?}
 		
 		Internal.setKeyMappings(jeiKeyMappings);
 		JemiPlugin.runtime = staticJEIRuntime;

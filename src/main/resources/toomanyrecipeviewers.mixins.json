@@ -2,7 +2,7 @@
 	"required": true,
 	"minVersion": "0.8",
 	"package": "dev.nolij.toomanyrecipeviewers.mixin",
-	"compatibilityLevel": "JAVA_${java_version}",
+	"compatibilityLevel": "JAVA_${mixin_java_version}",
 	"client": [
 		"EmiAgnosMixin",
 		"EmiReloadManager_ReloadWorkerMixin",

@@ -1,4 +1,3 @@
-import org.objectweb.asm.Opcodes
 import org.taumc.gradle.compression.DeflateAlgorithm
 import org.taumc.gradle.compression.task.AdvzipTask
 import org.taumc.gradle.minecraft.MinecraftVersion
@@ -6,6 +5,8 @@ import org.taumc.gradle.minecraft.ModEnvironment
 import org.taumc.gradle.minecraft.ModLoader
 import org.taumc.gradle.publishing.api.artifact.Relation
 import org.taumc.gradle.publishing.publishing
+import xyz.wagyourtail.jvmdg.gradle.task.DowngradeJar
+import xyz.wagyourtail.jvmdg.gradle.task.ShadeJar
 import xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask
 import xyz.wagyourtail.unimined.api.unimined
 import java.nio.file.Files
@@ -20,6 +21,7 @@ plugins {
 	id("com.github.gmazzo.buildconfig")
 	id("org.taumc.gradle.versioning")
 	id("org.taumc.gradle.compression")
+	id("xyz.wagyourtail.jvmdowngrader")
 }
 
 operator fun String.invoke(): String = project.properties[this] as? String ?: error("Property $this not found")
@@ -66,14 +68,10 @@ repositories {
 	maven("https://maven.taumc.org/releases")
 	maven("https://maven.terraformersmc.com/")
 	maven("https://maven.parchmentmc.org")
-	maven("https://maven.wagyourtail.xyz/snapshots")
-	maven("https://maven.wagyourtail.xyz/releases")
 }
 
 dependencies {
 	compileOnly("org.jetbrains:annotations:${"jetbrains_annotations_version"()}")
-
-	annotationProcessor("xyz.wagyourtail.jvmdowngrader:jvmdowngrader:${"jvmdg_version"()}:all")
 	
 	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
 	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
@@ -81,12 +79,7 @@ dependencies {
 
 val minecraftVersion = MinecraftVersion.get("minecraft_version"()) ?: error("Invalid `minecraft_version`!")
 val modLoader = ModLoader.get("mod_loader"()) ?: error("Invalid `mod_loader`!")
-val javaVersion = "java_version"().toIntOrNull() ?: error("Invalid `java_version`!")
-val classVersion = when (javaVersion) {
-	21 -> Opcodes.V21
-	17 -> Opcodes.V17
-	else -> error("Invalid `java_version`!")
-}
+val javaVersion = JavaVersion.valueOf("java_version"())
 
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
@@ -98,20 +91,6 @@ tasks.withType<JavaCompile> {
 		}
 		options.compilerArgs.addAll(arrayOf("-Xplugin:Manifold no-bootstrap"))
 		options.forkOptions.jvmArgs?.add("-XX:+EnableDynamicAgentLoading")
-
-		if (javaVersion < 21) {
-			// 16 least significant bits are the major version
-			fun Int.major() = this and 0xFFFF
-
-			val jvmdgOptions = listOf(
-				"debug",
-				// jvmdg stubs System.getProperty("native.encoding") but we don't use it so its fine
-				"--skipStub", "Lxyz/wagyourtail/jvmdg/j18/stub/java_base/J_L_System;",
-				"downgrade",
-				"--classVersion ${classVersion.major()}",
-			)
-			options.compilerArgs.addAll(arrayOf("-Xplugin:jvmdg ${jvmdgOptions.joinToString(" ")}"))
-		}
 	}
 }
 
@@ -128,6 +107,7 @@ tasks.processResources {
 		.mapValues { entry -> entry.value as String })
 	props["mod_version"] = tau.versioning.version
 	props["mod_loader"] = modLoader.commonName
+	props["mixin_java_version"] = (project.properties["java_version"] as String).replace("VERSION_", "")
 
 	filesMatching(listOf("fabric.mod.json", "mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "*.mixins.json")) {
 		expand(props)
@@ -204,14 +184,8 @@ dependencies {
 	val modImplementation by configurations.getting
 	val include by configurations.getting
 	
-	val libNolij = 
-		if (javaVersion >= 21)
-			"dev.nolij:libnolij:${"libnolij_version"()}"
-		else
-			"dev.nolij:libnolij:${"libnolij_version"()}:downgraded-17"
-	
-	shade(libNolij)
-	minecraftLibraries(libNolij)
+	shade("dev.nolij:libnolij:${"libnolij_version"()}")
+	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
 	
 	if (minecraftVersion >= "20.2")
 		implementation("dev.emi:emi-${modLoader.commonName}:${"emi_version"()}")
@@ -306,7 +280,9 @@ tasks.shadowJar {
 
 tasks.named<RemapJarTask>("remapJar") {
 	inputFile.set(tasks.shadowJar.get().archiveFile)
-	
+
+	asJar.archiveClassifier = "remapped"
+
 	mixinRemap {
 		enableMixinExtra()
 		disableRefmap()
@@ -314,9 +290,31 @@ tasks.named<RemapJarTask>("remapJar") {
 }
 val inputJar = tasks.getByName("remapJar") as AbstractArchiveTask
 
-val compressJar = tau.compression.compress<AdvzipTask>(inputJar, "compressJar") {
+val compressionInputJar = if (javaVersion.ordinal < JavaVersion.VERSION_21.ordinal) {
+	val downgradeJar = tasks.named<DowngradeJar>("downgradeJar") {
+		inputFile = inputJar.archiveFile
+		downgradeTo = javaVersion
+		archiveClassifier = "downgraded"
+	}
+
+	val shadeDowngradedJar by tasks.named<ShadeJar>("shadeDowngradedApi") {
+		inputFile = downgradeJar.get().archiveFile
+		archiveClassifier = "downgraded-shaded"
+	}
+
+	shadeDowngradedJar
+} else {
+	inputJar
+}
+
+// Cannot use CompressionExtension.compress because the finalizedBy/dependency logic makes chiseled builds deadlock
+val compressJar = tasks.register<AdvzipTask>("compressJar") {
+	inputJar = compressionInputJar.archiveFile
+	destinationDirectory = compressionInputJar.destinationDirectory
 	level = DeflateAlgorithm.EXTRA
 	throwIfNotInstalled = tau.versioning.isRelease
+	archiveClassifier = ""
+	dependsOn(compressionInputJar)
 }
 
 val outputJar = compressJar
@@ -326,10 +324,10 @@ tasks.assemble {
 }
 
 rootProject.tau.publishing.modArtifact {
-	files(outputJar.archiveFile, provider { sourcesJar.get().archiveFile })
+	files(outputJar.get().archiveFile, provider { sourcesJar.get().archiveFile })
 
 	minecraftVersionRange = minecraftVersion.mojangName
-	javaVersions.add(JavaVersion.values()[javaVersion - 1])
+	javaVersions.add(javaVersion)
 
 	environment = ModEnvironment.CLIENT_ONLY
 	modLoaders.add(modLoader)

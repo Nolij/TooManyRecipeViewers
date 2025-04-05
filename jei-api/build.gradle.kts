@@ -1,4 +1,3 @@
-import org.objectweb.asm.Opcodes
 import org.taumc.gradle.minecraft.MinecraftVersion
 import org.taumc.gradle.minecraft.ModLoader
 import java.nio.file.Files
@@ -45,14 +44,10 @@ repositories {
 	maven("https://maven.terraformersmc.com/")
 	maven("https://maven.blamejared.com/")
 	maven("https://maven.parchmentmc.org")
-	maven("https://maven.wagyourtail.xyz/snapshots")
-	maven("https://maven.wagyourtail.xyz/releases")
 }
 
 dependencies {
 	compileOnly("org.jetbrains:annotations:${"jetbrains_annotations_version"()}")
-
-	annotationProcessor("xyz.wagyourtail.jvmdowngrader:jvmdowngrader:${"jvmdg_version"()}:all")
 
 	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
 	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
@@ -60,12 +55,6 @@ dependencies {
 
 val minecraftVersion = MinecraftVersion.get("minecraft_version"()) ?: error("Invalid `minecraft_version`!")
 val modLoader = ModLoader.get("mod_loader"()) ?: error("Invalid `mod_loader`!")
-val javaVersion = "java_version"().toIntOrNull() ?: error("Invalid `java_version`!")
-val classVersion = when (javaVersion) {
-	21 -> Opcodes.V21
-	17 -> Opcodes.V17
-	else -> error("Invalid `java_version`!")
-}
 
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
@@ -77,20 +66,6 @@ tasks.withType<JavaCompile> {
 		}
 		options.compilerArgs.addAll(arrayOf("-Xplugin:Manifold no-bootstrap"))
 		options.forkOptions.jvmArgs?.add("-XX:+EnableDynamicAgentLoading")
-
-		if (javaVersion < 21) {
-			// 16 least significant bits are the major version
-			fun Int.major() = this and 0xFFFF
-
-			val jvmdgOptions = listOf(
-				"debug",
-				// jvmdg stubs System.getProperty("native.encoding") but we don't use it so its fine
-				"--skipStub", "Lxyz/wagyourtail/jvmdg/j18/stub/java_base/J_L_System;",
-				"downgrade",
-				"--classVersion ${classVersion.major()}",
-			)
-			options.compilerArgs.addAll(arrayOf("-Xplugin:jvmdg ${jvmdgOptions.joinToString(" ")}"))
-		}
 	}
 }
 

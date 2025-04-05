@@ -9,7 +9,6 @@ import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 //? if >=21.1 {
 import net.neoforged.fml.common.Mod;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 
-@Mod(value = MOD_ID/*? if >=21.1 {*/, dist = Dist.CLIENT /*?}*/)
+@Mod(MOD_ID)
 public class TooManyRecipeViewersMod {
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);

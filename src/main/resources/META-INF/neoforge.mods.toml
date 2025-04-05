@@ -20,7 +20,7 @@ type = "required"
 mandatory = true
 versionRange = "${mod_loader_range}"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
 
 [[dependencies.toomanyrecipeviewers]]
 modId = "minecraft"
@@ -28,7 +28,7 @@ type = "required"
 mandatory = true
 versionRange = "${minecraft_range}"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
 
 [[dependencies.toomanyrecipeviewers]]
 modId = "emi"
@@ -36,7 +36,7 @@ type = "required"
 mandatory = true
 versionRange = "${emi_range}"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
 
 [[mods]]
 modId = "jei"

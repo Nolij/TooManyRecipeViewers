@@ -1,2 +1,3 @@
 - backport to Minecraft 20.1
+- add server compatibility
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

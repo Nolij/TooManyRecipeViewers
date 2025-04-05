@@ -28,6 +28,7 @@ import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
@@ -65,12 +66,26 @@ public final class JEIPlugins {
 	}
 	
 	private static final InverseSet<String> forceLoadJEIPluginsFrom = InverseSet.of("emi", "jei", "jei-api", MOD_ID);
-	private static final Set<String> modsWithEMIPlugins =
-		JemiUtil
-			.getHandledMods()
-			.stream()
-			.filter(forceLoadJEIPluginsFrom::contains)
-			.collect(Collectors.toUnmodifiableSet());
+	private static final Set<String> modsWithEMIPlugins;
+	
+	static {
+		Set<String> draft;
+		
+		try {
+			draft = JemiUtil
+				.getHandledMods()
+				.stream()
+				.filter(forceLoadJEIPluginsFrom::contains)
+				.collect(Collectors.toUnmodifiableSet());
+		} catch (Throwable t) {
+			if (!FMLEnvironment.dist.isClient())
+				LOGGER.error("Error gathering mods with EMI plugins on client: ", t);
+			
+			draft = Collections.emptySet();
+		}
+		
+		modsWithEMIPlugins = draft;
+	}
 	
 	public static final List<IModPlugin> allPlugins = new ArrayList<>();
 	public static final List<IModPlugin> modPlugins = new ArrayList<>();

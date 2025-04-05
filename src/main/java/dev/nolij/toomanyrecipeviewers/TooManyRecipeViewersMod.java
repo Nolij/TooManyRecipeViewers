@@ -10,6 +10,7 @@ import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.fml.common.Mod;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
@@ -52,8 +53,10 @@ public class TooManyRecipeViewersMod {
 		/*MinecraftForge*/
 			.EVENT_BUS.addListener(this::onLoggingOut);
 		
-		//? if >=21.1
-		modEventBus.addListener(this::onRegisterPayloadHandlersEvent);
+		//? if >=21.1 {
+		if (FMLEnvironment.dist.isClient())
+			modEventBus.addListener(this::onRegisterPayloadHandlersEvent);
+		//?}
 	}
 	
 	private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {

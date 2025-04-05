@@ -291,18 +291,12 @@ tasks.named<RemapJarTask>("remapJar") {
 val inputJar = tasks.getByName("remapJar") as AbstractArchiveTask
 
 val compressionInputJar = if (javaVersion.ordinal < JavaVersion.VERSION_21.ordinal) {
-	val downgradeJar = tasks.named<DowngradeJar>("downgradeJar") {
+	jvmdg.defaultTask {
 		inputFile = inputJar.archiveFile
 		downgradeTo = javaVersion
-		archiveClassifier = "downgraded"
 	}
 
-	val shadeDowngradedJar by tasks.named<ShadeJar>("shadeDowngradedApi") {
-		inputFile = downgradeJar.get().archiveFile
-		archiveClassifier = "downgraded-shaded"
-	}
-
-	shadeDowngradedJar
+	jvmdg.defaultShadeTask.get()
 } else {
 	inputJar
 }

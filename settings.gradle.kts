@@ -14,7 +14,7 @@ plugins {
 	// https://maven.kikugie.dev/#/snapshots/dev/kikugie/stonecutter
 	id("dev.kikugie.stonecutter") version("0.6-beta.1")
 	// https://git.taumc.org/TauMC/TauGradle/releases/latest
-	id("org.taumc.gradle.stonecutter") version("0.4.0-dev")
+	id("org.taumc.gradle.stonecutter") version("0.3.30")
 }
 
 rootProject.name = "toomanyrecipeviewers"

@@ -163,6 +163,7 @@ tasks.shadowJar {
 	
 	val included = listOf(
 		"LICENSE_jei",
+		"pack.mcmeta",
 		"assets/jei/**",
 		"META-INF/accesstransformer.cfg",
 		"META-INF/mods.toml",

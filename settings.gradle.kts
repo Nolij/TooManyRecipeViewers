@@ -6,15 +6,20 @@ pluginManagement {
 		maven("https://maven.kikugie.dev/snapshots")
 		mavenLocal()
 	}
+	
+	plugins {
+		operator fun String.invoke(): String = extra[this] as? String ?: error("Property $this not found")
+		
+		id("org.gradle.toolchains.foojay-resolver-convention") version("foojay_resolver_convention_version"())
+		id("dev.kikugie.stonecutter") version("stonecutter_version"())
+		id("org.taumc.gradle.stonecutter") version("taugradle_version"())
+	}
 }
 
 plugins {
-	id("org.gradle.toolchains.foojay-resolver-convention") version("0.7.0")
-	// https://maven.kikugie.dev/#/releases/dev/kikugie/stonecutter
-	// https://maven.kikugie.dev/#/snapshots/dev/kikugie/stonecutter
-	id("dev.kikugie.stonecutter") version("0.6-beta.1")
-	// https://git.taumc.org/TauMC/TauGradle/releases/latest
-	id("org.taumc.gradle.stonecutter") version("0.3.31")
+	id("org.gradle.toolchains.foojay-resolver-convention")
+	id("dev.kikugie.stonecutter")
+	id("org.taumc.gradle.stonecutter")
 }
 
 rootProject.name = "toomanyrecipeviewers"

@@ -40,7 +40,7 @@ public class ConnectionToServer implements IConnectionToServer {
 		if (connection != null)
 			serverHasJEI = connection.hasChannel(PacketRecipeTransfer.TYPE);
 		else //?}
-			serverHasJEI = true;
+			serverHasJEI = false;
 	}
 	
 	@Override

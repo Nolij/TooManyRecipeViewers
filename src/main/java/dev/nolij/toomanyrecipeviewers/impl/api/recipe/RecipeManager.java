@@ -1,5 +1,13 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.recipe;
 
+//? if >=21.1 {
+import mezz.jei.api.ingredients.IIngredientSupplier;
+import mezz.jei.common.Internal;
+import mezz.jei.common.gui.elements.DrawableBlank;
+import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
+import mezz.jei.library.util.IngredientSupplierHelper;
+import net.minecraft.world.item.crafting.RecipeHolder;
+//?}
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import dev.emi.emi.EmiPort;
@@ -38,8 +46,6 @@ import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
 import mezz.jei.api.gui.drawable.IScalableDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
-//? if >=21.1
-import mezz.jei.api.ingredients.IIngredientSupplier;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.IFocus;
@@ -59,19 +65,11 @@ import mezz.jei.api.recipe.vanilla.IJeiCompostingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiFuelingRecipe;
 import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.runtime.IIngredientVisibility;
-//? if >=21.1 {
-import mezz.jei.common.Internal;
-import mezz.jei.common.gui.elements.DrawableBlank;
-//?}
 import mezz.jei.common.util.ErrorUtil;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
 import mezz.jei.library.gui.recipes.RecipeLayout;
-//? if >=21.1
-import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
 import mezz.jei.library.gui.recipes.layout.builder.RecipeSlotBuilder;
-//? if >=21.1
-import mezz.jei.library.util.IngredientSupplierHelper;
 import mezz.jei.library.util.RecipeErrorUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -80,8 +78,6 @@ import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-//? if >=21.1
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.item.crafting.SmeltingRecipe;

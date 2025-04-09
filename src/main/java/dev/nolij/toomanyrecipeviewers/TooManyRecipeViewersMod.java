@@ -1,11 +1,5 @@
 package dev.nolij.toomanyrecipeviewers;
 
-import dev.emi.emi.jemi.JemiPlugin;
-import dev.nolij.libnolij.refraction.Refraction;
-import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
-import mezz.jei.common.Internal;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 //? if >=21.1 {
 import net.neoforged.fml.common.Mod;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
@@ -20,6 +14,12 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.neoforged.fml.loading.FMLEnvironment;
 *///?}
+import dev.emi.emi.jemi.JemiPlugin;
+import dev.nolij.libnolij.refraction.Refraction;
+import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
+import mezz.jei.common.Internal;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

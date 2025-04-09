@@ -1,5 +1,7 @@
 package dev.nolij.toomanyrecipeviewers;
 
+//? if >=21.1
+import mezz.jei.api.registration.IModInfoRegistration;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.runtime.EmiReloadManager;
@@ -11,8 +13,6 @@ import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.registration.IExtraIngredientRegistration;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IIngredientAliasRegistration;
-//? if >=21.1
-import mezz.jei.api.registration.IModInfoRegistration;
 import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;

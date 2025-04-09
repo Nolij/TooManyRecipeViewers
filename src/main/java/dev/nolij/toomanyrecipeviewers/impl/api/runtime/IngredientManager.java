@@ -1,8 +1,10 @@
 package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 
-import com.google.common.collect.Lists;
-//? if >=21.1
+//? if >=21.1 {
 import com.mojang.serialization.Codec;
+import net.minecraft.core.Holder;
+//?}
+import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -43,8 +45,6 @@ import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
-//? if >=21.1
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

@@ -1,5 +1,14 @@
 package dev.nolij.toomanyrecipeviewers.impl.common.network;
 
+//? if >=21.1 {
+import mezz.jei.common.network.packets.PlayToServerPacket;
+import org.jetbrains.annotations.NotNull;
+//?} else {
+/*import mezz.jei.common.network.packets.PacketJei;
+import mezz.jei.common.Constants;
+import net.neoforged.neoforge.network.NetworkDirection;
+import net.neoforged.neoforge.network.NetworkHooks;
+*///?}
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.handler.EmiCraftContext;
 import dev.emi.emi.api.recipe.handler.StandardRecipeHandler;
@@ -8,21 +17,14 @@ import dev.emi.emi.network.FillRecipeC2SPacket;
 import dev.emi.emi.platform.EmiClient;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import mezz.jei.common.network.IConnectionToServer;
-//? if <21.1
-/*import mezz.jei.common.network.packets.PacketJei;*/
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
-//? if >=21.1
-import mezz.jei.common.network.packets.PlayToServerPacket;
 import mezz.jei.common.transfer.TransferOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-//? if >=21.1 {
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.jetbrains.annotations.NotNull;
-//?}
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,17 +32,26 @@ import java.util.Optional;
 
 public class ConnectionToServer implements IConnectionToServer {
 	
-	//? if <21.1
-	/*@SuppressWarnings("FieldCanBeLocal")*/
 	private final boolean serverHasJEI;
 	
 	public ConnectionToServer() {
-		//? if >=21.1 {
-		final var connection = Minecraft.getInstance().getConnection();
-		if (connection != null)
-			serverHasJEI = connection.hasChannel(PacketRecipeTransfer.TYPE);
-		else //?}
+		final var clientPacketListener = Minecraft.getInstance().getConnection();
+		if (clientPacketListener != null) {
+			//? if >=21.1 {
+			serverHasJEI = clientPacketListener.hasChannel(PacketRecipeTransfer.TYPE);
+			//?} else {
+			/*final var connection = clientPacketListener.getConnection();
+			final var connectionData = NetworkHooks.getConnectionData(connection);
+			if (connectionData == null) {
+				serverHasJEI = false;
+			} else {
+				final var channels = connectionData.getChannels();
+				serverHasJEI = channels.containsKey(Constants.NETWORK_CHANNEL_ID);
+			}
+			*///?}
+		} else {
 			serverHasJEI = false;
+		}
 	}
 	
 	@Override
@@ -56,12 +67,16 @@ public class ConnectionToServer implements IConnectionToServer {
 		if (!(packet instanceof PacketRecipeTransfer recipeTransferPacket))
 			return;
 		
-		//? if >=21.1 {
 		if (serverHasJEI) {
+			//? if >=21.1 {
 			PacketDistributor.sendToServer(recipeTransferPacket);
+			//?} else {
+			/*final var packetData = packet.getPacketData();
+			final var payload = NetworkDirection.PLAY_TO_SERVER.buildPacket(packetData, Constants.NETWORK_CHANNEL_ID);
+			PacketDistributor.SERVER.noArg().send(payload.getThis());
+			*///?}
 			return;
 		}
-		//?}
 		
 		final var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof AbstractContainerScreen<?> containerScreen))

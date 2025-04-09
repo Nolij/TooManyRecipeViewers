@@ -75,6 +75,7 @@ stonecutter.parameters {
 	replacement(eval(metadata.version, ">=21.1"), "mezz.jei.forge", "mezz.jei.neoforge")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.client.event", "net.neoforged.neoforge.client.event")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.fml", "net.neoforged.fml")
+	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.network", "net.neoforged.neoforge.network")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.fluids", "net.neoforged.neoforge.fluids")
 	replacement(eval(metadata.version, ">=21.1"), "@Nullable CompoundTag dataComponentPatch", "DataComponentPatch dataComponentPatch")
 	replacement(eval(metadata.version, ">=21.1"), "(dataComponentPatch == null || dataComponentPatch.isEmpty())", "(dataComponentPatch.isEmpty())")

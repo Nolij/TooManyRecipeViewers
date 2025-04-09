@@ -199,6 +199,7 @@ tasks.shadowJar {
 		"mezz/jei/common/util/Immutable*2i.class",
 		"mezz/jei/common/util/HorizontalAlignment.class",
 		"mezz/jei/common/util/VerticalAlignment.class",
+		"mezz/jei/common/util/MathUtil.class",
 		"mezz/jei/common/util/NavigationVisibility.class",
 		"mezz/jei/common/util/RegistryUtil.class",
 		"mezz/jei/common/util/SafeIngredientUtil.class",

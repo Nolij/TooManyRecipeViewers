@@ -29,8 +29,12 @@ idea.module {
 	isDownloadSources = true
 }
 
+val minecraftVersion = MinecraftVersion.get("minecraft_version"()) ?: error("Invalid `minecraft_version`!")
+val modLoader = ModLoader.get("mod_loader"()) ?: error("Invalid `mod_loader`!")
+val javaVersion = JavaVersion.valueOf("java_version"())
+
 project.group = "maven_group"()
-project.version = tau.versioning.version("mod_version"(), project.properties["release_channel"], "jei.${"jei_version"()}")
+project.version = tau.versioning.subVersion("mc.${minecraftVersion.conciseName}")
 
 println("TooManyRecipeViewers version: ${project.version}")
 
@@ -74,10 +78,6 @@ dependencies {
 	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
 	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
 }
-
-val minecraftVersion = MinecraftVersion.get("minecraft_version"()) ?: error("Invalid `minecraft_version`!")
-val modLoader = ModLoader.get("mod_loader"()) ?: error("Invalid `mod_loader`!")
-val javaVersion = JavaVersion.valueOf("java_version"())
 
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
@@ -322,6 +322,8 @@ rootProject.tau.publishing.modArtifact {
 
 	minecraftVersionRange = minecraftVersion.mojangName
 	javaVersions.add(javaVersion)
+	
+	useTauGradleVersioning()
 
 	environment = ModEnvironment.CLIENT_ONLY
 	modLoaders.add(modLoader)

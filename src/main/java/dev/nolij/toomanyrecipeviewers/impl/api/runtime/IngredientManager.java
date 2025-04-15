@@ -4,6 +4,8 @@ package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.Holder;
 //?}
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
@@ -165,32 +167,44 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 	}
 	
+	private final Cache<EmiStack, Object> rawIngredientCache = CacheBuilder.newBuilder()
+		.weakKeys()
+		.weakValues()
+		.build();
+	
 	@SuppressWarnings({"UnstableApiUsage"})
 	public Object getRawIngredient(EmiStack emiStack) {
-		if (emiStack instanceof ItemEmiStack itemEmiStack) {
-			return itemEmiStack.getItemStack();
-		} else if (emiStack instanceof FluidEmiStack fluidEmiStack) {
-			var amount = fluidEmiStack.getAmount();
-			if (amount == 0L)
-				amount = 1000L;
-			return fluidHelper.create(
-				//? if >=21.1
-				Holder.direct(
-					(Fluid) fluidEmiStack.getKey()
-				//? if >=21.1
-				)
-				, amount,
-				fluidEmiStack.getComponentChanges()
-			);
-		} else if (emiStack instanceof IJEMIStack<?> jemiStack) {
-			return jemiStack.tmrv$getIngredient();
-		}
-		
-		final var itemStack = emiStack.getItemStack();
-		if (itemStack == null || itemStack.isEmpty())
-			return null;
-		
-		return itemStack;
+		return rawIngredientCache.get(emiStack, () -> {
+			switch (emiStack) {
+				case ItemEmiStack itemEmiStack -> {
+					return itemEmiStack.getItemStack();
+				}
+				case FluidEmiStack fluidEmiStack -> {
+					var amount = fluidEmiStack.getAmount();
+					if (amount == 0L)
+						amount = 1000L;
+					return fluidHelper.create(
+						//? if >=21.1
+						Holder.direct(
+							(Fluid) fluidEmiStack.getKey()
+							//? if >=21.1
+						)
+						, amount,
+						fluidEmiStack.getComponentChanges()
+					);
+				}
+				case IJEMIStack<?> jemiStack -> {
+					return jemiStack.tmrv$getIngredient();
+				}
+				default -> {
+					final var itemStack = emiStack.getItemStack();
+					if (itemStack == null || itemStack.isEmpty())
+						return null;
+					
+					return itemStack;
+				}
+			}
+		});
 	}
 	
 	@SuppressWarnings({"UnstableApiUsage", "rawtypes"})

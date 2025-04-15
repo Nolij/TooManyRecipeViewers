@@ -49,6 +49,14 @@ tau.publishing.publish {
 		projectID = 1194921
 		projectSlug = "tmrv"
 	}
+	
+	modrinth {
+		supportChannels(PublishChannel.RELEASE)
+		
+		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+		projectID = "yFypjcfd"
+		projectSlug = "tmrv"
+	}
 
 	val iconURL = "https://github.com/Nolij/TooManyRecipeViewers/raw/master/src/main/resources/icon.png"
 

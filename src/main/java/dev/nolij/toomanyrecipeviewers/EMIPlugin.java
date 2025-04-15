@@ -92,8 +92,6 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		JEIPlugins.logLoadTimes();
 		
-		runtime.lockRegistration();
-		
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
 			return new EmiStackInteraction(runtime.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
@@ -108,6 +106,8 @@ public final class EMIPlugin implements EmiPlugin {
 			} catch (Throwable ignored) {}
 			return false;
 		});
+		
+		runtime.lockRegistration();
 	}
 	
 	public static void onRuntimeUnavailable() {

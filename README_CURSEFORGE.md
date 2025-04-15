@@ -63,7 +63,9 @@ Neither TMRV nor JEMI currently render this JEI widget properly. This limitation
 
 ### Recipe Manager Plugins
 
-The JEI API supports "Recipe Manager Plugins". These plugins allow mods to control their own recipe registries and handle recipe lookups themselves. These will not be supported. They are an outdated concept that very few plugins still use, and they aren't possible to properly support without very invasive EMI mixins - something I do not intend to use in this project.
+The JEI API supports "Recipe Manager Plugins". These plugins allow mods to control their own recipe registries and handle recipe lookups themselves at runtime.
+
+TMRV will attempt to extract recipes from these plugins, but this does not work for most plugins, and by no means provides proper support for the feature. Support beyond this is not planned. Recipe Manager plugins are an outdated concept that very few plugins still use, and they aren't possible to properly support without very invasive EMI mixins - something I do not intend to use in this project.
 
 ### Runtime Registry Changes
 

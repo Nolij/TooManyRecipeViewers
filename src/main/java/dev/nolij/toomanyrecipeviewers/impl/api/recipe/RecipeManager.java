@@ -83,6 +83,7 @@ import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -560,11 +561,22 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		if (locked)
 			throw new IllegalStateException("Tried to add plugins after registry is locked");
 		
-		// TODO: add support
-		if (!plugins.isEmpty())
-			LOGGER.error("Failed to add JEI recipe manager plugins due to being unsupported by TooManyRecipeViewers: [{}]", plugins.stream().map(x -> x.getClass().getName()).collect(Collectors.joining(", ")), new UnsupportedOperationException());
-		
-//		this.pluginManager.addAll(plugins);
+		for (final var plugin : plugins) {
+			var recipeCount = 0;
+			for (final var jeiCategory : jeiRecipeCategories) {
+				final var recipes = plugin.getRecipes(jeiCategory);
+				recipeCount += recipes.size();
+				
+				//noinspection rawtypes,unchecked
+				addRecipes((RecipeType) jeiCategory.getRecipeType(), recipes);
+			}
+			
+			LOGGER.log(
+				recipeCount > 0 ? Level.WARN : Level.ERROR, 
+				"Registered {} recipe(s) from Recipe Manager Plugin {}. Do not report issues if there are bugs with this feature; it is not supported!", 
+				recipeCount, plugin.getClass().getName()
+			);
+		}
 	}
 	
 	public void addDecorators(ImmutableListMultimap<RecipeType<?>, IRecipeCategoryDecorator<?>> decorators) {

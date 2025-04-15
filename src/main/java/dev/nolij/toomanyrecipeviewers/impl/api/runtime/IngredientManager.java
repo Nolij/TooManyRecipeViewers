@@ -168,7 +168,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	private final Cache<EmiStack, Object> rawIngredientCache = CacheBuilder.newBuilder()
-		.weakKeys()
 		.weakValues()
 		.build();
 	

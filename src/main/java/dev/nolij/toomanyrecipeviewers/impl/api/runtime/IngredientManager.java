@@ -2,7 +2,6 @@ package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
 
 //? if >=21.1 {
 import com.mojang.serialization.Codec;
-import net.minecraft.core.Holder;
 //?}
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -19,8 +18,6 @@ import dev.emi.emi.registry.EmiStackList;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
-import dev.nolij.toomanyrecipeviewers.util.IJEMIStack;
-import dev.nolij.toomanyrecipeviewers.util.LazyMappedCollection;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.ingredients.IIngredientHelper;
@@ -40,17 +37,13 @@ import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.core.util.WeakList;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
-import mezz.jei.library.ingredients.itemStacks.TypedItemStack;
-import mezz.jei.library.ingredients.itemStacks.TypedItemStackExtension;
 import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -158,131 +151,53 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@SuppressWarnings("UnstableApiUsage")
 	public <T> EmiStack getEMIStack(ITypedIngredient<T> typedIngredient) {
-		if (typedIngredient == null)
-			return EmiStack.EMPTY;
-			
-		if (typedIngredient instanceof IJEITypedItemStack typedItemStack)
-			return ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
-		
-		return getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
+		return switch (typedIngredient) {
+			case null -> EmiStack.EMPTY;
+			case EmiStack emiStack -> emiStack;
+			case IJEITypedItemStack typedItemStack ->
+				ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
+			default -> getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
+		};
 	}
 	
 	private final Cache<EmiStack, Object> rawIngredientCache = CacheBuilder.newBuilder()
 		.weakValues()
 		.build();
 	
-	@SuppressWarnings({"UnstableApiUsage"})
 	public Object getRawIngredient(EmiStack emiStack) {
 		return rawIngredientCache.get(emiStack, () -> {
-			switch (emiStack) {
-				case ItemEmiStack itemEmiStack -> {
-					return itemEmiStack.getItemStack();
-				}
-				case FluidEmiStack fluidEmiStack -> {
-					var amount = fluidEmiStack.getAmount();
-					if (amount == 0L)
-						amount = 1000L;
-					return fluidHelper.create(
-						//? if >=21.1
-						Holder.direct(
-							(Fluid) fluidEmiStack.getKey()
-							//? if >=21.1
-						)
-						, amount,
-						fluidEmiStack.getComponentChanges()
-					);
-				}
-				case IJEMIStack<?> jemiStack -> {
-					return jemiStack.tmrv$getIngredient();
-				}
-				default -> {
-					final var itemStack = emiStack.getItemStack();
-					if (itemStack == null || itemStack.isEmpty())
-						return null;
-					
-					return itemStack;
-				}
-			}
+			if (emiStack instanceof ITypedIngredient<?> typedIngredient)
+				return typedIngredient.getIngredient();
+			
+			return null;
 		});
 	}
 	
-	@SuppressWarnings({"UnstableApiUsage", "rawtypes"})
 	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
-		try {
-			if (emiStack instanceof ItemEmiStack itemEmiStack) {
-				return Optional.of(TypedItemStackExtension.create(
-					(Item) itemEmiStack.getKey(),
-					(int) itemEmiStack.getAmount(),
-					itemEmiStack.getComponentChanges()
-				));
-			} else if (emiStack instanceof FluidEmiStack fluidEmiStack) {
-				var amount = fluidEmiStack.getAmount();
-				if (amount == 0L)
-					amount = 1000L;
-				//noinspection unchecked
-				return Optional.of(TypedIngredient.createUnvalidated(
-					(IIngredientType) fluidHelper.getFluidIngredientType(),
-					fluidHelper.create(
-						//? if >=21.1
-						Holder.direct(
-						(Fluid) fluidEmiStack.getKey()
-						//? if >=21.1
-						)
-						, amount,
-						fluidEmiStack.getComponentChanges()
-					)
-				));
-			} else if (emiStack instanceof IJEMIStack<?> jemiStack) {
-				//noinspection unchecked
-				return Optional.of(TypedIngredient.createUnvalidated(
-					(IIngredientType) jemiStack.tmrv$getType(),
-					jemiStack.tmrv$getIngredient()
-				));
-			}
-			
-			final var itemStack = emiStack.getItemStack();
-			if (itemStack == null || itemStack.isEmpty())
-				return Optional.empty();
-			
-			return Optional.of(TypedItemStack.create(itemStack));
-		} catch (Throwable t) {
-			LOGGER.error("Error converting EmiStack to JEI ITypedIngredient: ", t);
-			return Optional.empty();
-		}
+		if (emiStack instanceof ITypedIngredient<?> typedIngredient)
+			return Optional.of(typedIngredient);
+		
+		return Optional.empty();
 	}
 	
 	//region IIngredientManager
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
 	
-	@SuppressWarnings({"unchecked", "UnstableApiUsage", "ReplaceNullCheck"})
+	@SuppressWarnings("unchecked")
 	@Override
 	public @Unmodifiable <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType) {
-		if (ingredientType == VanillaTypes.ITEM_STACK) {
-			if (itemStacks != null) {
-				return (Collection<V>) itemStacks;
-			} else {
-				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
-					.filter(ItemEmiStack.class::isInstance)
-					.map(ItemEmiStack.class::cast)
-					.toList(), this::getRawIngredient);
-			}
-		} else if (ingredientType == fluidHelper.getFluidIngredientType()) {
-			if (fluidStacks != null) {
-				return (Collection<V>) fluidStacks;
-			} else {
-				return (Collection<V>) new LazyMappedCollection<>(EmiStackList.stacks.stream()
-					.filter(FluidEmiStack.class::isInstance)
-					.map(FluidEmiStack.class::cast)
-					.toList(), this::getRawIngredient);
-			}
+		if (ingredientType == VanillaTypes.ITEM_STACK && itemStacks != null) {
+			return (Collection<V>) itemStacks;
+		} else if (ingredientType == fluidHelper.getFluidIngredientType() && fluidStacks != null) {
+			return (Collection<V>) fluidStacks;
 		}
 		
 		return (Collection<V>) EmiStackList.stacks.stream()
-			.filter(JemiStack.class::isInstance)
-			.map(JemiStack.class::cast)
-			.map(x -> x.ingredient)
-			.filter(ingredientType.getIngredientClass()::isInstance)
+			.filter(ITypedIngredient.class::isInstance)
+			.map(ITypedIngredient.class::cast)
+			.filter(x -> x.getType() == ingredientType)
+			.map(ITypedIngredient::getIngredient)
 			.toList();
 	}
 	

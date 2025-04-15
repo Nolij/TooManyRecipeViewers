@@ -6,7 +6,9 @@
 	"client": [
 		"EmiAgnosMixin",
 		"EmiReloadManager_ReloadWorkerMixin",
+		"FluidEmiStackMixin",
 		"FullTypedItemStackMixin",
+		"ItemEmiStackMixin",
 		"JemiStackMixin",
 		"JemiUtilMixin",
 		"NormalizedTypedItemMixin",

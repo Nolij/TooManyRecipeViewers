@@ -73,6 +73,7 @@ tau.publishing.publish {
 
 stonecutter.parameters {
 	replacement(eval(metadata.version, ">=21.1"), "mezz.jei.forge", "mezz.jei.neoforge")
+	replacement(eval(metadata.version, ">=21.1"), "mezz.jei.api.forge", "mezz.jei.api.neoforge")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.client.event", "net.neoforged.neoforge.client.event")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.fml", "net.neoforged.fml")
 	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.network", "net.neoforged.neoforge.network")

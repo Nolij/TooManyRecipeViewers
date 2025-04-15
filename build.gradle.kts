@@ -318,7 +318,7 @@ tasks.assemble {
 }
 
 rootProject.tau.publishing.modArtifact {
-	files(outputJar.get().archiveFile, provider { sourcesJar.get().archiveFile })
+	files(provider { outputJar.get().archiveFile }, provider { sourcesJar.get().archiveFile })
 
 	minecraftVersionRange = minecraftVersion.mojangName
 	javaVersions.add(javaVersion)

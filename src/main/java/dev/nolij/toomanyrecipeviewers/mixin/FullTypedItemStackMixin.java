@@ -5,14 +5,14 @@ package dev.nolij.toomanyrecipeviewers.mixin;
 import net.minecraft.core.Holder;
 import org.jetbrains.annotations.Nullable;
 *///?}
-import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
+import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import net.minecraft.core.component.DataComponentPatch;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(targets = "mezz/jei/library/ingredients/itemStacks/FullTypedItemStack", remap = false)
-public abstract class FullTypedItemStackMixin implements IJEITypedItemStack {
+public abstract class FullTypedItemStackMixin implements IItemStackish {
 	
 	//? if <21.1 {
 	/*@Shadow @Final private Holder<Item> itemHolder;

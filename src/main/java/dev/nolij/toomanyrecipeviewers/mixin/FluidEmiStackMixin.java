@@ -5,6 +5,7 @@ import net.minecraft.core.Holder;
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
 //?}
 import dev.emi.emi.api.stack.FluidEmiStack;
+import dev.nolij.toomanyrecipeviewers.util.IFluidStackish;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.core.component.DataComponentPatch;
@@ -18,9 +19,10 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 
 @SuppressWarnings({"UnstableApiUsage", "NonExtendableApiUsage"})
 @Mixin(value = FluidEmiStack.class, remap = false)
-public class FluidEmiStackMixin implements ITypedIngredient<FluidStack> {
+public class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidStackish {
 	
 	@Shadow @Final private Fluid fluid;
+	
 	//? if >=21.1 {
 	@Shadow @Final private DataComponentPatch componentChanges;
 	//?} else
@@ -54,5 +56,23 @@ public class FluidEmiStackMixin implements ITypedIngredient<FluidStack> {
 		return (B) fluid;
 	}
 	//?}
+	
+	@Override
+	public Fluid tmrv$getFluid() {
+		return fluid;
+	}
+	
+	@Override
+	public /*? if >=21.1 {*/ DataComponentPatch /*?} else {*/ /*CompoundTag *//*?}*/ tmrv$getDataComponentPatch() {
+		//? if >=21.1 {
+		return componentChanges;
+		//?} else
+		/*return nbt;*/
+	}
+	
+	@Override
+	public long tmrv$getCount() {
+		return ((FluidEmiStack) (Object) this).getAmount();
+	}
 	
 }

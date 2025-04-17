@@ -6,11 +6,11 @@ import net.minecraft.world.item.Item;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Shadow;
 *///?}
-import dev.nolij.toomanyrecipeviewers.util.IJEITypedItemStack;
+import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(targets = "mezz/jei/library/ingredients/itemStacks/NormalizedTypedItem", remap = false)
-public abstract class NormalizedTypedItemMixin implements IJEITypedItemStack {
+public abstract class NormalizedTypedItemMixin implements IItemStackish {
 	
 	//? if <21.1 {
 	/*@Shadow @Final private Holder<Item> itemHolder;

@@ -4,6 +4,7 @@ package dev.nolij.toomanyrecipeviewers.mixin;
 import net.minecraft.core.Holder;
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
 //?}
+import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.nolij.toomanyrecipeviewers.util.IFluidStackish;
 import mezz.jei.api.ingredients.IIngredientType;
@@ -19,7 +20,7 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 
 @SuppressWarnings({"UnstableApiUsage", "NonExtendableApiUsage"})
 @Mixin(value = FluidEmiStack.class, remap = false)
-public class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidStackish {
+public abstract class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidStackish<EmiStack> {
 	
 	@Shadow @Final private Fluid fluid;
 	
@@ -27,6 +28,8 @@ public class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidS
 	@Shadow @Final private DataComponentPatch componentChanges;
 	//?} else
 	/*@Shadow @Final private CompoundTag nbt;*/
+	
+	@Shadow public abstract EmiStack copy();
 	
 	@Override
 	public IIngredientType<FluidStack> getType() {
@@ -36,14 +39,10 @@ public class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidS
 	
 	@Override
 	public FluidStack getIngredient() {
-		var amount = ((FluidEmiStack) (Object) this).getAmount();
-		if (amount == 0L)
-			amount = 1000L;
-		
 		//? if >=21.1 {
-		return (FluidStack) fluidHelper.create(Holder.direct(fluid), amount, componentChanges);
+		return (FluidStack) fluidHelper.create(Holder.direct(fluid), tmrv$getAmount(), componentChanges);
 		//?} else
-		/*return (FluidStack) fluidHelper.create(fluid, amount, nbt);*/
+		/*return (FluidStack) fluidHelper.create(fluid, tmrv$getAmount(), nbt);*/
 	}
 	
 	//? if >=21.1 {
@@ -71,8 +70,17 @@ public class FluidEmiStackMixin implements ITypedIngredient<FluidStack>, IFluidS
 	}
 	
 	@Override
-	public long tmrv$getCount() {
-		return ((FluidEmiStack) (Object) this).getAmount();
+	public long tmrv$getAmount() {
+		final var amount = ((FluidEmiStack) (Object) this).getAmount();
+		if (amount == 0L)
+			return 1000L;
+		
+		return amount;
+	}
+	
+	@Override
+	public EmiStack tmrv$normalize() {
+		return copy().setAmount(0L);
 	}
 	
 }

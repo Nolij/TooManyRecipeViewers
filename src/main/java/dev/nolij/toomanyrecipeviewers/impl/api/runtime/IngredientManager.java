@@ -17,7 +17,6 @@ import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
-import dev.nolij.toomanyrecipeviewers.util.IFluidStackish;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
@@ -43,7 +42,6 @@ import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -58,6 +56,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
@@ -80,6 +79,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		.weakValues()
 		.build();
 	
+	private final Map<Object, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
+	
 	private volatile boolean locked = false;
 	
 	public IngredientManager(TooManyRecipeViewers runtime) {
@@ -98,9 +99,16 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		//noinspection UnstableApiUsage
 		EmiStackList.stacks.stream()
 			.filter(ItemEmiStack.class::isInstance)
-			.map(ItemEmiStack.class::cast)
-			.map(ItemEmiStack::getItemStack)
-			.forEach(itemStacks::add);
+			.map(ITypedIngredient.class::cast)
+			.forEach(x -> {
+				final var itemStack = (ItemStack) x.getIngredient();
+				
+				itemStacks.add(itemStack);
+				
+				uidLookup.put(getUid(VanillaTypes.ITEM_STACK, itemStack), x);
+				//? if >=21.1
+				uidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
+			});
 		
 		//noinspection rawtypes,unchecked
 		registerIngredientType(new IngredientInfo(
@@ -115,9 +123,19 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		//noinspection UnstableApiUsage
 		EmiStackList.stacks.stream()
 			.filter(FluidEmiStack.class::isInstance)
-			.map(FluidEmiStack.class::cast)
-			.map(this::getRawIngredient)
-			.forEach(fluidStacks::add);
+			.map(ITypedIngredient.class::cast)
+			.forEach(x -> {
+				final var fluidStack = (FluidStack) x.getIngredient();
+				
+				fluidStacks.add(fluidStack);
+				
+				//noinspection unchecked,rawtypes
+				uidLookup.put(getUid((IIngredientType) fluidHelper.getFluidIngredientType(), fluidStack), x);
+				//? if >=21.1 {
+				//noinspection unchecked,rawtypes
+				uidLookup.put(getLegacyUid((IIngredientType) fluidHelper.getFluidIngredientType(), fluidStack), x);
+				//?}
+			});
 	}
 	
 	public EmiIngredient getEMIIngredient(Stream<ItemStack> itemStackStream) {
@@ -164,7 +182,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			case null -> EmiStack.EMPTY;
 			case EmiStack emiStack -> emiStack;
 			case IItemStackish typedItemStack ->
-				ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getCount());
+				ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getAmount());
 			default -> getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 		};
 	}
@@ -394,27 +412,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		//?}
 	}
 	
-	private <V> Object getUid(ITypedIngredient<V> typedIngredient) {
-		//? if <21.1 {
-		/*return getLegacyUid(typedIngredient);
-		*///?} else {
-		//noinspection unchecked
-		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(typedIngredient.getType());
-		final var ingredientHelper = ingredientInfo.getIngredientHelper();
-		
-		try {
-			return ingredientHelper.getUid(typedIngredient, UidContext.Ingredient);
-		} catch (Throwable getUidException) {
-			try {
-				LOGGER.error("Failed to get UID for broken ingredient {}", ingredientHelper.getErrorInfo(typedIngredient.getIngredient()), getUidException);
-			} catch (Throwable getErrorInfoException) {
-				LOGGER.error("Failed to get UID for broken ingredient", getErrorInfoException);
-			}
-			return null;
-		}
-		//?}
-	}
-	
 	//? if >=21.1
 	@SuppressWarnings("removal")
 	private <V> Object getLegacyUid(IIngredientType<V> ingredientType, V ingredient) {
@@ -424,29 +421,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		try {
 			return ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient);
-		} catch (Throwable throwable) {
-			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
-			return null;
-		}
-	}
-	
-	//? if >=21.1
-	@SuppressWarnings("removal")
-	private <V> Object getLegacyUid(ITypedIngredient<V> typedIngredient) {
-		if (typedIngredient instanceof IItemStackish typedItemStack) {
-			final var item = typedItemStack.tmrv$getItem();
-			return BuiltInRegistries.ITEM.getKey(item);
-		} else if (typedIngredient instanceof IFluidStackish typedFluidStack) {
-			final var fluid = typedFluidStack.tmrv$getFluid();
-			return BuiltInRegistries.FLUID.getKey(fluid);
-		}
-		
-		//noinspection unchecked
-		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(typedIngredient.getType());
-		final var ingredientHelper = ingredientInfo.getIngredientHelper();
-		
-		try {
-			return ingredientHelper.getUniqueId(typedIngredient.getIngredient(), UidContext.Ingredient);
 		} catch (Throwable throwable) {
 			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
 			return null;
@@ -465,10 +439,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> ingredientType, String uid) {
-		return getAllTypedIngredients(ingredientType)
-			.stream()
-			.filter(x -> uid.equals(getUid(x)) || uid.equals(getLegacyUid(x)))
-			.findFirst();
+		//noinspection unchecked
+		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(uid, null));
 	}
 	
 	@Override
@@ -607,6 +579,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			
 		for (final var ingredient : ingredients) {
 			final var emiStack = getEMIStack(ingredientType, ingredient);
+			//noinspection unchecked
+			final var typedIngredient = (ITypedIngredient<V>) emiStack;
+			uidLookup.put(getUid(ingredientType, ingredient), typedIngredient);
+			//? if >=21.1
+			uidLookup.put(getLegacyUid(ingredientType, ingredient), typedIngredient);
+			
 			if (!emiStack.isEmpty())
 				runtime.emiRegistry.addEmiStack(emiStack);
 		}

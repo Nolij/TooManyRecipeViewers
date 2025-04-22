@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers.mixin;
 
 //? if >=21.1
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
+import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import mezz.jei.api.constants.VanillaTypes;
@@ -18,7 +19,7 @@ import java.util.Optional;
 
 @SuppressWarnings({"UnstableApiUsage", "NonExtendableApiUsage"})
 @Mixin(value = ItemEmiStack.class, remap = false)
-public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, IItemStackish {
+public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, IItemStackish<EmiStack> {
 	
 	@Shadow @Final private Item item;
 	
@@ -26,6 +27,8 @@ public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, 
 	@Shadow @Final private DataComponentPatch componentChanges;
 	//?} else
 	/*@Shadow @Final private CompoundTag nbt;*/
+	
+	@Shadow public abstract EmiStack copy();
 	
 	@Override
 	public IIngredientType<ItemStack> getType() {
@@ -67,8 +70,13 @@ public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, 
 	}
 	
 	@Override
-	public long tmrv$getCount() {
+	public long tmrv$getAmount() {
 		return ((ItemEmiStack) (Object) this).getAmount();
+	}
+	
+	@Override
+	public EmiStack tmrv$normalize() {
+		return copy().setAmount(1);
 	}
 	
 }

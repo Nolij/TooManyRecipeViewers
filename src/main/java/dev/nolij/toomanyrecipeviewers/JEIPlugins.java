@@ -27,6 +27,7 @@ import mezz.jei.library.plugins.jei.JeiInternalPlugin;
 import mezz.jei.library.plugins.vanilla.VanillaPlugin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.ModList;
 import org.objectweb.asm.Type;
 
@@ -88,10 +89,25 @@ public final class JEIPlugins {
 		pluginClasses.addLast(JeiInternalPlugin.class);
 		
 		for (final var pluginClass : pluginClasses) {
-			final IModPlugin plugin = pluginClass.getDeclaredConstructor().newInstance();
-			
-			if (modsWithEMIPlugins.contains(plugin.getPluginUid().getNamespace()))
+			final IModPlugin plugin;
+			try {
+				plugin = pluginClass.getDeclaredConstructor().newInstance();
+			} catch (Throwable t) {
+				LOGGER.error("Failed to initialize JEI plugin {}", pluginClass.getName(), t);
 				continue;
+			}
+			
+			final ResourceLocation pluginID;
+			try {
+				pluginID = Objects.requireNonNull(plugin.getPluginUid());
+			} catch (Throwable t) {
+				LOGGER.error("{}.getPluginUid() threw an exception or returned null", pluginClass.getName(), t);
+				continue;
+			}
+			
+			if (modsWithEMIPlugins.contains(pluginID.getNamespace()))
+				continue;
+			
 			allPlugins.add(plugin);
 			if (plugin instanceof VanillaPlugin)
 				continue;

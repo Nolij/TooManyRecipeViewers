@@ -69,6 +69,10 @@ The JEI API supports "Recipe Manager Plugins". These plugins allow mods to contr
 
 TMRV will attempt to extract recipes from these plugins, but this does not work for most plugins, and by no means provides proper support for the feature. Support beyond this is not planned. Recipe Manager plugins are an outdated concept that very few plugins still use, and they aren't possible to properly support without very invasive EMI mixins - something I do not intend to use in this project.
 
+### Vanilla Recipe Category Extensions
+
+The JEI API supports "extensions" to the vanilla Crafting and Smithing recipe categories. Sufficient inspection (that would be necessary to determine feasibility of adding support) of how this part of the JEI API works is yet to be done. For now, though, these are unsupported by TMRV.
+
 ### Runtime Registry Changes
 
 The JEI API supports modifying the recipe and ingredient registries at runtime (ie after plugin registration is complete). This concept is not compatible with EMI, and it is not a practice I want to support. As such, after `IModPlugin.onRuntimeAvailable` has been invoked, all APIs for runtime registry modifications will throw an `IllegalStateException` if invoked to avoid potential confusion.

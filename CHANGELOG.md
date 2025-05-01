@@ -1,4 +1,2 @@
-- backported to Minecraft 20.1
-- added (extremely) limited support for JEI Recipe Manager Plugins
-- made miscellaneous improvements to performance and memory usage
+- fix crash on 20.1
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

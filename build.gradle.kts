@@ -317,13 +317,13 @@ tasks.assemble {
 	dependsOn(outputJar, sourcesJar)
 }
 
-rootProject.tau.publishing.modArtifact {
+rootProject.tau.publishing.modArtifact("${modLoader.displayName} ${minecraftVersion.conciseName}") {
 	files(provider { outputJar.get().archiveFile }, provider { sourcesJar.get().archiveFile })
+
+	version = tau.versioning.version
 
 	minecraftVersionRange = minecraftVersion.mojangName
 	javaVersions.add(javaVersion)
-	
-	useTauGradleVersioning()
 
 	environment = ModEnvironment.CLIENT_ONLY
 	modLoaders.add(modLoader)

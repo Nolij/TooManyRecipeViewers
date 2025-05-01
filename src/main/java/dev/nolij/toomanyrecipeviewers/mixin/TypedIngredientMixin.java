@@ -1,7 +1,9 @@
 package dev.nolij.toomanyrecipeviewers.mixin;
 
+//? if <21.1 {
+/*import java.util.Optional;
+*///?}
 import dev.nolij.toomanyrecipeviewers.util.IStackish;
-import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.library.ingredients.TypedIngredient;
@@ -22,16 +24,20 @@ public class TypedIngredientMixin {
 //		}
 //	}
 	
-	@Inject(method =
-		//? if >=21.1 {
-		"defensivelyCopyTypedIngredientFromApi"
-		//?} else
-		/*"deepCopy"*/
-		, at = @At("HEAD"), cancellable = true)
+	//? if >=21.1 {
+	@Inject(method = "defensivelyCopyTypedIngredientFromApi", at = @At("HEAD"), cancellable = true)
 	private static <T> void tmrv$defensivelyCopyTypedIngredientFromApi$HEAD(IIngredientManager ingredientManager, ITypedIngredient<T> value, CallbackInfoReturnable<ITypedIngredient<T>> cir) {
 		if (value instanceof IStackish<?>) {
 			cir.setReturnValue(value);
 		}
 	}
+	//?} else {
+	/*@Inject(method = "deepCopy", at = @At("HEAD"), cancellable = true)
+	private static <T> void tmrv$deepCopy$HEAD(IIngredientManager ingredientManager, ITypedIngredient<T> value, CallbackInfoReturnable<Optional<ITypedIngredient<T>>> cir) {
+		if (value instanceof IStackish<?>) {
+			cir.setReturnValue(Optional.of(value));
+		}
+	}
+	*///?}
 	
 }

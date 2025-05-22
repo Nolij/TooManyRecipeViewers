@@ -1,2 +1,2 @@
-- fix crash on 20.1
+- provide JEI 19.21.1.304 on 21.1
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

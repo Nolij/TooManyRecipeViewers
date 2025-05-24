@@ -36,7 +36,10 @@ public class ConnectionToServer implements IConnectionToServer {
 	
 	public ConnectionToServer() {
 		final var clientPacketListener = Minecraft.getInstance().getConnection();
-		if (clientPacketListener != null) {
+		if (clientPacketListener == null ||
+			clientPacketListener.getConnection().isMemoryConnection()) {
+			serverHasJEI = false;
+		} else {
 			//? if >=21.1 {
 			serverHasJEI = clientPacketListener.hasChannel(PacketRecipeTransfer.TYPE);
 			//?} else {
@@ -49,8 +52,6 @@ public class ConnectionToServer implements IConnectionToServer {
 				serverHasJEI = channels.containsKey(Constants.NETWORK_CHANNEL_ID);
 			}
 			*///?}
-		} else {
-			serverHasJEI = false;
 		}
 	}
 	
@@ -78,6 +79,10 @@ public class ConnectionToServer implements IConnectionToServer {
 			return;
 		}
 		
+		handle(recipeTransferPacket);
+	}
+	
+	public static void handle(PacketRecipeTransfer recipeTransferPacket) {
 		final var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof AbstractContainerScreen<?> containerScreen))
 			return;

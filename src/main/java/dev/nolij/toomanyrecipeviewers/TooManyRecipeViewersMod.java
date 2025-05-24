@@ -17,6 +17,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.nolij.libnolij.refraction.Refraction;
 import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
+import dev.nolij.toomanyrecipeviewers.impl.common.network.ConnectionToServer;
 import mezz.jei.common.Internal;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
@@ -75,7 +76,10 @@ public class TooManyRecipeViewersMod {
 		event.registrar("3")
 			.executesOn(HandlerThread.MAIN)
 			.optional()
-			.playToServer(PacketRecipeTransfer.TYPE, PacketRecipeTransfer.STREAM_CODEC, (e, context) -> {});
+			.playToServer(PacketRecipeTransfer.TYPE, PacketRecipeTransfer.STREAM_CODEC, (recipeTransferPacket, context) -> {
+				// for singleplayer
+				ConnectionToServer.handle(recipeTransferPacket);
+			});
 	}
 	//?}
 	

@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.emi.emi.config.EmiConfig;

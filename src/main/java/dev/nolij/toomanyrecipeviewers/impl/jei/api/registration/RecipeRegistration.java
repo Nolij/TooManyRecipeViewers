@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.registration;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.registration;
 
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.helpers.IJeiHelpers;

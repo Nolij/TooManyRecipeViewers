@@ -1,6 +1,6 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.recipe.advanced;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.advanced;
 
-import dev.nolij.toomanyrecipeviewers.impl.api.recipe.RecipeManager;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.advanced.IRecipeManagerPluginHelper;

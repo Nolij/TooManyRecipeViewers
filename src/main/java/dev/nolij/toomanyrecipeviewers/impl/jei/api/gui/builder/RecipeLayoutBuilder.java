@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.gui.builder;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

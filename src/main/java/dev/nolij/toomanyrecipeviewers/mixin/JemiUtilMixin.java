@@ -3,7 +3,7 @@ package dev.nolij.toomanyrecipeviewers.mixin;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
-import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import org.spongepowered.asm.mixin.Mixin;

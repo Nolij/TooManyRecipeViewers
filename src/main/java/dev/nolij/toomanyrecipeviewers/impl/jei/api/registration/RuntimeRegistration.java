@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.registration;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.registration;
 
 import dev.emi.emi.jemi.runtime.JemiBookmarkOverlay;
 import dev.emi.emi.jemi.runtime.JemiIngredientFilter;

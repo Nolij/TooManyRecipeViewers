@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.library.config;
+package dev.nolij.toomanyrecipeviewers.impl.jei.library.config;
 
 import mezz.jei.library.config.IModIdFormatConfig;
 import mezz.jei.library.config.ModIdFormatConfig;

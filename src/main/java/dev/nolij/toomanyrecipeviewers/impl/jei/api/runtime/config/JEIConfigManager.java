@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.runtime.config;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.config;
 
 import mezz.jei.api.runtime.config.IJeiConfigFile;
 import mezz.jei.api.runtime.config.IJeiConfigManager;

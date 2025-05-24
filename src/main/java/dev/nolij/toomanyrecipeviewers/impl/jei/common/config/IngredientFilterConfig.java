@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.common.config;
+package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
 import mezz.jei.common.config.IIngredientFilterConfig;
 import mezz.jei.core.search.SearchMode;

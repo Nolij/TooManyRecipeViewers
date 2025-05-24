@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.common.config;
+package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
 //? if >=21.1 {
 import mezz.jei.api.gui.placement.HorizontalAlignment;

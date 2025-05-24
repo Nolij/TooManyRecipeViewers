@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.common.config;
+package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
 import mezz.jei.common.config.BookmarkTooltipFeature;
 import mezz.jei.common.config.GiveMode;

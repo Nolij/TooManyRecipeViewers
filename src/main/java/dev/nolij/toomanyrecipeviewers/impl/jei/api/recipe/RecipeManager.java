@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.recipe;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe;
 
 //? if >=21.1 {
 import mezz.jei.api.ingredients.IIngredientSupplier;
@@ -39,8 +39,8 @@ import dev.emi.emi.recipe.EmiStonecuttingRecipe;
 import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
-import dev.nolij.toomanyrecipeviewers.impl.api.runtime.IngredientManager;
-import dev.nolij.toomanyrecipeviewers.impl.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -99,7 +99,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.MOD_ID;

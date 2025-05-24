@@ -16,8 +16,8 @@ import net.neoforged.fml.loading.FMLEnvironment;
 *///?}
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.nolij.libnolij.refraction.Refraction;
-import dev.nolij.toomanyrecipeviewers.impl.common.config.JEIClientConfigs;
-import dev.nolij.toomanyrecipeviewers.impl.common.network.ConnectionToServer;
+import dev.nolij.toomanyrecipeviewers.impl.jei.common.config.JEIClientConfigs;
+import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
 import mezz.jei.common.Internal;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;

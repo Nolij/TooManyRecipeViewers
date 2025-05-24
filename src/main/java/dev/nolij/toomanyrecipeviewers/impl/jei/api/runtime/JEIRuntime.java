@@ -1,6 +1,6 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 
-import dev.nolij.toomanyrecipeviewers.impl.api.registration.RuntimeRegistration;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.registration.RuntimeRegistration;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;

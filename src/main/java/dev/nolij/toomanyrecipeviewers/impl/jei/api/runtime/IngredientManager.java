@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.api.runtime;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 
 //? if >=21.1 {
 import com.mojang.serialization.Codec;

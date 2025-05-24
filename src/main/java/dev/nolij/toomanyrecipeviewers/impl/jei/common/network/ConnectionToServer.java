@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.common.network;
+package dev.nolij.toomanyrecipeviewers.impl.jei.common.network;
 
 //? if >=21.1 {
 import mezz.jei.common.network.packets.PlayToServerPacket;

@@ -42,7 +42,7 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 |                             | TMRV                                                                        | JEMI                                                                           | Comparison                                                       |
 |-----------------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------------|------------------------------------------------------------------|
 | Craftoria&nbsp;&nbsp;&nbsp; | 3378ms (53ms before world load, 3325ms after world load)&nbsp;&nbsp;&nbsp;  | 7677ms (6413ms before world load, 1264ms after world load)&nbsp;&nbsp;&nbsp;   | -4299ms (-6360ms before world load, +2061ms after world load)    |
-| ATM10&nbsp;&nbsp;&nbsp;     | 9875ms (1ms before world load, 9874ms after world load)&nbsp;&nbsp;&nbsp;   | 19936ms (16350ms before world load, 3586ms after world load)&nbsp;&nbsp;&nbsp; | -100061ms (-16349ms before world load, +6288ms after world load) |
+| ATM10&nbsp;&nbsp;&nbsp;     | 9875ms (1ms before world load, 9874ms after world load)&nbsp;&nbsp;&nbsp;   | 19936ms (16350ms before world load, 3586ms after world load)&nbsp;&nbsp;&nbsp; | -10061ms (-16349ms before world load, +6288ms after world load)  |
 | ATM9&nbsp;&nbsp;&nbsp;      | 25319ms (1ms before world load, 25318ms after world load)&nbsp;&nbsp;&nbsp; | 38785ms (34610ms before world load, 4175ms after world load)&nbsp;&nbsp;&nbsp; | -13466ms (-34609ms before world load, +21143ms after world load) |
 
 ### Memory Usage

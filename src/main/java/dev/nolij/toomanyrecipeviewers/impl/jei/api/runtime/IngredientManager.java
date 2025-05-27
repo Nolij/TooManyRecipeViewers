@@ -171,11 +171,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	@SuppressWarnings("UnstableApiUsage")
-	public <T> EmiStack getEMIStack(ITypedIngredient<T> typedIngredient) {
+	public <T> EmiStack getEMIStack(@Nullable ITypedIngredient<T> typedIngredient) {
 		return switch (typedIngredient) {
 			case null -> EmiStack.EMPTY;
 			case EmiStack emiStack -> emiStack;
-			case IItemStackish typedItemStack ->
+			case IItemStackish<?> typedItemStack ->
 				ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getAmount());
 			default -> getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 		};

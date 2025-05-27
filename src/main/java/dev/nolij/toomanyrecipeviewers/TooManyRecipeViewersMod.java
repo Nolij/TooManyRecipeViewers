@@ -77,8 +77,12 @@ public class TooManyRecipeViewersMod {
 			.executesOn(HandlerThread.MAIN)
 			.optional()
 			.playToServer(PacketRecipeTransfer.TYPE, PacketRecipeTransfer.STREAM_CODEC, (recipeTransferPacket, context) -> {
-				// for singleplayer
-				ConnectionToServer.handle(recipeTransferPacket);
+				// We never process this packet. On a multiplayer server, TMRV is never loaded, so there are two possibilities:
+				// - JEI is installed. In this case JEI will register a handler for this packet on the server.
+				// - EMI is installed. In this case TMRV is not loaded, so the server will not support this packet,
+				//   and TMRV will fall back to the EMI packet.
+				// We special-case singleplayer and never send this packet (since we don't have logic for handling it),
+				// so nothing needs to be processed here.
 			});
 	}
 	//?}

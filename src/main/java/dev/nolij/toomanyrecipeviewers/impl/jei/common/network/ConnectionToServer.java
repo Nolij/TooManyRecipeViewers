@@ -9,6 +9,7 @@ import mezz.jei.common.Constants;
 import net.neoforged.neoforge.network.NetworkDirection;
 import net.neoforged.neoforge.network.NetworkHooks;
 *///?}
+import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.handler.EmiCraftContext;
 import dev.emi.emi.api.recipe.handler.StandardRecipeHandler;
@@ -20,7 +21,6 @@ import mezz.jei.common.network.IConnectionToServer;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import mezz.jei.common.transfer.TransferOperation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -83,9 +83,10 @@ public class ConnectionToServer implements IConnectionToServer {
 	}
 	
 	public static void handle(PacketRecipeTransfer recipeTransferPacket) {
-		final var screen = Minecraft.getInstance().screen;
-		if (!(screen instanceof AbstractContainerScreen<?> containerScreen))
+		final var containerScreen = EmiApi.getHandledScreen();
+		if (containerScreen == null) {
 			return;
+		}
 		
 		final var containerMenu = containerScreen.getMenu();
 		final var inventorySlots = recipeTransferPacket.inventorySlots.stream()

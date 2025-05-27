@@ -1,2 +1,4 @@
+- replace `JemiRecipe` (modded recipes should be converted more efficiently and accurately now)
+- add support for smithing recipe category extensions
 - fix recipe transfer handlers
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

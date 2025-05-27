@@ -26,6 +26,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
 import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
@@ -51,6 +52,7 @@ import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -211,6 +213,9 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
 		runtime.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
+		
+//		runtime.recipeManager.addRecipes(RecipeTypes.CRAFTING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING));
+		runtime.recipeManager.addRecipes(RecipeTypes.SMITHING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING));
 		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);

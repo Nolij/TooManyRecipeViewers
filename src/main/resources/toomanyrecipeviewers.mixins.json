@@ -13,8 +13,10 @@
 		"JemiUtilMixin",
 		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
+		"SmithingRecipeCategoryAccessor",
 		"TypedIngredientMixin",
-		"TypedItemStackMixin"
+		"TypedItemStackMixin",
+		"VanillaPluginMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

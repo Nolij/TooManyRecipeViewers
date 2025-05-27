@@ -41,6 +41,8 @@ import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
 import dev.nolij.toomanyrecipeviewers.impl.TMRVRecipe;
+import dev.nolij.toomanyrecipeviewers.mixin.SmithingRecipeCategoryAccessor;
+import dev.nolij.toomanyrecipeviewers.util.ExtendedSmithingRecipe;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -81,6 +83,7 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
+import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
 import org.apache.logging.log4j.Level;
@@ -449,6 +452,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new HashSet<>());
 	private <T> void addRecipe(Category<T> category, T jeiRecipe) {
+		if (runtime.ignoredRecipes.contains(jeiRecipe))
+			return;
+		
 		final var jeiCategory = category.getJEICategory();
 		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		if (!jeiCategory.isHandled(jeiRecipe)) {
@@ -650,6 +656,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		replacementRecipes.clear();
 		hiddenRecipeIDs.clear();
 		hiddenCategories.clear();
+		runtime.ignoredRecipes.clear();
 	}
 	//endregion
 	
@@ -1090,13 +1097,29 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				};
 			}
 			
-			private @NotNull EmiSmithingRecipe convertEMISmithingRecipe() {
+			//? if >=21.1
+			@SuppressWarnings("DataFlowIssue")
+			private @NotNull EmiRecipe convertEMISmithingRecipe() {
+				//? if >=21.1 {
+				@SuppressWarnings("unchecked")
+				final var recipe = ((RecipeHolder<SmithingRecipe>) this.jeiRecipe).value();
+				//?} else
+				/*final var recipe = (SmithingRecipe) this.jeiRecipe;*/
+				
+				final var extension = ((SmithingRecipeCategoryAccessor) runtime.smithingCategory).tmrv$getExtension(recipe);
+				if (extension != null) {
+					//noinspection rawtypes,unchecked
+					return new ExtendedSmithingRecipe(runtime, recipe, extension, getID());
+				}
+				
+				final var id = getID();
+				
+				LOGGER.warn("Using fallback smithing recipe extractor for recipe {}", id);
+				
 				final var extractedRecipeData = extractJEIRecipeData();
 				final var emiInputs = extractedRecipeData.emiInputs;
 				final var emiOutputs = extractedRecipeData.emiOutputs;
 				
-				// TODO: smithing trim recipes?
-				// TODO: IExtendableSmithingRecipeCategory?
 				return new EmiSmithingRecipe(emiInputs.get(0), emiInputs.get(1), emiInputs.get(2), emiOutputs.getFirst(), getID());
 			}
 			

@@ -51,8 +51,10 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public final class TooManyRecipeViewers {
@@ -81,6 +83,7 @@ public final class TooManyRecipeViewers {
 	public volatile SmithingRecipeCategory smithingCategory = null;
 	public volatile @Unmodifiable List<IRecipeCategory<?>> recipeCategories = null;
 	public volatile ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = null;
+	public final Set<Object> ignoredRecipes = new HashSet<>();
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;

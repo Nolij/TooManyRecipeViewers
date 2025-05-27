@@ -191,6 +191,7 @@ tasks.shadowJar {
 		"mezz/jei/common/network/codecs/*.class",
 		"mezz/jei/common/network/packets/*.class",
 		"mezz/jei/common/network/I*.class",
+		"mezz/jei/common/network/PacketIdServer.class",
 		"mezz/jei/common/network/ServerPacketContext.class",
 		"mezz/jei/common/platform/*.class",
 		"mezz/jei/common/transfer/**/*.class",

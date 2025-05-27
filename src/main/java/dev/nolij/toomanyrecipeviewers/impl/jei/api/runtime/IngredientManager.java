@@ -3,8 +3,6 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 //? if >=21.1 {
 import com.mojang.serialization.Codec;
 //?}
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
 import dev.emi.emi.api.stack.Comparison;
@@ -74,10 +72,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
-	
-	private final Cache<EmiStack, Object> rawIngredientCache = CacheBuilder.newBuilder()
-		.weakValues()
-		.build();
 	
 	private final Map<Object, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
 	
@@ -185,15 +179,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				ItemEmiStack.of(typedItemStack.tmrv$getItem(), typedItemStack.tmrv$getDataComponentPatch(), typedItemStack.tmrv$getAmount());
 			default -> getEMIStack(typedIngredient.getType(), typedIngredient.getIngredient());
 		};
-	}
-	
-	public Object getRawIngredient(EmiStack emiStack) {
-		return rawIngredientCache.get(emiStack, () -> {
-			if (emiStack instanceof ITypedIngredient<?> typedIngredient)
-				return typedIngredient.getIngredient();
-			
-			return null;
-		});
 	}
 	
 	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
@@ -678,7 +663,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		if (!removedStacks.isEmpty()) {
 			runtime.emiRegistry.removeEmiStacks(removedStacks::contains);
-			rawIngredientCache.invalidateAll(removedStacks);
 		}
 		
 		registerItemStackDefaultComparison();

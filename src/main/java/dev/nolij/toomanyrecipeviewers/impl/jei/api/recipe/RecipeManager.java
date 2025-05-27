@@ -27,7 +27,6 @@ import dev.emi.emi.api.widget.GeneratedSlotWidget;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.JemiCategory;
-import dev.emi.emi.jemi.JemiRecipe;
 import dev.emi.emi.recipe.EmiBrewingRecipe;
 import dev.emi.emi.recipe.EmiCompostingRecipe;
 import dev.emi.emi.recipe.EmiCookingRecipe;
@@ -41,6 +40,7 @@ import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.TMRVRecipe;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -464,7 +464,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && recipe.getOriginalID() != null) {
-				if (emiRecipe instanceof JemiRecipe<?>)
+				if (emiRecipe instanceof TMRVRecipe<?>)
 					LOGGER.warn("Recipe replacement for {} will not render properly!", recipe.getOriginalID());
 				
 				replacementRecipes.add(emiRecipe);
@@ -835,17 +835,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 				final var recipeLayoutBuilder = new RecipeLayoutBuilder(ingredientManager);
 				jeiCategory.setRecipe(recipeLayoutBuilder, jeiRecipe, runtime.jeiHelpers.getFocusFactory().getEmptyFocusGroup());
+				final var data = recipeLayoutBuilder.extractEMIRecipeData();
 				
-				return new ExtractedRecipeData(
-					recipeLayoutBuilder.inputs.stream()
-						.map(ingredientManager::getEMIStack)
-						.map(EmiIngredient.class::cast)
-						.toList(),
-					recipeLayoutBuilder.outputs.stream()
-						.map(ingredientManager::getEMIStack)
-						.toList(),
-					recipeLayoutBuilder.shapeless
-				);
+				return new ExtractedRecipeData(data.inputs(), data.outputs(), data.shapeless());
 			}
 			
 			public synchronized @Nullable ResourceLocation getOriginalID() {
@@ -915,10 +907,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					}
 					
 					if (emiRecipe == null) {
-						final var jemiRecipe = new JemiRecipe<>(emiCategory, Objects.requireNonNull(getJEICategory()), jeiRecipe);
-						jemiRecipe.builder = null; // no longer needed and takes a lot of memory
-						jemiRecipe.id = getID();
-						emiRecipe = jemiRecipe;
+						emiRecipe = new TMRVRecipe<>(runtime, Category.this, jeiRecipe, getID());
 					}
 					
 					emiRecipeMap.put(emiRecipe, this);

@@ -1,0 +1,165 @@
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient;
+
+import dev.emi.emi.api.stack.EmiIngredient;
+import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.Bounds;
+import dev.emi.emi.api.widget.TankWidget;
+import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.OffsetDrawable;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.util.FluidRendererParameters;
+import dev.nolij.toomanyrecipeviewers.util.OverrideableIngredientCycler;
+import mezz.jei.api.gui.builder.IIngredientConsumer;
+import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
+import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.common.util.ImmutableRect2i;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.Rect2i;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawable, ITMRVSlotWidget {
+	
+	private final IngredientManager ingredientManager;
+	private final RecipeIngredientRole role;
+	private final ImmutableRect2i rect;
+	
+	private final OverrideableIngredientCycler ingredientCycler;
+	
+	private @Nullable String name = null;
+	
+	private @Nullable OffsetDrawable background = null;
+	private @Nullable OffsetDrawable overlay = null;
+	
+	private final List<IRecipeSlotRichTooltipCallback> tooltipCallbacks = new ArrayList<>();
+	
+	public TMRVTankWidget(IngredientManager ingredientManager, RecipeIngredientRole role, FluidRendererParameters fluidRendererParameters, ImmutableRect2i rect) {
+		super(EmiStack.EMPTY, rect.x(), rect.y(), rect.width(), rect.height(), fluidRendererParameters.capacity());
+		this.ingredientManager = ingredientManager;
+		this.role = role;
+		this.rect = rect;
+		this.ingredientCycler = new OverrideableIngredientCycler(ingredientManager);
+	}
+	
+	@Override
+	public TMRVIngredientCollector getIngredientCollector() {
+		return ingredientCycler.ingredientCollector;
+	}
+	
+	@Override
+	public void setName(@Nullable String name) {
+		this.name = name;
+	}
+	
+	@Override
+	public void setBackground(@Nullable OffsetDrawable background) {
+		this.background = background;
+	}
+	
+	@Override
+	public void setOverlay(@Nullable OffsetDrawable overlay) {
+		this.overlay = overlay;
+	}
+	
+	@Override
+	public void addTooltipCallbacks(List<IRecipeSlotRichTooltipCallback> tooltipCallbacks) {
+		this.tooltipCallbacks.addAll(tooltipCallbacks);
+	}
+	
+	//region SlotWidget
+	@Override
+	public Bounds getBounds() {
+		final var rect = this.rect.expandBy(this.output ? 6 : 1);
+		return new Bounds(rect.x(), rect.y(), rect.width(), rect.height());
+	}
+	
+	@Override
+	public void drawBackground(GuiGraphics draw, int mouseX, int mouseY, float delta) {
+		TMRVSlotWidget.drawJEIBackground(background, draw, rect.x(), rect.y());
+		
+		super.drawBackground(draw, mouseX, mouseY, delta);
+	}
+	
+	@Override
+	public void drawOverlay(GuiGraphics draw, int mouseX, int mouseY, float delta) {
+		TMRVSlotWidget.drawJEIOverlay(overlay, draw, rect.x(), rect.y());
+		
+		super.drawOverlay(draw, mouseX, mouseY, delta);
+	}
+	
+	@Override
+	public EmiIngredient getStack() {
+		return ingredientManager.getEMIStack(getDisplayedIngredient().orElse(null));
+	}
+	
+	@Override
+	protected void addSlotTooltip(List<ClientTooltipComponent> list) {
+		final var builder = new JemiTooltipBuilder();
+		for (final var tooltipCallback : tooltipCallbacks) {
+			tooltipCallback.onRichTooltip(this, builder);
+		}
+		list.addAll(builder.tooltip);
+		
+		super.addSlotTooltip(list);
+	}
+	//endregion
+	
+	//region ITMRVRecipeSlotDrawable
+	@Override
+	public IIngredientConsumer createDisplayOverrides() {
+		return ingredientCycler.createDisplayOverrides();
+	}
+	
+	@Override
+	public void clearDisplayOverrides() {
+		ingredientCycler.clearDisplayOverrides();
+	}
+	
+	@SuppressWarnings("removal")
+	@Override
+	public Rect2i getRect() {
+		return rect.toMutable();
+	}
+	
+	@Override
+	public Stream<ITypedIngredient<?>> getAllIngredients() {
+		return ingredientCycler.ingredientCollector.stream();
+	}
+	
+	//? if >=21.1 {
+	@Override
+	public @Unmodifiable List<@Nullable ITypedIngredient<?>> getAllIngredientsList() {
+		return ingredientCycler.ingredientCollector.getCollectedIngredients();
+	}
+	//?}
+	
+	@Override
+	public Optional<ITypedIngredient<?>> getDisplayedIngredient() {
+		return ingredientCycler.getDisplayedIngredient();
+	}
+	
+	@Override
+	public RecipeIngredientRole getRole() {
+		return this.role;
+	}
+	
+	@Override
+	public boolean isEmpty() {
+		return ingredientCycler.ingredientCollector.isEmpty();
+	}
+	
+	@Override
+	public Optional<String> getSlotName() {
+		return Optional.ofNullable(name);
+	}
+	//endregion
+	
+}

@@ -144,6 +144,10 @@ val shade: Configuration by configurations.creating {
 	configurations.runtimeClasspath.get().extendsFrom(this)
 }
 
+val modRuntimeOnly: Configuration by configurations.creating {
+	configurations.runtimeClasspath.get().extendsFrom(this)
+}
+
 unimined.minecraft {
 	version(minecraftVersion.mojangName)
 
@@ -173,6 +177,12 @@ unimined.minecraft {
 	mappings {
 		mojmap()
 		parchment(mcVersion = minecraftVersion.mojangName, version = "parchment_version"())
+	}
+	
+	if (modLoader == ModLoader.LEXFORGE) {
+		mods {
+			remap(modRuntimeOnly)
+		}
 	}
 }
 
@@ -242,12 +252,16 @@ dependencies {
 		runtimeOnly("curse.maven:playeranimator-658587:6024462")
 		runtimeOnly("curse.maven:irons-spells-n-spellbooks-855414:6197625")
 		runtimeOnly("maven.modrinth:jei-multiblocks:1.21.1-1.0.4")
+		runtimeOnly("curse.maven:just-dire-things-1002348:6369120")
 	} else if (minecraftVersion.equals("20.1") && modLoader == ModLoader.LEXFORGE) {
 		compileOnly("io.github.llamalad7:mixinextras-common:${"mixinextras_version"()}")
 		include("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
 		implementation("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
 
-		modImplementation("curse.maven:actually-subtractions-1083685:6223947")
+		modRuntimeOnly("curse.maven:actually-subtractions-1083685:6223947")
+//		modRuntimeOnly("curse.maven:ender-io-64578:6274905")
+		modRuntimeOnly("curse.maven:puzzles-lib-495476:6387081")
+		modRuntimeOnly("curse.maven:visual-workbench-500273:4612695")
 	}
 }
 

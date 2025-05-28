@@ -253,6 +253,10 @@ dependencies {
 		runtimeOnly("curse.maven:irons-spells-n-spellbooks-855414:6197625")
 		runtimeOnly("maven.modrinth:jei-multiblocks:1.21.1-1.0.4")
 		runtimeOnly("curse.maven:just-dire-things-1002348:6369120")
+		runtimeOnly("curse.maven:fusion-connected-textures-854949:6453834")
+		runtimeOnly("curse.maven:supermartijn642s-core-lib-454372:6076757")
+		runtimeOnly("curse.maven:supermartijn642s-config-lib-438332:5546996")
+		runtimeOnly("curse.maven:rechiseled-558998:5663514")
 	} else if (minecraftVersion.equals("20.1") && modLoader == ModLoader.LEXFORGE) {
 		compileOnly("io.github.llamalad7:mixinextras-common:${"mixinextras_version"()}")
 		include("io.github.llamalad7:mixinextras-forge:${"mixinextras_version"()}")
@@ -262,6 +266,12 @@ dependencies {
 //		modRuntimeOnly("curse.maven:ender-io-64578:6274905")
 		modRuntimeOnly("curse.maven:puzzles-lib-495476:6387081")
 		modRuntimeOnly("curse.maven:visual-workbench-500273:4612695")
+//		modRuntimeOnly("curse.maven:mantle-74924:6258424")
+//		modRuntimeOnly("curse.maven:tinkers-construct-74072:6266282")
+		modRuntimeOnly("curse.maven:fusion-connected-textures-854949:6453794")
+		modRuntimeOnly("curse.maven:supermartijn642s-core-lib-454372:6034718")
+		modRuntimeOnly("curse.maven:supermartijn642s-config-lib-438332:4715408")
+		modRuntimeOnly("curse.maven:rechiseled-558998:5286306")
 	}
 }
 

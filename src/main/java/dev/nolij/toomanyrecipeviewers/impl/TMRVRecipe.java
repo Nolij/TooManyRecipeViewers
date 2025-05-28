@@ -3,23 +3,43 @@ package dev.nolij.toomanyrecipeviewers.impl;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
+import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
+import dev.emi.emi.api.widget.Widget;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
 import dev.emi.emi.runtime.EmiDrawContext;
 import dev.emi.emi.screen.EmiScreenManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.DeferredPlaceableWidget;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.DrawableWidget;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.ScrollGridWidget;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.TextWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
+import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotDrawablesView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.gui.inputs.IJeiGuiEventListener;
+import mezz.jei.api.gui.inputs.IJeiInputHandler;
+import mezz.jei.api.gui.placement.IPlaceable;
+import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
+import mezz.jei.api.gui.widgets.IRecipeWidget;
+import mezz.jei.api.gui.widgets.IScrollBoxWidget;
+import mezz.jei.api.gui.widgets.IScrollGridWidget;
+import mezz.jei.api.gui.widgets.ISlottedRecipeWidget;
+import mezz.jei.api.gui.widgets.ITextWidget;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.library.focus.FocusGroup;
+import mezz.jei.library.gui.widgets.ScrollBoxRecipeWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -108,33 +128,57 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 	}
 	
+	private static class RecipeSlotDrawablesView implements IRecipeSlotDrawablesView {
+		
+		private final List<IRecipeSlotDrawable> slots = new ArrayList<>();
+		
+		@Override
+		public @Unmodifiable List<IRecipeSlotDrawable> getSlots() {
+			return slots;
+		}
+		
+	}
+	
 	@Override
 	public void addWidgets(WidgetHolder widgets) {
 		final var builder = new RecipeLayoutBuilder(runtime.ingredientManager);
 		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
 		
-		final var recipeSlotsView = new RecipeSlotsView();
-		widgets.add(new Widget(recipeSlotsView));
+		final var slotsView = new RecipeSlotsView();
+		final var slotDrawablesView = new RecipeSlotDrawablesView();
+		
+		final var rootWidget = widgets.add(new RootWidget(widgets, slotsView, slotDrawablesView));
 		
 		for (final var slot : builder.getSlots()) {
 			if (!slot.isVisible())
 				continue;
 			
 			final var widget = widgets.add(slot.build());
-			recipeSlotsView.slots.add((IRecipeSlotView) widget);
+			slotsView.slots.add((IRecipeSlotView) widget);
+			slotDrawablesView.slots.add((IRecipeSlotDrawable) widget);
 			
 			if (slot.role == RecipeIngredientRole.OUTPUT)
 				widget.recipeContext(this);
 		}
+		
+		jeiCategory.createRecipeExtras(rootWidget, jeiRecipe, FocusGroup.EMPTY);
 	}
 	
-	private class Widget extends dev.emi.emi.api.widget.Widget {
+	private class RootWidget extends Widget implements IRecipeExtrasBuilder {
 		
-		private final IRecipeSlotsView recipeSlotsView;
+		private final WidgetHolder widgets;
+		private final IRecipeSlotsView slotsView;
+		private final IRecipeSlotDrawablesView slotDrawablesView;
 		private final Bounds bounds;
 		
-		private Widget(IRecipeSlotsView recipeSlotsView) {
-			this.recipeSlotsView = recipeSlotsView;
+		private final ArrayList<IRecipeWidget> recipeWidgets = new ArrayList<>();
+		private final ArrayList<IJeiInputHandler> inputHandlers = new ArrayList<>();
+		private final ArrayList<IJeiGuiEventListener> guiEventListeners = new ArrayList<>();
+		
+		private RootWidget(WidgetHolder widgets, IRecipeSlotsView slotsView, IRecipeSlotDrawablesView slotDrawablesView) {
+			this.widgets = widgets;
+			this.slotsView = slotsView;
+			this.slotDrawablesView = slotDrawablesView;
 			this.bounds = new Bounds(0, 0, getDisplayWidth(), getDisplayHeight());
 		}
 		
@@ -154,28 +198,135 @@ public class TMRVRecipe<T> implements EmiRecipe {
 				categoryBackground.draw(context.raw());
 			}
 			
-			jeiCategory.draw(jeiRecipe, recipeSlotsView, context.raw(), mouseX, mouseY);
+			jeiCategory.draw(jeiRecipe, slotsView, context.raw(), mouseX, mouseY);
+			
 			context.resetColor();
 			context.pop();
+			
+			for (final var recipeWidget : recipeWidgets) {
+				context.push();
+				
+				recipeWidget.drawWidget(context.raw(), mouseX, mouseY);
+				
+				context.resetColor();
+				context.pop();
+			}
 		}
 		
 		@Override
 		public List<ClientTooltipComponent> getTooltip(int mouseX, int mouseY) {
 			final var tooltipBuilder = new JemiTooltipBuilder();
-			jeiCategory.getTooltip(tooltipBuilder, jeiRecipe, recipeSlotsView, mouseX, mouseY);
+			jeiCategory.getTooltip(tooltipBuilder, jeiRecipe, slotsView, mouseX, mouseY);
 			return tooltipBuilder.tooltip;
 		}
 		
 		@Override
 		public boolean mouseClicked(int mouseX, int mouseY, int button) {
-			//noinspection removal
-			return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button));
+			return handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button));
 		}
 		
 		@Override
 		public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode));
+		}
+		
+		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key input) {
 			//noinspection removal
-			return jeiCategory.handleInput(jeiRecipe, EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode));
+			return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, input);
+		}
+		
+		@Override
+		public IRecipeSlotDrawablesView getRecipeSlots() {
+			return slotDrawablesView;
+		}
+		
+		@Override
+		public void addDrawable(IDrawable drawable, int x, int y) {
+			widgets.add(new DrawableWidget(drawable, x, y));
+		}
+		
+		@Override
+		public IPlaceable<?> addDrawable(IDrawable drawable) {
+			return widgets.add(new DrawableWidget(drawable));
+		}
+		
+		@Override
+		public void addWidget(IRecipeWidget recipeWidget) {
+			recipeWidgets.add(recipeWidget);
+		}
+		
+		@Override
+		public void addSlottedWidget(ISlottedRecipeWidget slottedRecipeWidget, List<IRecipeSlotDrawable> slots) {
+			// TODO
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public void addInputHandler(IJeiInputHandler inputHandler) {
+			inputHandlers.add(inputHandler);
+		}
+		
+		@Override
+		public void addGuiEventListener(IJeiGuiEventListener listener) {
+			guiEventListeners.add(listener);
+		}
+		
+		@Override
+		public IScrollBoxWidget addScrollBoxWidget(int width, int height, int x, int y) {
+			final var widget = new ScrollBoxRecipeWidget(width, height, x, y);
+			addWidget(widget);
+			addInputHandler(widget);
+			return widget;
+		}
+		
+		@Override
+		public IScrollGridWidget addScrollGridWidget(List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
+			return new ScrollGridWidget(slots, columns, visibleRows);
+		}
+		
+		private DeferredPlaceableWidget addTexture(EmiTexture texture) {
+			return new DeferredPlaceableWidget((x, y) -> widgets.addTexture(texture, x, y), texture.width, texture.height);
+		}
+		
+		@Override
+		public IPlaceable<?> addRecipeArrow() {
+			return addTexture(EmiTexture.EMPTY_ARROW);
+		}
+		
+		@Override
+		public IPlaceable<?> addRecipePlusSign() {
+			return addTexture(EmiTexture.PLUS);
+		}
+		
+		@Override
+		public IPlaceable<?> addAnimatedRecipeArrow(int cookTime) {
+			return new DeferredPlaceableWidget((x, y) -> widgets.addFillingArrow(x, y, cookTime), EmiTexture.EMPTY_ARROW.width, EmiTexture.EMPTY_ARROW.height);
+		}
+		
+		@Override
+		public IPlaceable<?> addAnimatedRecipeFlame(int cookTime) {
+			// TODO
+			return new IPlaceable() {
+				@Override
+				public IPlaceable setPosition(int i, int i1) {
+					return null;
+				}
+				
+				@Override
+				public int getWidth() {
+					return 0;
+				}
+				
+				@Override
+				public int getHeight() {
+					return 0;
+				}
+			};
+		}
+		
+		@Override
+		public ITextWidget addText(List<FormattedText> lines, int maxWidth, int maxHeight) {
+			return widgets.add(new TextWidget(lines, maxWidth, maxHeight));
 		}
 		
 	}

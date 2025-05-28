@@ -55,10 +55,6 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 # Known API Limitations
 
-### Scroll Widget
-
-Neither TMRV nor JEMI currently render this JEI widget properly. This limitation will eventually be addressed, but for now, recipes using it (such as Chipped's Workbench) will not render properly.
-
 ### JEI Config Files
 
 `.minecraft/config/jei/blacklist.json` is the only JEI config file that TMRV even reads. This file _should_ work fine for vanilla ingredient types and for modded ingredient types added by a JEI plugin (this does not include mods that support both JEI and EMI natively, such as Mekanism). This is meant to be a stop-gap for packs switching over from JEI. JEMI had a similar flaw. EMI has its own config for hiding ingredients - please use that instead. All other JEI config files are completely ignored by TMRV, and there are no plans to support them.

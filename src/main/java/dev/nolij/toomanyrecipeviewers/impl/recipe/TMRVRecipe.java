@@ -281,7 +281,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public IScrollGridWidget addScrollGridWidget(List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
-			return new ScrollGridWidget(slots, columns, visibleRows).addScrollWidgets(widgets);
+			return new ScrollGridWidget(widgets, slots, columns, visibleRows);
 		}
 		
 		private DeferredPlaceableWidget addTexture(EmiTexture texture) {

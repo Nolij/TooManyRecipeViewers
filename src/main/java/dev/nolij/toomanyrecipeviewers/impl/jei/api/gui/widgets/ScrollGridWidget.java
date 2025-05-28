@@ -2,14 +2,14 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets;
 
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.ITMRVSlotWidget;
-import dev.nolij.toomanyrecipeviewers.impl.widget.ButtonWidget;
+import dev.nolij.toomanyrecipeviewers.impl.widget.ScrollBarWidget;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.inputs.RecipeSlotUnderMouse;
 import mezz.jei.api.gui.widgets.IScrollGridWidget;
 import mezz.jei.common.util.ImmutableRect2i;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +22,13 @@ public class ScrollGridWidget implements IScrollGridWidget {
 	
 	private final List<ITMRVSlotWidget> slots = new ArrayList<>();
 	private final int columns;
-	private final int rows;
 	private final int visibleRows;
 	
 	private ImmutableRect2i rect;
-	private int scroll = 0;
 	
-	public ScrollGridWidget(List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
+	private final @Nullable ScrollBarWidget scrollBar;
+	
+	public ScrollGridWidget(WidgetHolder widgets, List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
 		for (final var slot : slots) {
 			if (slot instanceof ITMRVSlotWidget tmrvSlotWidget) {
 				tmrvSlotWidget.drawBack(true);
@@ -39,12 +39,14 @@ public class ScrollGridWidget implements IScrollGridWidget {
 		}
 		
 		this.columns = columns;
-		this.rows = (int) Math.ceil(((double) this.slots.size()) / (double) columns);
+		final var rows = (int) Math.ceil(((double) this.slots.size()) / (double) columns);
 		this.visibleRows = visibleRows;
-		if (visibleRows > rows)
-			scroll = -1;
 		
-		this.rect = new ImmutableRect2i(0, 0, SLOT_SIZE * columns + (scroll == -1 ? 0 : SCROLL_BAR_WIDTH), SLOT_SIZE * visibleRows);
+		if (rows > visibleRows)
+			this.scrollBar = widgets.add(new ScrollBarWidget(ImmutableRect2i.EMPTY, rows, visibleRows, this::updateGrid));
+		else
+			this.scrollBar = null;
+		this.rect = new ImmutableRect2i(0, 0, SLOT_SIZE * columns + (scrollBar == null ? 0 : SCROLL_BAR_WIDTH), SLOT_SIZE * visibleRows);
 		updateGrid();
 	}
 	
@@ -53,7 +55,7 @@ public class ScrollGridWidget implements IScrollGridWidget {
 			final var slot = slots.get(i);
 			final var column = i % columns;
 			final var row = i / columns;
-			final var renderRow = scroll == -1 ? row : row - scroll;
+			final var renderRow = scrollBar == null ? row : row - scrollBar.getScroll();
 			if (renderRow < 0 || renderRow >= visibleRows) {
 				slot.setVisible(false);
 			} else {
@@ -63,26 +65,6 @@ public class ScrollGridWidget implements IScrollGridWidget {
 		}
 	}
 	
-	public void scroll(int amount) {
-		if (scroll == -1)
-			return;
-		
-		this.scroll = Mth.clamp(scroll + amount, 0, rows - visibleRows);
-		updateGrid();
-	}
-	
-	public ScrollGridWidget addScrollWidgets(WidgetHolder widgets) {
-		if (scroll == -1)
-			return this;
-		
-		final var scrollArea = rect.keepRight(SCROLL_BAR_WIDTH).addOffset(2, SLOT_SIZE + 1);
-		
-		widgets.add(new ButtonWidget(scrollArea.keepTop(scrollArea.getHeight() / 2), () -> scroll > 0, () -> scroll(-1)));
-		widgets.add(new ButtonWidget(scrollArea.keepBottom(scrollArea.getHeight() / 2), () -> scroll < rows - visibleRows, () -> scroll(1)));
-		
-		return this;
-	}
-	
 	@Override
 	public ScreenRectangle getScreenRectangle() {
 		return rect.toScreenRectangle();
@@ -90,7 +72,11 @@ public class ScrollGridWidget implements IScrollGridWidget {
 	
 	@Override
 	public IScrollGridWidget setPosition(int x, int y) {
-		rect = rect.setPosition(x, y);
+		rect = rect.setPosition(x + 1, y);
+		
+		if (this.scrollBar != null)
+			scrollBar.setRect(rect.keepRight(SCROLL_BAR_WIDTH).addOffset(0, -1));
+		
 		updateGrid();
 		return this;
 	}

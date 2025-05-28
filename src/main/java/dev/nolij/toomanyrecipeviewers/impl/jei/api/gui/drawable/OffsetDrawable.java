@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui;
+package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable;
 
 import mezz.jei.api.gui.drawable.IDrawable;
 import net.minecraft.client.gui.GuiGraphics;

@@ -3,7 +3,7 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.SlotWidget;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.OffsetDrawable;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.ITMRVSlotWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.TMRVSlotWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.TMRVTankWidget;

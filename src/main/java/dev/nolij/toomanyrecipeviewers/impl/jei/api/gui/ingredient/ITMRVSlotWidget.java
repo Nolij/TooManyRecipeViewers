@@ -1,7 +1,7 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient;
 
 import dev.emi.emi.api.widget.SlotWidget;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.OffsetDrawable;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import org.jetbrains.annotations.Nullable;

@@ -8,7 +8,7 @@ import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
 import dev.emi.emi.runtime.EmiDrawContext;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.OffsetDrawable;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.util.OverrideableIngredientCycler;
@@ -56,7 +56,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	private final IngredientManager ingredientManager;
 	private final RecipeIngredientRole role;
-	private final ImmutableRect2i rect;
+	private ImmutableRect2i rect;
 	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides;
 	
 	private final OverrideableIngredientCycler ingredientCycler;
@@ -211,6 +211,11 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	@Override
 	public Rect2i getRect() {
 		return rect.toMutable();
+	}
+	
+	@Override
+	public void setPosition(int x, int y) {
+		this.rect = new ImmutableRect2i(x, y, rect.width(), rect.height());
 	}
 	
 	@Override

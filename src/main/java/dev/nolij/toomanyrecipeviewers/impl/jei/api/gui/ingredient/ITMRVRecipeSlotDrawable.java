@@ -39,11 +39,6 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 		return getRect().contains((int) x, (int) y);
 	}
 	
-	@Override
-	default void setPosition(int x, int y) {
-		throw new UnsupportedOperationException();
-	}
-	
 	@SuppressWarnings("removal")
 	@Override
 	default void addTooltipCallback(mezz.jei.api.gui.ingredient.IRecipeSlotTooltipCallback tooltipCallback) {

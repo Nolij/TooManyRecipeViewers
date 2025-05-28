@@ -1012,6 +1012,11 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 						public SlotWidget getOutputWidget(int x, int y) {
 							return new GeneratedSlotWidget(r -> emiOutputs.get(r.nextInt(emiOutputs.size())), unique, x, y);
 						}
+						
+						@Override
+						public boolean supportsRecipeTree() {
+							return emiOutputs.size() == 1;
+						}
 					};
 				}
 			}

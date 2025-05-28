@@ -17,7 +17,8 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 		List<EmiIngredient> inputs, 
 		List<EmiIngredient> catalysts, 
 		List<EmiStack> outputs, 
-		boolean shapeless
+		boolean shapeless,
+		boolean supportsRecipeTree
 	) {}
 	
 	private final IngredientManager ingredientManager;
@@ -30,6 +31,18 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	}
 	
 	public ExtractedEMIRecipeData extractEMIRecipeData() {
+		final var outputSlots = slots.stream().filter(x -> x.role == RecipeIngredientRole.OUTPUT).toList();
+		final var outputs = new ArrayList<EmiStack>();
+		
+		var supportsRecipeTree = true;
+		for (final var outputSlot : outputSlots) {
+			final var stacks = outputSlot.getEMIStacks();
+			outputs.addAll(stacks);
+			if (supportsRecipeTree && stacks.size() > 1) {
+				supportsRecipeTree = false;
+			}
+		}
+		
 		return new ExtractedEMIRecipeData(
 			slots.stream()
 				.filter(x -> x.role == RecipeIngredientRole.INPUT)
@@ -39,11 +52,9 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 				.filter(x -> x.role == RecipeIngredientRole.CATALYST)
 				.map(RecipeSlotBuilder::getEMIIngredient)
 				.toList(),
-			slots.stream()
-				.filter(x -> x.role == RecipeIngredientRole.OUTPUT)
-				.flatMap(x -> x.getEMIStacks().stream())
-				.toList(),
-			shapeless
+			outputs,
+			shapeless,
+			supportsRecipeTree
 		);
 	}
 	

@@ -63,6 +63,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 	private final List<EmiIngredient> inputs;
 	private final List<EmiIngredient> catalysts;
 	private final List<EmiStack> outputs;
+	private final boolean supportsRecipeTree;
 	
 	public TMRVRecipe(TooManyRecipeViewers runtime, RecipeManager.Category<T> category, T jeiRecipe, ResourceLocation id) {
 		this.runtime = runtime;
@@ -80,6 +81,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		inputs = recipeData.inputs();
 		catalysts = recipeData.catalysts();
 		outputs = recipeData.outputs();
+		supportsRecipeTree = recipeData.supportsRecipeTree();
 	}
 	
 	@Override
@@ -115,6 +117,11 @@ public class TMRVRecipe<T> implements EmiRecipe {
 	@Override
 	public int getDisplayHeight() {
 		return jeiCategory.getHeight();
+	}
+	
+	@Override
+	public boolean supportsRecipeTree() {
+		return supportsRecipeTree;
 	}
 	
 	private static class RecipeSlotsView implements IRecipeSlotsView {

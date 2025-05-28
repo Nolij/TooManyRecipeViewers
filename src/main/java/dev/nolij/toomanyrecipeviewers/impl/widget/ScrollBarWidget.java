@@ -14,6 +14,7 @@ public class ScrollBarWidget extends Widget implements IPlaceable<ScrollBarWidge
 	private ImmutableRect2i upRect;
 	private ImmutableRect2i downRect;
 	private ImmutableRect2i midRect;
+	private ImmutableRect2i scrollRect;
 	private ImmutableRect2i dragRect;
 	
 	private int scroll = 0;
@@ -47,10 +48,10 @@ public class ScrollBarWidget extends Widget implements IPlaceable<ScrollBarWidge
 		if (maxScroll == 0)
 			return;
 		
-		var dragRect = midRect.insetBy(1);
-		final var increment = dragRect.height() / ((double) maxScroll + 1);
-		dragRect = dragRect.keepTop((int) increment);
-		this.dragRect = dragRect.addOffset(0, (int) (increment * (double) scroll));
+		final var increment = scrollRect.height() / ((double) maxScroll + 1);
+		this.dragRect = scrollRect
+			.keepTop((int) increment)
+			.addOffset(0, (int) (increment * (double) scroll));
 	}
 	
 	public int getScroll() {
@@ -63,6 +64,7 @@ public class ScrollBarWidget extends Widget implements IPlaceable<ScrollBarWidge
 		upRect = rect.keepTop(rect.width());
 		downRect = rect.keepBottom(rect.width());
 		midRect = rect.cropTop(upRect.height()).cropBottom(downRect.height());
+		scrollRect = midRect.insetBy(1);
 		updateDragRect();
 	}
 	
@@ -105,9 +107,10 @@ public class ScrollBarWidget extends Widget implements IPlaceable<ScrollBarWidge
 		} else if (downRect.contains(mouseX, mouseY)) {
 			return scroll(scroll + 1);
 		} else if (midRect.contains(mouseX, mouseY)) {
-			return scroll((mouseY - midRect.y()) / (midRect.height() / (maxScroll + 1)));
+			return scroll((int) ((mouseY - scrollRect.y()) / (double) scrollRect.height() * ((double) maxScroll + 1)));
 		}
 		
 		return false;
 	}
+	
 }

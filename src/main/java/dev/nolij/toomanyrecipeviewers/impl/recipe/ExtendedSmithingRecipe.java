@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.util;
+package dev.nolij.toomanyrecipeviewers.impl.recipe;
 
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
@@ -84,15 +84,6 @@ public class ExtendedSmithingRecipe<R extends SmithingRecipe> implements EmiReci
 	}
 	
 	private TMRVSlotWidget addSlot(WidgetHolder widgets, SetMethod<R> setMethod, ImmutableRect2i rect, RecipeIngredientRole role, Consumer<TMRVSlotWidget> updateHook) {
-//		var typedIngredients = getTypedIngredients(setMethod).stream().map(runtime.ingredientManager::getEMIStack).toList();
-//		
-//		if (typedIngredients.isEmpty())
-//			return widgets.addSlot(x, y);
-//		else if (typedIngredients.size() == 1)
-//			return widgets.addSlot(typedIngredients.getFirst(), x, y);
-//		else
-//			return widgets.addGeneratedSlot(r -> typedIngredients.get(r.nextInt(typedIngredients.size())), unique, x, y);
-		
 		final var slot = new TMRVSlotWidget(runtime.ingredientManager, role, rect, updateHook);
 		setMethod.set(backingRecipe, slot.getIngredientCollector());
 		return widgets.add(slot);

@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets;
+package dev.nolij.toomanyrecipeviewers.impl.widget;
 
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.Widget;

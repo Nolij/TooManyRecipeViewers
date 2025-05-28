@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl;
+package dev.nolij.toomanyrecipeviewers.impl.recipe;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.emi.emi.api.recipe.EmiRecipe;
@@ -14,10 +14,10 @@ import dev.emi.emi.runtime.EmiDrawContext;
 import dev.emi.emi.screen.EmiScreenManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.DeferredPlaceableWidget;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.DrawableWidget;
+import dev.nolij.toomanyrecipeviewers.impl.widget.DeferredPlaceableWidget;
+import dev.nolij.toomanyrecipeviewers.impl.widget.DrawableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.ScrollGridWidget;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.TextWidget;
+import dev.nolij.toomanyrecipeviewers.impl.widget.TextWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
@@ -281,7 +281,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public IScrollGridWidget addScrollGridWidget(List<IRecipeSlotDrawable> slots, int columns, int visibleRows) {
-			return new ScrollGridWidget(slots, columns, visibleRows);
+			return new ScrollGridWidget(slots, columns, visibleRows).addScrollWidgets(widgets);
 		}
 		
 		private DeferredPlaceableWidget addTexture(EmiTexture texture) {

@@ -31,6 +31,7 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	private final IngredientManager ingredientManager;
 	private final RecipeIngredientRole role;
 	private ImmutableRect2i rect;
+	private boolean visible = true;
 	
 	private final OverrideableIngredientCycler ingredientCycler;
 	
@@ -74,9 +75,25 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 		this.tooltipCallbacks.addAll(tooltipCallbacks);
 	}
 	
+	@Override
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+	
 	//region SlotWidget
 	@Override
+	public void render(GuiGraphics draw, int mouseX, int mouseY, float delta) {
+		if (!visible)
+			return;
+		
+		super.render(draw, mouseX, mouseY, delta);
+	}
+	
+	@Override
 	public Bounds getBounds() {
+		if (!visible)
+			return Bounds.EMPTY;
+		
 		final var rect = this.rect.expandBy(this.output ? 6 : 1);
 		return new Bounds(rect.x(), rect.y(), rect.width(), rect.height());
 	}

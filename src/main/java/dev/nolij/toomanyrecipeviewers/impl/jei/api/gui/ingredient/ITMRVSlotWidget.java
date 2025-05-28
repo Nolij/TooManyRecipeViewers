@@ -19,6 +19,10 @@ public interface ITMRVSlotWidget {
 	
 	void addTooltipCallbacks(List<IRecipeSlotRichTooltipCallback> tooltipCallbacks);
 	
+	void setPosition(int x, int y);
+	
+	void setVisible(boolean visible);
+	
 	TMRVIngredientCollector getIngredientCollector();
 	
 	SlotWidget drawBack(boolean drawBack);

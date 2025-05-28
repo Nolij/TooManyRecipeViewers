@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets;
+package dev.nolij.toomanyrecipeviewers.impl.widget;
 
 import mezz.jei.api.gui.placement.IPlaceable;
 

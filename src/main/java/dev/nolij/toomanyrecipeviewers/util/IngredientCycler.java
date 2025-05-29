@@ -28,13 +28,14 @@ public abstract class IngredientCycler {
 	}
 	
 	public boolean isStatic() {
-		return getDisplayedIngredients().size() == 1;
+		return getDisplayedIngredients().size() <= 1;
 	}
 	
 	public Optional<ITypedIngredient<?>> getDisplayedIngredient() {
 		final var time = (long) (System.currentTimeMillis() * INCREMENT);
 		
 		if (time > lastGenerate) {
+			final var firstGenerate = lastGenerate == 0L;
 			lastGenerate = time;
 			updateHook();
 			
@@ -42,7 +43,7 @@ public abstract class IngredientCycler {
 			
 			if (ingredients.isEmpty())
 				displayedIngredient = null;
-			else if (lastGenerate == 0L || isStatic())
+			else if (firstGenerate || isStatic())
 				displayedIngredient = ingredients.getFirst();
 			else
 				displayedIngredient = ingredients.get(getRandom(time).nextInt(ingredients.size()));

@@ -17,6 +17,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuild
 import dev.nolij.toomanyrecipeviewers.impl.widget.DeferredPlaceableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.DrawableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.ScrollGridWidget;
+import dev.nolij.toomanyrecipeviewers.impl.widget.FillingFlameWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.TextWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -312,23 +313,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public IPlaceable<?> addAnimatedRecipeFlame(int cookTime) {
-			// TODO
-			return new IPlaceable() {
-				@Override
-				public IPlaceable setPosition(int i, int i1) {
-					return null;
-				}
-				
-				@Override
-				public int getWidth() {
-					return 0;
-				}
-				
-				@Override
-				public int getHeight() {
-					return 0;
-				}
-			};
+			return new DeferredPlaceableWidget((x, y) -> widgets.add(new FillingFlameWidget(x, y, cookTime)), EmiTexture.EMPTY_FLAME.width, EmiTexture.EMPTY_FLAME.height);
 		}
 		
 		@Override

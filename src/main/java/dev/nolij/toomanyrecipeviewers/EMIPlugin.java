@@ -100,14 +100,6 @@ public final class EMIPlugin implements EmiPlugin {
 				.map(IClickableIngredient::getTypedIngredient).map(runtime.ingredientManager::getEMIStack).findFirst().orElse(EmiStack.EMPTY), null, false);
 		});
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
-		registry.removeEmiStacks(emiStack -> {
-			try {
-				final var jeiIngredient = runtime.ingredientManager.getTypedIngredient(emiStack);
-				if (jeiIngredient.isPresent())
-					return !runtime.ingredientVisibility.isIngredientVisible(jeiIngredient.get());
-			} catch (Throwable ignored) {}
-			return false;
-		});
 		
 		runtime.lockRegistration();
 	}

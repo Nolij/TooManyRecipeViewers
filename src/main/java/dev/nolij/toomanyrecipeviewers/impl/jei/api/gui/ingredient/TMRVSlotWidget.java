@@ -32,6 +32,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+
 public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawable, ITMRVSlotWidget {
 	
 	static void drawJEIBackground(@Nullable OffsetDrawable background, GuiGraphics draw, int x, int y) {
@@ -205,7 +207,11 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	protected void addSlotTooltip(List<ClientTooltipComponent> list) {
 		final var builder = new JemiTooltipBuilder();
 		for (final var tooltipCallback : tooltipCallbacks) {
-			tooltipCallback.onRichTooltip(this, builder);
+			try {
+				tooltipCallback.onRichTooltip(this, builder);
+			} catch (Throwable t) {
+				LOGGER.error("Error invoking JEI tooltip callback: ", t);
+			}
 		}
 		list.addAll(builder.tooltip);
 		

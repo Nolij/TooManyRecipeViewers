@@ -214,6 +214,8 @@ tasks.shadowJar {
 		"mezz/jei/core/util/function/LazySupplier.class",
 		"mezz/jei/core/util/Pair.class",
 		"mezz/jei/core/util/WeakList.class",
+		"mezz/jei/gui/input/UserInput.class",
+		"mezz/jei/gui/input/InputType.class",
 		"mezz/jei/library/color/**/*.class",
 		"mezz/jei/library/config/ColorNameConfig.class",
 		"mezz/jei/library/config/EditModeConfig*.class",

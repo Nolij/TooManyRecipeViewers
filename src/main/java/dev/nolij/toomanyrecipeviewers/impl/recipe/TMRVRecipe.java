@@ -36,6 +36,8 @@ import mezz.jei.api.gui.widgets.ISlottedRecipeWidget;
 import mezz.jei.api.gui.widgets.ITextWidget;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.gui.input.InputType;
+import mezz.jei.gui.input.UserInput;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.widgets.ScrollBoxRecipeWidget;
 import net.minecraft.client.gui.GuiGraphics;
@@ -230,17 +232,42 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public boolean mouseClicked(int mouseX, int mouseY, int button) {
-			return handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button));
+			return handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button), 0);
 		}
 		
 		@Override
 		public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode));
+			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode), modifiers);
 		}
 		
-		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key input) {
+		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key key, int modifiers) {
+			final var input = new UserInput(key, mouseX, mouseY, modifiers, InputType.IMMEDIATE);
+			
+			for (final var inputHandler : inputHandlers) {
+				final var area = inputHandler.getArea();
+				if (area.containsPoint(mouseX, mouseY)) {
+					final var position = area.position();
+					if (inputHandler.handleInput(mouseX - position.x(), mouseY - position.y(), input))
+						return true;
+				}
+			}
+			for (final var guiEventListener : guiEventListeners) {
+				final var area = guiEventListener.getArea();
+				if (area.containsPoint(mouseX, mouseY)) {
+					final var position = area.position();
+					final var x = mouseX - position.x();
+					final var y = mouseY - position.y();
+					if (switch (key.getType()) {
+							case MOUSE -> guiEventListener.mouseReleased(x, y, key.getValue());
+							case KEYSYM -> guiEventListener.keyPressed(x, y, key.getValue(), 0, modifiers);
+							default -> false;
+						})
+						return true;
+				}
+			}
+			
 			//noinspection removal
-			return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, input);
+			return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, key);
 		}
 		
 		@Override

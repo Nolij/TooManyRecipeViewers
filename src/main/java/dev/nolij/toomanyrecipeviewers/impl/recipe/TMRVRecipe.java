@@ -41,6 +41,7 @@ import mezz.jei.gui.input.UserInput;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.widgets.ScrollBoxRecipeWidget;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -240,12 +241,18 @@ public class TMRVRecipe<T> implements EmiRecipe {
 			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode), modifiers);
 		}
 		
+		private static boolean containsPoint(ScreenRectangle area, int x, int y) {
+			return 
+				area.top() <= y && y <= area.bottom() &&
+				area.left() <= x && x <= area.right();
+		}
+		
 		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key key, int modifiers) {
 			final var input = new UserInput(key, mouseX, mouseY, modifiers, InputType.IMMEDIATE);
 			
 			for (final var inputHandler : inputHandlers) {
 				final var area = inputHandler.getArea();
-				if (area.containsPoint(mouseX, mouseY)) {
+				if (containsPoint(area, mouseX, mouseY)) {
 					final var position = area.position();
 					if (inputHandler.handleInput(mouseX - position.x(), mouseY - position.y(), input))
 						return true;
@@ -253,7 +260,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 			}
 			for (final var guiEventListener : guiEventListeners) {
 				final var area = guiEventListener.getArea();
-				if (area.containsPoint(mouseX, mouseY)) {
+				if (containsPoint(area, mouseX, mouseY)) {
 					final var position = area.position();
 					final var x = mouseX - position.x();
 					final var y = mouseY - position.y();

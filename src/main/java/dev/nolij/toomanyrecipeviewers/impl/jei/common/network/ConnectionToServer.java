@@ -9,6 +9,10 @@ import mezz.jei.common.Constants;
 import net.neoforged.neoforge.network.NetworkDirection;
 import net.neoforged.neoforge.network.NetworkHooks;
 *///?}
+import dev.emi.emi.api.recipe.EmiRecipeCategory;
+import dev.emi.emi.api.stack.EmiIngredient;
+import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.handler.EmiCraftContext;
@@ -17,14 +21,17 @@ import dev.emi.emi.network.EmiNetwork;
 import dev.emi.emi.network.FillRecipeC2SPacket;
 import dev.emi.emi.platform.EmiClient;
 import dev.emi.emi.registry.EmiRecipeFiller;
+import dev.nolij.toomanyrecipeviewers.mixin.PacketRecipeTransferAccessor;
 import mezz.jei.common.network.IConnectionToServer;
 import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import mezz.jei.common.transfer.TransferOperation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,9 +105,7 @@ public class ConnectionToServer implements IConnectionToServer {
 			/*.map(x -> x.index)*/
 			.map(containerMenu::getSlot).toList();
 		
-		final var craftingSlotIndex = new int[craftingSlots.size()];
-		for (int i = 0; i < craftingSlotIndex.length; i++)
-			craftingSlotIndex[i] = craftingSlots[i].index;
+		final var craftingSlotIndex = craftingSlots.stream().mapToInt(s -> s.index).toArray();
 		
 		final var transferOperationIndex = new ArrayList<Optional<TransferOperation>>(craftingSlots.size());
 		for (final var craftingSlotId : craftingSlotIndex) {
@@ -108,37 +113,79 @@ public class ConnectionToServer implements IConnectionToServer {
 				.stream().filter(x -> x.craftingSlotId() == craftingSlotId)
 				.findFirst());
 		}
-		
-		final var stacks = new ArrayList<ItemStack>(craftingSlots.size());
-		for (int i = 0; i < craftingSlotIndex.length; i++) {
-			stacks.add(transferOperationIndex[i]
-				.map(TransferOperation::inventorySlotId)
-				.map(containerMenu::getSlot)
-				.map(Slot::getItem)
-				.map(x -> x.copyWithCount(1))
-				.orElse(ItemStack.EMPTY));
-		}
+
+		// We need to compute the desired number of items to place in each slot
+
+		//noinspection rawtypes
+		var fakeRecipeHandler = new StandardRecipeHandler() {
+			@Override
+			public List<Slot> getInputSources(AbstractContainerMenu handler) {
+				return inventorySlots;
+			}
+
+			@Override
+			public List<Slot> getCraftingSlots(AbstractContainerMenu handler) {
+				return craftingSlots;
+			}
+
+			@Override
+			public boolean supportsRecipe(EmiRecipe recipe) {
+				return true;
+			}
+		};
+
+		var fakeIngredients = transferOperationIndex.stream()
+				.map(o -> o.map(t -> containerMenu.getSlot(t.inventorySlotId())))
+				.map(o -> o.map(s -> s.getItem().copyWithCount(1)))
+				.map(o -> o.map(EmiStack::of).orElse(EmiStack.EMPTY))
+				.map(EmiIngredient.class::cast)
+				.toList();
+
+		var fakeRecipe = new EmiRecipe() {
+			@Override
+			public EmiRecipeCategory getCategory() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public @Nullable ResourceLocation getId() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public List<EmiIngredient> getInputs() {
+				return fakeIngredients;
+			}
+
+			@Override
+			public List<EmiStack> getOutputs() {
+				return List.of();
+			}
+
+			@Override
+			public int getDisplayWidth() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public int getDisplayHeight() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void addWidgets(WidgetHolder widgets) {
+				throw new UnsupportedOperationException();
+			}
+		};
+
+		//noinspection unchecked
+		List<ItemStack> stacks = EmiRecipeFiller.getStacks(fakeRecipeHandler, fakeRecipe, containerScreen, ((PacketRecipeTransferAccessor)recipeTransferPacket).tmrv$isMaxTransfer() ? Integer.MAX_VALUE : 1);
 		
 		if (EmiClient.onServer) {
 			EmiNetwork.sendToServer(new FillRecipeC2SPacket(containerMenu, 0, inventorySlots, craftingSlots, null, stacks));
 		} else {
-			//noinspection rawtypes,unchecked
-			EmiRecipeFiller.clientFill(new StandardRecipeHandler() {
-				@Override
-				public List<Slot> getInputSources(AbstractContainerMenu handler) {
-					return inventorySlots;
-				}
-				
-				@Override
-				public List<Slot> getCraftingSlots(AbstractContainerMenu handler) {
-					return craftingSlots;
-				}
-				
-				@Override
-				public boolean supportsRecipe(EmiRecipe recipe) {
-					return true;
-				}
-			}, null, containerScreen, stacks, EmiCraftContext.Destination.NONE);
+			//noinspection unchecked
+			EmiRecipeFiller.clientFill(fakeRecipeHandler, null, containerScreen, stacks, EmiCraftContext.Destination.NONE);
 		}
 	}
 	

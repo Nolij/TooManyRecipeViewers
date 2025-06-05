@@ -13,6 +13,7 @@
 		"JemiUtilMixin",
 		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
+		"PacketRecipeTransferAccessor",
 		"SmithingRecipeCategoryAccessor",
 		"TypedIngredientMixin",
 		"TypedItemStackMixin",

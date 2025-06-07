@@ -61,7 +61,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	public <I> TMRVIngredientCollector addIngredients(IIngredientType<I> type, List<@Nullable I> ingredients) {
 		collectedIngredients.addAll(TypedIngredient.createAndFilterInvalidList(ingredientManager, type, ingredients, false)
 			//? if <21.1
-			/*.stream().map(Optional::orElseThrow).toList()*/
+			/*.stream().map(x -> x.orElse(null)).toList()*/
 		);
 		return this;
 	}
@@ -70,7 +70,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	public <I> TMRVIngredientCollector addIngredient(IIngredientType<I> type, I ingredient) {
 		collectedIngredients.add(TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
 			//? if <21.1
-			/*.orElseThrow()*/
+			/*.orElse(null)*/
 		);
 		return this;
 	}
@@ -80,7 +80,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		collectedIngredients.addAll(ingredients.stream()
 			.map(x -> TypedIngredient.createAndFilterInvalid(ingredientManager, x, false))
 			//? if <21.1
-			/*.map(Optional::orElseThrow)*/
+			/*.map(x -> x.orElse(null))*/
 			.toList());
 		return this;
 	}
@@ -89,7 +89,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	public <I> TMRVIngredientCollector addTypedIngredient(ITypedIngredient<I> typedIngredient) {
 		collectedIngredients.add(TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)
 			//? if <21.1
-			/*.orElseThrow()*/
+			/*.orElse(null)*/
 		);
 		return this;
 	}
@@ -99,7 +99,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		collectedIngredients.addAll(typedIngredients.stream()
 			.map(x -> TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, x))
 			//? if <21.1
-			/*.map(Optional::orElseThrow)*/
+			/*.map(x -> x.orElse(null))*/
 			.toList());
 		return this;
 	}

@@ -119,11 +119,7 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	protected void addSlotTooltip(List<ClientTooltipComponent> list) {
-		final var builder = new JemiTooltipBuilder();
-		for (final var tooltipCallback : tooltipCallbacks) {
-			tooltipCallback.onRichTooltip(this, builder);
-		}
-		list.addAll(builder.tooltip);
+		TMRVSlotWidget.applyTooltipCallbacks(list, tooltipCallbacks, this);
 		
 		super.addSlotTooltip(list);
 	}

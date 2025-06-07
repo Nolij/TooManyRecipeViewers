@@ -14,6 +14,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.util.OverrideableIngredientCycler;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
+import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -54,6 +55,18 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		context.matrices().translate(0.0F, 0.0F, 200.0F);
 		overlay.draw(context.raw(), x, y);
 		context.pop();
+	}
+	
+	static void applyTooltipCallbacks(List<ClientTooltipComponent> list, List<IRecipeSlotRichTooltipCallback> tooltipCallbacks, IRecipeSlotView slotView) {
+		final var builder = new JemiTooltipBuilder();
+		for (final var tooltipCallback : tooltipCallbacks) {
+			try {
+				tooltipCallback.onRichTooltip(slotView, builder);
+			} catch (Throwable t) {
+				LOGGER.error("Error invoking JEI tooltip callback: ", t);
+			}
+		}
+		list.addAll(builder.tooltip);
 	}
 	
 	private final IngredientManager ingredientManager;
@@ -205,15 +218,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	protected void addSlotTooltip(List<ClientTooltipComponent> list) {
-		final var builder = new JemiTooltipBuilder();
-		for (final var tooltipCallback : tooltipCallbacks) {
-			try {
-				tooltipCallback.onRichTooltip(this, builder);
-			} catch (Throwable t) {
-				LOGGER.error("Error invoking JEI tooltip callback: ", t);
-			}
-		}
-		list.addAll(builder.tooltip);
+		applyTooltipCallbacks(list, tooltipCallbacks, this);
 		
 		super.addSlotTooltip(list);
 	}

@@ -11,7 +11,11 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 
 public class TMRVTooltipBuilder implements ITooltipBuilder {
 	
@@ -70,10 +74,11 @@ public class TMRVTooltipBuilder implements ITooltipBuilder {
 	@Override
 	public void removeAll(List<Component> list) {
 		final var toRemove = new HashSet<>(list);
-		for (final var line : lines) {
+		for (final var iterator = lines.iterator(); iterator.hasNext(); ) {
+			final var line = iterator.next();
 			final var component = getComponent(line);
 			if (component != null && toRemove.contains(component)) {
-				lines.remove(line);
+				iterator.remove();
 				toRemove.remove(component);
 			}
 		}

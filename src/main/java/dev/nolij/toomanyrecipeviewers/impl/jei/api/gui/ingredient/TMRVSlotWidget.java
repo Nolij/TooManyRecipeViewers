@@ -6,8 +6,8 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.SlotWidget;
-import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
 import dev.emi.emi.runtime.EmiDrawContext;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVTooltipBuilder;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
@@ -58,7 +58,8 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	}
 	
 	static void applyTooltipCallbacks(List<ClientTooltipComponent> list, List<IRecipeSlotRichTooltipCallback> tooltipCallbacks, IRecipeSlotView slotView) {
-		final var builder = new JemiTooltipBuilder();
+		final var builder = new TMRVTooltipBuilder(list);
+		
 		for (final var tooltipCallback : tooltipCallbacks) {
 			try {
 				tooltipCallback.onRichTooltip(slotView, builder);
@@ -66,7 +67,9 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 				LOGGER.error("Error invoking JEI tooltip callback: ", t);
 			}
 		}
-		list.addAll(builder.tooltip);
+		
+		list.clear();
+		list.addAll(builder.getClientTooltipComponents());
 	}
 	
 	private final IngredientManager ingredientManager;

@@ -4,7 +4,6 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.TankWidget;
-import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;

@@ -73,7 +73,20 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
 	
-	private final Map<Object, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
+	private record TypedIngredientUID(
+		String typeUid, 
+		Object ingredientUid
+		//? if >=21.1
+		, boolean legacy
+	) {
+		//? if >=21.1 {
+		private TypedIngredientUID(String typeUid, Object ingredientUid) {
+			this(typeUid, ingredientUid, false);
+		}
+		//?}
+	}
+	
+	private final Map<TypedIngredientUID, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
 	
 	private volatile boolean locked = false;
 	
@@ -84,7 +97,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerIngredientType(new IngredientInfo<>(
 			VanillaTypes.ITEM_STACK,
 			Collections.emptyList(),
-			new ItemStackHelper(/*? if <21.1 {*//*runtime.subtypeManager, *//*?}*/ runtime.stackHelper, runtime.colorHelper),
+			new ItemStackHelper(
+				//? if <21.1
+				/*runtime.subtypeManager,*/
+				runtime.stackHelper,
+				runtime.colorHelper
+			),
 			new ItemStackRenderer()
 			//? if >=21.1
 			, ItemStack.STRICT_SINGLE_ITEM_CODEC
@@ -119,15 +137,17 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			.filter(FluidEmiStack.class::isInstance)
 			.map(ITypedIngredient.class::cast)
 			.forEach(x -> {
+				//noinspection rawtypes
+				final var fluidType = (IIngredientType) fluidHelper.getFluidIngredientType();
 				final var fluidStack = (FluidStack) x.getIngredient();
 				
 				fluidStacks.add(fluidStack);
 				
-				//noinspection unchecked,rawtypes
-				uidLookup.put(getUid((IIngredientType) fluidHelper.getFluidIngredientType(), fluidStack), x);
+				//noinspection unchecked
+				uidLookup.put(getUid(fluidType, fluidStack), x);
 				//? if >=21.1 {
-				//noinspection unchecked,rawtypes
-				uidLookup.put(getLegacyUid((IIngredientType) fluidHelper.getFluidIngredientType(), fluidStack), x);
+				//noinspection unchecked
+				uidLookup.put(getLegacyUid(fluidType, fluidStack), x);
 				//?}
 			});
 	}
@@ -376,16 +396,17 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.of(clickableIngredient);
 	}
 	
-	private <V> Object getUid(IIngredientType<V> ingredientType, V ingredient) {
+	private <V> TypedIngredientUID getUid(IIngredientType<V> ingredientType, V ingredient) {
 		//? if <21.1 {
 		/*return getLegacyUid(ingredientType, ingredient);
 		*///?} else {
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
+		final var typeUid = ingredientType.getUid();
 		
 		try {
-			return ingredientHelper.getUid(ingredient, UidContext.Ingredient);
+			return new TypedIngredientUID(typeUid, ingredientHelper.getUid(ingredient, UidContext.Ingredient));
 		} catch (Throwable getUidException) {
 			try {
 				LOGGER.error("Failed to get UID for broken ingredient {}", ingredientHelper.getErrorInfo(ingredient), getUidException);
@@ -399,13 +420,17 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	//? if >=21.1
 	@SuppressWarnings("removal")
-	private <V> Object getLegacyUid(IIngredientType<V> ingredientType, V ingredient) {
+	private <V> TypedIngredientUID getLegacyUid(IIngredientType<V> ingredientType, V ingredient) {
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
+		final var typeUid = ingredientType.getUid();
 		
 		try {
-			return ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient);
+			return new TypedIngredientUID(typeUid, ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient)
+				//? if >=21.1
+				, true
+			);
 		} catch (Throwable throwable) {
 			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
 			return null;
@@ -425,7 +450,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> ingredientType, String uid) {
 		//noinspection unchecked
-		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(uid, null));
+		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(new TypedIngredientUID(ingredientType.getUid(), uid), null));
 	}
 	
 	@Override
@@ -561,7 +586,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			itemStacks.addAll((Collection<ItemStack>) ingredients);
 		else if (fluidStacks != null && ingredientType == fluidHelper.getFluidIngredientType())
 			fluidStacks.addAll(ingredients);
-			
+		
 		for (final var ingredient : ingredients) {
 			final var emiStack = getEMIStack(ingredientType, ingredient);
 			//noinspection unchecked

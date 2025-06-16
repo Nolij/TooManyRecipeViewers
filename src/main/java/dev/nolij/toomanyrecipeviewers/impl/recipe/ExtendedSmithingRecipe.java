@@ -83,8 +83,8 @@ public class ExtendedSmithingRecipe<R extends SmithingRecipe> implements EmiReci
 		return collector;
 	}
 	
-	private TMRVSlotWidget addSlot(WidgetHolder widgets, SetMethod<R> setMethod, ImmutableRect2i rect, RecipeIngredientRole role, Consumer<TMRVSlotWidget> updateHook) {
-		final var slot = new TMRVSlotWidget(runtime.ingredientManager, role, rect, updateHook);
+	private TMRVSlotWidget addSlot(WidgetHolder widgets, SetMethod<R> setMethod, ImmutableRect2i rect, RecipeIngredientRole role) {
+		final var slot = new TMRVSlotWidget(runtime.ingredientManager, role, rect);
 		setMethod.set(backingRecipe, slot.getIngredientCollector());
 		return widgets.add(slot);
 	}
@@ -93,10 +93,12 @@ public class ExtendedSmithingRecipe<R extends SmithingRecipe> implements EmiReci
 	public void addWidgets(WidgetHolder widgets) {
 		widgets.addTexture(EmiTexture.EMPTY_ARROW, 62, 1);
 		final var origin = new ImmutableRect2i(1, 1, 16, 16);
-		final var templateSlot = addSlot(widgets, extension::setTemplate, origin, RecipeIngredientRole.INPUT, thiz -> {});
-		final var baseSlot = addSlot(widgets, extension::setBase, origin.addOffset(18, 0), RecipeIngredientRole.INPUT, thiz -> {});
-		final var additionSlot = addSlot(widgets, extension::setAddition, origin.addOffset(36, 0), RecipeIngredientRole.INPUT, thiz -> {});
-		addSlot(widgets, extension::setOutput, origin.addOffset(94, 0), RecipeIngredientRole.OUTPUT, thiz -> extension.onDisplayedIngredientsUpdate(backingRecipe, templateSlot, baseSlot, additionSlot, thiz, FocusGroup.EMPTY)).recipeContext(this);
+		final var templateSlot = addSlot(widgets, extension::setTemplate, origin, RecipeIngredientRole.INPUT);
+		final var baseSlot = addSlot(widgets, extension::setBase, origin.addOffset(18, 0), RecipeIngredientRole.INPUT);
+		final var additionSlot = addSlot(widgets, extension::setAddition, origin.addOffset(36, 0), RecipeIngredientRole.INPUT);
+		final var outputSlot = addSlot(widgets, extension::setOutput, origin.addOffset(94, 0), RecipeIngredientRole.OUTPUT);
+		outputSlot.recipeContext(this);
+		extension.onDisplayedIngredientsUpdate(backingRecipe, templateSlot, baseSlot, additionSlot, outputSlot, FocusGroup.EMPTY);
 	}
 	
 }

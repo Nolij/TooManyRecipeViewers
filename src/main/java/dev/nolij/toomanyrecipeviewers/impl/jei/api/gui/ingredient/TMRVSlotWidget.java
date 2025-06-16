@@ -1,7 +1,6 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.emi.emi.api.render.EmiRender;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
@@ -11,7 +10,6 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVTooltipBuilde
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
-import dev.nolij.toomanyrecipeviewers.util.OverrideableIngredientCycler;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
@@ -30,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
@@ -78,7 +75,8 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	private boolean visible = true;
 	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides;
 	
-	private final OverrideableIngredientCycler ingredientCycler;
+	private final TMRVIngredientCollector ingredientCollector;
+	private @Nullable TMRVIngredientCollector overrideIngredientCollector = null;
 	
 	private @Nullable String name = null;
 	
@@ -87,35 +85,26 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	private final List<IRecipeSlotRichTooltipCallback> tooltipCallbacks = new ArrayList<>();
 	
-	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect, Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides, Consumer<TMRVSlotWidget> updateHook) {
+	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect, Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides) {
 		super(EmiStack.EMPTY, rect.x(), rect.y());
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;
 		this.rendererOverrides = rendererOverrides;
-		this.ingredientCycler = new OverrideableIngredientCycler(ingredientManager) {
-			@Override
-			protected void updateHook() {
-				updateHook.accept(TMRVSlotWidget.this);
-			}
-		};
-	}
-	
-	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect, Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides) {
-		this(ingredientManager, role, rect, rendererOverrides, thiz -> {});
-	}
-	
-	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect, Consumer<TMRVSlotWidget> updateHook) {
-		this(ingredientManager, role, rect, Map.of(), updateHook);
+		this.ingredientCollector = new TMRVIngredientCollector(ingredientManager);
 	}
 	
 	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect) {
 		this(ingredientManager, role, rect, Map.of());
 	}
 	
+	private TMRVIngredientCollector getActiveIngredientCollector() {
+		return overrideIngredientCollector == null ? ingredientCollector : overrideIngredientCollector;
+	}
+	
 	@Override
 	public TMRVIngredientCollector getIngredientCollector() {
-		return ingredientCycler.ingredientCollector;
+		return ingredientCollector;
 	}
 	
 	@Override
@@ -168,55 +157,43 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		super.drawBackground(draw, mouseX, mouseY, delta);
 	}
 	
-	@Override
-	public void drawStack(GuiGraphics draw, int mouseX, int mouseY, float delta) {
-		final var optional = getDisplayedIngredient();
-		if (optional.isEmpty())
-			return;
-		
-		final var ingredient = optional.get();
-		final var type = ingredient.getType();
-		
-		if (rendererOverrides.containsKey(type)) {
-			//noinspection rawtypes
-			final var renderer = (IIngredientRenderer) rendererOverrides.get(type);
-			final var context = EmiDrawContext.wrap(draw);
-			final var bounds = getBounds();
-			final var xOff = bounds.x() + (bounds.width() - 16) / 2 + (16 - renderer.getWidth()) / 2;
-			final var yOff = bounds.y() + (bounds.height() - 16) / 2 + (16 - renderer.getHeight()) / 2;
-			RenderSystem.enableBlend();
-			context.push();
-			context.matrices().translate((float) xOff, (float) yOff, 0F);
-			//noinspection unchecked
-			renderer.render(context.raw(), ingredient.getIngredient());
-			context.pop();
-		} else {
-			super.drawStack(draw, mouseX, mouseY, delta);
-		}
-	}
+//	@Override
+//	public void drawStack(GuiGraphics draw, int mouseX, int mouseY, float delta) {
+//		final var optional = getDisplayedIngredient();
+//		if (optional.isEmpty())
+//			return;
+//		
+//		final var ingredient = optional.get();
+//		final var type = ingredient.getType();
+//		
+//		if (rendererOverrides.containsKey(type)) {
+//			//noinspection rawtypes
+//			final var renderer = (IIngredientRenderer) rendererOverrides.get(type);
+//			final var context = EmiDrawContext.wrap(draw);
+//			final var bounds = getBounds();
+//			final var xOff = bounds.x() + (bounds.width() - 16) / 2 + (16 - renderer.getWidth()) / 2;
+//			final var yOff = bounds.y() + (bounds.height() - 16) / 2 + (16 - renderer.getHeight()) / 2;
+//			RenderSystem.enableBlend();
+//			context.push();
+//			context.matrices().translate((float) xOff, (float) yOff, 0F);
+//			//noinspection unchecked
+//			renderer.render(context.raw(), ingredient.getIngredient());
+//			context.pop();
+//		} else {
+//			super.drawStack(draw, mouseX, mouseY, delta);
+//		}
+//	}
 	
 	@Override
 	public void drawOverlay(GuiGraphics draw, int mouseX, int mouseY, float delta) {
 		drawJEIOverlay(overlay, draw, rect.x(), rect.y());
 		
-		final var context = EmiDrawContext.wrap(draw);
-		
-		if (!ingredientCycler.isStatic() && !getStack().isEmpty()) {
-			int off = 1;
-			
-			if (output) {
-				off = 5;
-			}
-			
-			EmiRender.renderIngredientIcon(getStack(), context.raw(), x + off, y + off);
-		}
-		
-		super.drawOverlay(context.raw(), mouseX, mouseY, delta);
+		super.drawOverlay(draw, mouseX, mouseY, delta);
 	}
 	
 	@Override
 	public EmiIngredient getStack() {
-		return ingredientManager.getEMIStack(getDisplayedIngredient().orElse(null));
+		return getActiveIngredientCollector().getEMIIngredient();
 	}
 	
 	@Override
@@ -230,12 +207,15 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	//region ITMRVRecipeSlotDrawable
 	@Override
 	public IIngredientConsumer createDisplayOverrides() {
-		return ingredientCycler.createDisplayOverrides();
+		if (overrideIngredientCollector == null)
+			overrideIngredientCollector = new TMRVIngredientCollector(ingredientManager);
+		
+		return overrideIngredientCollector;
 	}
 	
 	@Override
 	public void clearDisplayOverrides() {
-		ingredientCycler.clearDisplayOverrides();
+		overrideIngredientCollector = null;
 	}
 	
 	@SuppressWarnings("removal")
@@ -251,19 +231,19 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public Stream<ITypedIngredient<?>> getAllIngredients() {
-		return ingredientCycler.ingredientCollector.stream();
+		return getActiveIngredientCollector().stream();
 	}
 	
 	//? if >=21.1 {
 	@Override
 	public @Unmodifiable List<@Nullable ITypedIngredient<?>> getAllIngredientsList() {
-		return ingredientCycler.ingredientCollector.getCollectedIngredients();
+		return getActiveIngredientCollector().getCollectedIngredients();
 	}
 	//?}
 	
 	@Override
 	public Optional<ITypedIngredient<?>> getDisplayedIngredient() {
-		return ingredientCycler.getDisplayedIngredient();
+		return getAllIngredients().findFirst();
 	}
 	
 	@Override
@@ -273,7 +253,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public boolean isEmpty() {
-		return ingredientCycler.ingredientCollector.isEmpty();
+		return getActiveIngredientCollector().isEmpty();
 	}
 	
 	@Override

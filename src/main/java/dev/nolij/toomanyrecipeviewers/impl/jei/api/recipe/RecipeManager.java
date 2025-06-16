@@ -23,7 +23,6 @@ import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
 import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
-import dev.emi.emi.api.widget.GeneratedSlotWidget;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.JemiCategory;
@@ -1010,7 +1009,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 						
 						@Override
 						public SlotWidget getOutputWidget(int x, int y) {
-							return new GeneratedSlotWidget(r -> emiOutputs.get(r.nextInt(emiOutputs.size())), unique, x, y);
+							return new SlotWidget(EmiIngredient.of(emiOutputs), x, y);
 						}
 						
 						@Override
@@ -1178,12 +1177,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					public void addWidgets(WidgetHolder widgets) {
 						widgets.addTexture(EmiTexture.PLUS, 27, 3);
 						widgets.addTexture(EmiTexture.EMPTY_ARROW, 75, 1);
-						if (leftInputs.size() == 1) widgets.addSlot(leftInputs.getFirst(), 0, 0);
-						else widgets.addGeneratedSlot(r -> leftInputs.get(r.nextInt(leftInputs.size())), unique, 0, 0);
-						if (rightInputs.size() == 1) widgets.addSlot(rightInputs.getFirst(), 49, 0);
-						else widgets.addGeneratedSlot(r -> rightInputs.get(r.nextInt(rightInputs.size())), unique, 49, 0);
-						if (outputs.size() == 1) widgets.addSlot(outputs.getFirst(), 107, 0).recipeContext(this);
-						else widgets.addGeneratedSlot(r -> outputs.get(r.nextInt(outputs.size())), unique, 107, 0).recipeContext(this);
+						widgets.addSlot(EmiIngredient.of(leftInputs), 0, 0);
+						widgets.addSlot(EmiIngredient.of(rightInputs), 49, 0);
+						widgets.addSlot(EmiIngredient.of(outputs), 107, 0).recipeContext(this);
 					}
 				};
 			}

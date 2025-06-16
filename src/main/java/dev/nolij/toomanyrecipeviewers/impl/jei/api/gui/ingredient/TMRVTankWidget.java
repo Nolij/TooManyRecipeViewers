@@ -8,7 +8,6 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.util.FluidRendererParameters;
-import dev.nolij.toomanyrecipeviewers.util.OverrideableIngredientCycler;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -32,7 +31,8 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	private ImmutableRect2i rect;
 	private boolean visible = true;
 	
-	private final OverrideableIngredientCycler ingredientCycler;
+	private final TMRVIngredientCollector ingredientCollector;
+	private @Nullable TMRVIngredientCollector overrideIngredientCollector = null;
 	
 	private @Nullable String name = null;
 	
@@ -46,12 +46,16 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;
-		this.ingredientCycler = new OverrideableIngredientCycler(ingredientManager);
+		this.ingredientCollector = new TMRVIngredientCollector(ingredientManager);
+	}
+	
+	private TMRVIngredientCollector getActiveIngredientCollector() {
+		return overrideIngredientCollector == null ? ingredientCollector : overrideIngredientCollector;
 	}
 	
 	@Override
 	public TMRVIngredientCollector getIngredientCollector() {
-		return ingredientCycler.ingredientCollector;
+		return ingredientCollector;
 	}
 	
 	@Override
@@ -113,7 +117,7 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public EmiIngredient getStack() {
-		return ingredientManager.getEMIStack(getDisplayedIngredient().orElse(null));
+		return getActiveIngredientCollector().getEMIIngredient();
 	}
 	
 	@Override
@@ -127,12 +131,15 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	//region ITMRVRecipeSlotDrawable
 	@Override
 	public IIngredientConsumer createDisplayOverrides() {
-		return ingredientCycler.createDisplayOverrides();
+		if (overrideIngredientCollector == null)
+			overrideIngredientCollector = new TMRVIngredientCollector(ingredientManager);
+		
+		return overrideIngredientCollector;
 	}
 	
 	@Override
 	public void clearDisplayOverrides() {
-		ingredientCycler.clearDisplayOverrides();
+		overrideIngredientCollector = null;
 	}
 	
 	@SuppressWarnings("removal")
@@ -148,19 +155,19 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public Stream<ITypedIngredient<?>> getAllIngredients() {
-		return ingredientCycler.ingredientCollector.stream();
+		return getActiveIngredientCollector().stream();
 	}
 	
 	//? if >=21.1 {
 	@Override
 	public @Unmodifiable List<@Nullable ITypedIngredient<?>> getAllIngredientsList() {
-		return ingredientCycler.ingredientCollector.getCollectedIngredients();
+		return getActiveIngredientCollector().getCollectedIngredients();
 	}
 	//?}
 	
 	@Override
 	public Optional<ITypedIngredient<?>> getDisplayedIngredient() {
-		return ingredientCycler.getDisplayedIngredient();
+		return getAllIngredients().findFirst();
 	}
 	
 	@Override
@@ -170,7 +177,7 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public boolean isEmpty() {
-		return ingredientCycler.ingredientCollector.isEmpty();
+		return getActiveIngredientCollector().isEmpty();
 	}
 	
 	@Override

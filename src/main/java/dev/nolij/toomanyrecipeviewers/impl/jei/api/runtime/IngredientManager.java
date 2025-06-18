@@ -15,6 +15,8 @@ import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
@@ -95,6 +97,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		this.runtime = runtime;
 		
 		registerIngredientType(new IngredientInfo<>(
+			ErrorIngredient.INSTANCE,
+			Collections.emptyList(),
+			ErrorIngredient.INSTANCE,
+			ErrorIngredient.INSTANCE
+			//? if >=21.1
+			, null
+		), Collections.emptyList());
+		
+		registerIngredientType(new IngredientInfo<>(
 			VanillaTypes.ITEM_STACK,
 			Collections.emptyList(),
 			new ItemStackHelper(
@@ -173,11 +184,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	public <T> EmiStack getEMIStack(IIngredientType<T> ingredientType, T ingredient) {
-		//noinspection IfCanBeSwitch
 		if (ingredient == null)
 			return EmiStack.EMPTY;
-		
-		if (ingredient instanceof ItemStack itemStack)
+		else if (ingredientType == null || ingredient == ErrorIngredient.INSTANCE)
+			return ErrorEmiStack.INSTANCE;
+		else if (ingredient instanceof ItemStack itemStack)
 			return getEMIStack(itemStack);
 		else if (ingredient instanceof FluidStack fluidStack)
 			return getEMIStack(fluidStack);
@@ -185,7 +196,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<T>) typeInfoMap.get(ingredientType);
 		if (ingredientInfo == null)
-			return EmiStack.EMPTY;
+			return ErrorEmiStack.INSTANCE;
 		
 		return new JemiStack<>(ingredientType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
 	}

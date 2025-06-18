@@ -2,7 +2,6 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.emi.api.stack.EmiIngredient;
-import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.runtime.EmiDrawContext;
@@ -10,6 +9,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVTooltipBuilde
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
@@ -86,7 +86,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	private final List<IRecipeSlotRichTooltipCallback> tooltipCallbacks = new ArrayList<>();
 	
 	public TMRVSlotWidget(IngredientManager ingredientManager, RecipeIngredientRole role, ImmutableRect2i rect, Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides) {
-		super(EmiStack.EMPTY, rect.x(), rect.y());
+		super(ErrorEmiStack.INSTANCE, rect.x(), rect.y());
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;

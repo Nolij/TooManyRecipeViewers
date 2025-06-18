@@ -42,6 +42,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuild
 import dev.nolij.toomanyrecipeviewers.impl.recipe.TMRVRecipe;
 import dev.nolij.toomanyrecipeviewers.mixin.SmithingRecipeCategoryAccessor;
 import dev.nolij.toomanyrecipeviewers.impl.recipe.ExtendedSmithingRecipe;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -996,7 +997,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 						recipeID,
 						extractedRecipeData.shapeless);
 				} else {
-					return new EmiPatternCraftingRecipe(emiInputs, EmiStack.EMPTY, recipeID, extractedRecipeData.shapeless) {
+					return new EmiPatternCraftingRecipe(emiInputs, ErrorEmiStack.INSTANCE, recipeID, extractedRecipeData.shapeless) {
 						@Override
 						public List<EmiStack> getOutputs() {
 							return emiOutputs;

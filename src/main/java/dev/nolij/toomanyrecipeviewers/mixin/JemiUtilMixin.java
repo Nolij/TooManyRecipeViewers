@@ -4,6 +4,7 @@ import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,7 +40,7 @@ public class JemiUtilMixin {
 	private static <T> void tmrv$getStack_typedingredient$HEAD(ITypedIngredient<T> typedIngredient, CallbackInfoReturnable<EmiStack> cir) {
 		tmrv$withIngredientManager(
 			ingredientManager -> cir.setReturnValue(ingredientManager.getEMIStack(typedIngredient)),
-			() -> cir.setReturnValue(EmiStack.EMPTY)
+			() -> cir.setReturnValue(ErrorEmiStack.INSTANCE)
 		);
 	}
 	
@@ -47,7 +48,7 @@ public class JemiUtilMixin {
 	private static <T> void tmrv$getStack_type_ingredient$HEAD(IIngredientType<T> type, T ingredient, CallbackInfoReturnable<EmiStack> cir) {
 		tmrv$withIngredientManager(
 			ingredientManager -> cir.setReturnValue(ingredientManager.getEMIStack(type, ingredient)),
-			() -> cir.setReturnValue(EmiStack.EMPTY)
+			() -> cir.setReturnValue(ErrorEmiStack.INSTANCE)
 		);
 	}
 	

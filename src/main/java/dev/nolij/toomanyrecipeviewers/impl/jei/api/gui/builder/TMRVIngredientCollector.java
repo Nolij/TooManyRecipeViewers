@@ -5,11 +5,15 @@ import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
+import dev.nolij.toomanyrecipeviewers.util.IStackish;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.library.ingredients.TypedIngredient;
+import mezz.jei.library.ingredients.itemStacks.TypedItemStack;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
@@ -58,49 +62,66 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	
 	//region IIngredientAcceptor
 	@Override
-	public <I> TMRVIngredientCollector addIngredients(IIngredientType<I> type, List<@Nullable I> ingredients) {
-		collectedIngredients.addAll(TypedIngredient.createAndFilterInvalidList(ingredientManager, type, ingredients, false)
-			//? if <21.1
-			/*.stream().map(x -> x.orElse(null)).toList()*/
-		);
+	public <I> TMRVIngredientCollector addIngredient(IIngredientType<I> type, I ingredient) {
+		if (type == VanillaTypes.ITEM_STACK) {
+			if (ingredient instanceof ItemStack itemStack)
+				collectedIngredients.add(TypedItemStack.create(itemStack));
+			else
+				collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
+		} else {
+			final var typedIngredient = TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
+				//? if <21.1
+				/*.orElse(null)*/
+				;
+			collectedIngredients.add(typedIngredient != null ? typedIngredient : ErrorIngredient.TYPED_INSTANCE);
+		}
+		
 		return this;
 	}
 	
 	@Override
-	public <I> TMRVIngredientCollector addIngredient(IIngredientType<I> type, I ingredient) {
-		collectedIngredients.add(TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
-			//? if <21.1
-			/*.orElse(null)*/
-		);
+	public <I> TMRVIngredientCollector addIngredients(IIngredientType<I> type, List<@Nullable I> ingredients) {
+		for (final var ingredient : ingredients) {
+			addIngredient(type, ingredient);
+		}
+		
 		return this;
 	}
 	
 	@Override
 	public TMRVIngredientCollector addIngredientsUnsafe(List<?> ingredients) {
-		collectedIngredients.addAll(ingredients.stream()
-			.map(x -> TypedIngredient.createAndFilterInvalid(ingredientManager, x, false))
-			//? if <21.1
-			/*.map(x -> x.orElse(null))*/
-			.toList());
+		for (final var ingredient : ingredients) {
+			final var type = ingredientManager.getIngredientType(ingredient);
+			if (type != null)
+				collectedIngredients.add(TypedIngredient.createUnvalidated(type, ingredient));
+			else
+				collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
+		}
+		
 		return this;
 	}
 	
 	@Override
 	public <I> TMRVIngredientCollector addTypedIngredient(ITypedIngredient<I> typedIngredient) {
-		collectedIngredients.add(TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)
-			//? if <21.1
-			/*.orElse(null)*/
-		);
+		if (typedIngredient instanceof IStackish<?>) {
+			collectedIngredients.add(typedIngredient);
+		} else {
+			final var copy = TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)
+				//? if <21.1
+				/*.orElse(null)*/
+				;
+			collectedIngredients.add(copy != null ? copy : ErrorIngredient.TYPED_INSTANCE);
+		}
+		
 		return this;
 	}
 	
 	@Override
 	public TMRVIngredientCollector addTypedIngredients(List<ITypedIngredient<?>> typedIngredients) {
-		collectedIngredients.addAll(typedIngredients.stream()
-			.map(x -> TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, x))
-			//? if <21.1
-			/*.map(x -> x.orElse(null))*/
-			.toList());
+		for (final var typedIngredient : typedIngredients) {
+			addTypedIngredient(typedIngredient);
+		}
+		
 		return this;
 	}
 	
@@ -108,7 +129,8 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	public TMRVIngredientCollector addOptionalTypedIngredients(List<Optional<ITypedIngredient<?>>> typedIngredients) {
 		typedIngredients.stream()
 			.map(x -> x.orElse(null))
-			.forEach(collectedIngredients::add);
+			.forEach(this::addTypedIngredient);
+		
 		return this;
 	}
 	

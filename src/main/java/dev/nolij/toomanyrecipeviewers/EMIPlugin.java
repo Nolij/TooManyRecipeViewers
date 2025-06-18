@@ -26,6 +26,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
 import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
@@ -53,6 +54,7 @@ import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -136,6 +138,9 @@ public final class EMIPlugin implements EmiPlugin {
 	private static final Path BLACKLIST_PATH = FMLPaths.CONFIGDIR.get().resolve("jei").resolve("blacklist.json");
 	
 	private void registerIngredients() {
+		if (!FMLEnvironment.production)
+			runtime.emiRegistry.addEmiStack(ErrorEmiStack.INSTANCE);
+		
 		runtime.colorHelper = new ColorHelper(new ColorNameConfig());
 		runtime.ingredientManager = new IngredientManager(runtime);
 		JEIPlugins.registerIngredients(runtime.ingredientManager);

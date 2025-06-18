@@ -1,12 +1,12 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient;
 
 import dev.emi.emi.api.stack.EmiIngredient;
-import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.TankWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.util.FluidRendererParameters;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
@@ -42,7 +42,7 @@ public class TMRVTankWidget extends TankWidget implements ITMRVRecipeSlotDrawabl
 	private final List<IRecipeSlotRichTooltipCallback> tooltipCallbacks = new ArrayList<>();
 	
 	public TMRVTankWidget(IngredientManager ingredientManager, RecipeIngredientRole role, FluidRendererParameters fluidRendererParameters, ImmutableRect2i rect) {
-		super(EmiStack.EMPTY, rect.x(), rect.y(), rect.width(), rect.height(), fluidRendererParameters.capacity());
+		super(ErrorEmiStack.INSTANCE, rect.x(), rect.y(), rect.width(), rect.height(), fluidRendererParameters.capacity());
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;

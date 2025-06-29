@@ -73,7 +73,6 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	private final RecipeIngredientRole role;
 	private ImmutableRect2i rect;
 	private boolean visible = true;
-	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides;
 	
 	private final TMRVIngredientCollector ingredientCollector;
 	private @Nullable TMRVIngredientCollector overrideIngredientCollector = null;
@@ -90,7 +89,6 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;
-		this.rendererOverrides = rendererOverrides;
 		this.ingredientCollector = new TMRVIngredientCollector(ingredientManager);
 	}
 	
@@ -156,33 +154,6 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		
 		super.drawBackground(draw, mouseX, mouseY, delta);
 	}
-	
-//	@Override
-//	public void drawStack(GuiGraphics draw, int mouseX, int mouseY, float delta) {
-//		final var optional = getDisplayedIngredient();
-//		if (optional.isEmpty())
-//			return;
-//		
-//		final var ingredient = optional.get();
-//		final var type = ingredient.getType();
-//		
-//		if (rendererOverrides.containsKey(type)) {
-//			//noinspection rawtypes
-//			final var renderer = (IIngredientRenderer) rendererOverrides.get(type);
-//			final var context = EmiDrawContext.wrap(draw);
-//			final var bounds = getBounds();
-//			final var xOff = bounds.x() + (bounds.width() - 16) / 2 + (16 - renderer.getWidth()) / 2;
-//			final var yOff = bounds.y() + (bounds.height() - 16) / 2 + (16 - renderer.getHeight()) / 2;
-//			RenderSystem.enableBlend();
-//			context.push();
-//			context.matrices().translate((float) xOff, (float) yOff, 0F);
-//			//noinspection unchecked
-//			renderer.render(context.raw(), ingredient.getIngredient());
-//			context.pop();
-//		} else {
-//			super.drawStack(draw, mouseX, mouseY, delta);
-//		}
-//	}
 	
 	@Override
 	public void drawOverlay(GuiGraphics draw, int mouseX, int mouseY, float delta) {

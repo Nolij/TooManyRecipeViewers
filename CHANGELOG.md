@@ -1,1 +1,3 @@
+- added error ingredient for conversion failures so broken recipes can be more easily identified and reported
+- use `EmiIngredient` instead of cycling slot widgets (this requires removing support for renderer overrides but greatly improves usability in other ways)
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

@@ -77,8 +77,6 @@ dependencies {
 	
 	compileOnly("systems.manifold:manifold-rt:${"manifold_version"()}")
 	annotationProcessor("systems.manifold:manifold-exceptions:${"manifold_version"()}")
-	implementation("systems.manifold:manifold-ext-rt:${"manifold_version"()}")
-	annotationProcessor("systems.manifold:manifold-ext:${"manifold_version"()}")
 }
 
 tasks.withType<JavaCompile> {

@@ -22,6 +22,11 @@ public class ErrorEmiStack extends EmiStack {
 	private static final int BACKGROUND_COLOR = 0xFFAA0000;
 	private static final int TEXT_COLOUR = 0xFFDDDD33;
 	
+	static void render(GuiGraphics draw) {
+		draw.fill(0, 0, 16, 16, BACKGROUND_COLOR);
+		draw.drawCenteredString(FONT, Component.literal("!?!").withStyle(ChatFormatting.OBFUSCATED), 8, Y_OFFSET, TEXT_COLOUR);
+	}
+	
 	public static final ErrorEmiStack INSTANCE = new ErrorEmiStack();
 	
 	private ErrorEmiStack() {}
@@ -29,11 +34,6 @@ public class ErrorEmiStack extends EmiStack {
 	@Override
 	public EmiStack copy() {
 		return this;
-	}
-	
-	public static void render(GuiGraphics draw) {
-		draw.fill(0, 0, 16, 16, BACKGROUND_COLOR);
-		draw.drawCenteredString(FONT, Component.literal("!?!").withStyle(ChatFormatting.OBFUSCATED), 8, Y_OFFSET, TEXT_COLOUR);
 	}
 	
 	@Override

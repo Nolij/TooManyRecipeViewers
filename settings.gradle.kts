@@ -25,6 +25,7 @@ plugins {
 rootProject.name = "toomanyrecipeviewers"
 
 include(":jei-api")
+include(":benchmarktool")
 
 tau.stonecutter.create {
 	config("21.1", "neoforge")

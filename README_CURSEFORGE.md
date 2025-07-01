@@ -41,17 +41,17 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 |                             | TMRV                                                                        | JEMI                                                                           | Comparison                                                       |
 |-----------------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------------|------------------------------------------------------------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 2813ms (3ms before world load, 2810ms after world load)&nbsp;&nbsp;&nbsp;   | 8048ms (6498ms before world load, 1550ms after world load)&nbsp;&nbsp;&nbsp;   | -5235ms (-6495ms before world load, +1260ms after world load)    |
-| ATM10&nbsp;&nbsp;&nbsp;     | 4943ms (2ms before world load, 4941ms after world load)&nbsp;&nbsp;&nbsp;   | 16372ms (12700ms before world load, 3672ms after world load)&nbsp;&nbsp;&nbsp; | -11429ms (-12698ms before world load, +1269ms after world load)  |
-| ATM9&nbsp;&nbsp;&nbsp;      | 36973ms (1ms before world load, 36972ms after world load)&nbsp;&nbsp;&nbsp; | 47790ms (41220ms before world load, 6570ms after world load)&nbsp;&nbsp;&nbsp; | -10817ms (-41219ms before world load, +30402ms after world load) |
+| Craftoria&nbsp;&nbsp;&nbsp; | 3201ms (2ms before world load, 3199ms after world load)&nbsp;&nbsp;&nbsp;   | 8277ms (6751ms before world load, 1526ms after world load)&nbsp;&nbsp;&nbsp;   | -5076ms (-6749ms before world load, +1673ms after world load)    |
+| ATM10&nbsp;&nbsp;&nbsp;     | 7484ms (2ms before world load, 7482ms after world load)&nbsp;&nbsp;&nbsp;   | 18658ms (14500ms before world load, 4158ms after world load)&nbsp;&nbsp;&nbsp; | -11174ms (-14498ms before world load, +3324ms after world load)  |
+| ATM9&nbsp;&nbsp;&nbsp;      | 32392ms (2ms before world load, 32390ms after world load)&nbsp;&nbsp;&nbsp; | 49409ms (42590ms before world load, 6819ms after world load)&nbsp;&nbsp;&nbsp; | -17017ms (-42588ms before world load, +25571ms after world load) |
 
 ### Memory Usage
 
 |                             | TMRV                        | JEMI                        | Comparison               |
 |-----------------------------|-----------------------------|-----------------------------|--------------------------|
-| Craftoria&nbsp;&nbsp;&nbsp; | 2.916 GiB&nbsp;&nbsp;&nbsp; | 3.066 GiB&nbsp;&nbsp;&nbsp; | -153.6 MiB (approximate) |
-| ATM10&nbsp;&nbsp;&nbsp;     | 3.579 GiB&nbsp;&nbsp;&nbsp; | 4.508 GiB&nbsp;&nbsp;&nbsp; | -951.3 MiB (approximate) |
-| ATM9&nbsp;&nbsp;&nbsp;      | 4.738 GiB&nbsp;&nbsp;&nbsp; | 5.627 GiB&nbsp;&nbsp;&nbsp; | -910.3 MiB (approximate) |
+| Craftoria&nbsp;&nbsp;&nbsp; | 2.722 GiB&nbsp;&nbsp;&nbsp; | 2.872 GiB&nbsp;&nbsp;&nbsp; | -153.6 MiB (approximate) |
+| ATM10&nbsp;&nbsp;&nbsp;     | 3.580 GiB&nbsp;&nbsp;&nbsp; | 4.491 GiB&nbsp;&nbsp;&nbsp; | -932.9 MiB (approximate) |
+| ATM9&nbsp;&nbsp;&nbsp;      | 4.345 GiB&nbsp;&nbsp;&nbsp; | 5.939 GiB&nbsp;&nbsp;&nbsp; | -1.594 GiB               |
 
 # Known API Limitations
 

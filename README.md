@@ -41,17 +41,17 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 |           | TMRV                                                      | JEMI                                                         | Comparison                                                       |
 |-----------|-----------------------------------------------------------|--------------------------------------------------------------|------------------------------------------------------------------|
-| Craftoria | 2813ms (3ms before world load, 2810ms after world load)   | 8048ms (6498ms before world load, 1550ms after world load)   | -5235ms (-6495ms before world load, +1260ms after world load)    |
-| ATM10     | 4943ms (2ms before world load, 4941ms after world load)   | 16372ms (12700ms before world load, 3672ms after world load) | -11429ms (-12698ms before world load, +1269ms after world load)  |
-| ATM9      | 36973ms (1ms before world load, 36972ms after world load) | 47790ms (41220ms before world load, 6570ms after world load) | -10817ms (-41219ms before world load, +30402ms after world load) |
+| Craftoria | 3201ms (2ms before world load, 3199ms after world load)   | 8277ms (6751ms before world load, 1526ms after world load)   | -5076ms (-6749ms before world load, +1673ms after world load)    |
+| ATM10     | 7484ms (2ms before world load, 7482ms after world load)   | 18658ms (14500ms before world load, 4158ms after world load) | -11174ms (-14498ms before world load, +3324ms after world load)  |
+| ATM9      | 32392ms (2ms before world load, 32390ms after world load) | 49409ms (42590ms before world load, 6819ms after world load) | -17017ms (-42588ms before world load, +25571ms after world load) |
 
 ### Memory Usage
 
 |           | TMRV      | JEMI      | Comparison               |
 |-----------|-----------|-----------|--------------------------|
-| Craftoria | 2.916 GiB | 3.066 GiB | -153.6 MiB (approximate) |
-| ATM10     | 3.579 GiB | 4.508 GiB | -951.3 MiB (approximate) |
-| ATM9      | 4.738 GiB | 5.627 GiB | -910.3 MiB (approximate) |
+| Craftoria | 2.722 GiB | 2.872 GiB | -153.6 MiB (approximate) |
+| ATM10     | 3.580 GiB | 4.491 GiB | -932.9 MiB (approximate) |
+| ATM9      | 4.345 GiB | 5.939 GiB | -1.594 GiB               |
 
 # Known API Limitations
 

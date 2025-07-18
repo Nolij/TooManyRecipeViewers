@@ -290,8 +290,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public <V> void addIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
-		if (locked)
-			throw new IllegalStateException();
+		if (locked) {
+			LOGGER.error(new IllegalStateException("Tried to add ingredients after registry is locked"));
+			return;
+		}
 		
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
@@ -326,8 +328,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
-		if (locked)
-			throw new IllegalStateException();
+		if (locked) {
+			LOGGER.error(new IllegalStateException("Tried to remove ingredients after registry is locked"));
+			return;
+		}
 		
 		//noinspection unchecked
 		final var ingredientInfo = (IngredientInfo<V>) typeInfoMap.get(ingredientType);
@@ -528,7 +532,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
 		if (locked)
-			throw new IllegalStateException();
+			throw new IllegalStateException("Tried to add ingredient alias after registry is locked");
 		
 		final var emiStack = getEMIStack(type, ingredient);
 		final var normalizedEMIStack = emiStack.getEmiStacks().getFirst();
@@ -590,7 +594,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private <V> void registerIngredients(IIngredientType<V> ingredientType, Collection<V> ingredients) {
 		if (locked)
-			throw new IllegalStateException();
+			throw new IllegalStateException("Tried to add ingredients after registry is locked");
 		
 		if (itemStacks != null && ingredientType == VanillaTypes.ITEM_STACK)
 			//noinspection unchecked
@@ -613,7 +617,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private <V> void registerIngredientType(IngredientInfo<V> ingredientInfo, Collection<V> ingredients) {
 		if (locked)
-			throw new IllegalStateException();
+			throw new IllegalStateException("Tried to add ingredient type after registry is locked");
 		
 		final var ingredientType = ingredientInfo.getIngredientType();
 		

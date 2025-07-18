@@ -21,7 +21,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
       - name: Build
-        run: ./gradlew chiseledBuild -Prelease_channel=PRE_RELEASE
+        run: ./gradlew build -Prelease_channel=PRE_RELEASE
       - name: Publish
         run: ./gradlew taugradle_publish -Prelease_channel=PRE_RELEASE
         env:

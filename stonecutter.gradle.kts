@@ -19,15 +19,9 @@ idea.module {
 project.group = "maven_group"()
 project.version = tau.versioning.version("mod_version"(), project.properties["release_channel"])
 
-val chiseledBuild = tasks.register("chiseledBuild", stonecutter.chiseled) {
-	group = "project"
-	ofTask("build")
-}
-stonecutter registerChiseled chiseledBuild
-
 tasks.register("runClientActive") {
 	group = "project"
-	dependsOn("${stonecutter.current.project}:runClient")
+	dependsOn("${stonecutter.current?.project}:runClient")
 }
 
 tau.publishing.publish {
@@ -79,17 +73,55 @@ tau.publishing.publish {
 	}
 }
 
-stonecutter.parameters {
-	replacement(eval(metadata.version, ">=21.1"), "mezz.jei.forge", "mezz.jei.neoforge")
-	replacement(eval(metadata.version, ">=21.1"), "mezz.jei.api.forge", "mezz.jei.api.neoforge")
-	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.client.event", "net.neoforged.neoforge.client.event")
-	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.fml", "net.neoforged.fml")
-	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.network", "net.neoforged.neoforge.network")
-	replacement(eval(metadata.version, ">=21.1"), "net.minecraftforge.fluids", "net.neoforged.neoforge.fluids")
-	replacement(eval(metadata.version, ">=21.1"), "@Nullable CompoundTag dataComponentPatch", "DataComponentPatch dataComponentPatch")
-	replacement(eval(metadata.version, ">=21.1"), "(dataComponentPatch == null || dataComponentPatch.isEmpty())", "(dataComponentPatch.isEmpty())")
-	replacement(eval(metadata.version, ">=21.1"), "import net.minecraft.nbt.CompoundTag;", "import net.minecraft.core.component.DataComponentPatch;")
-	replacement(eval(metadata.version, ">=21.1"), "TypedIngredient.deepCopy", "TypedIngredient.defensivelyCopyTypedIngredientFromApi")
-	replacement(eval(metadata.version, ">=21.1"), ".getNbt()", ".getComponentChanges()")
-	replacement(eval(metadata.version, ">=21.1"), ".getTag()", ".getComponentsPatch()")
+stonecutter parameters {
+	replacements {
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("mezz.jei.forge", "mezz.jei.neoforge")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("mezz.jei.api.forge", "mezz.jei.api.neoforge")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("net.minecraftforge.client.event", "net.neoforged.neoforge.client.event")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("net.minecraftforge.fml", "net.neoforged.fml")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("net.minecraftforge.network", "net.neoforged.neoforge.network")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("net.minecraftforge.fluids", "net.neoforged.neoforge.fluids")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("@Nullable CompoundTag dataComponentPatch", "DataComponentPatch dataComponentPatch")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("(dataComponentPatch == null || dataComponentPatch.isEmpty())", "(dataComponentPatch.isEmpty())")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("import net.minecraft.nbt.CompoundTag;", "import net.minecraft.core.component.DataComponentPatch;")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace("TypedIngredient.deepCopy", "TypedIngredient.defensivelyCopyTypedIngredientFromApi")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace(".getNbt()", ".getComponentChanges()")
+		}
+		string {
+			direction = eval(current.version, ">=21.1")
+			replace(".getTag()", ".getComponentsPatch()")
+		}
+	}
 }

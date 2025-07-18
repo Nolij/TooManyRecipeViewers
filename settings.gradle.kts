@@ -12,22 +12,20 @@ pluginManagement {
 		
 		id("org.gradle.toolchains.foojay-resolver-convention") version("foojay_resolver_convention_version"())
 		id("dev.kikugie.stonecutter") version("stonecutter_version"())
-		id("org.taumc.gradle.stonecutter") version("taugradle_version"())
 	}
 }
 
 plugins {
 	id("org.gradle.toolchains.foojay-resolver-convention")
 	id("dev.kikugie.stonecutter")
-	id("org.taumc.gradle.stonecutter")
 }
 
 rootProject.name = "toomanyrecipeviewers"
 
 include(":jei-api")
 
-tau.stonecutter.create {
-	config("21.1", "neoforge")
-	config("20.1", "lexforge")
-	subproject("jei-api")
+stonecutter.create(rootProject) {
+	vers("21.1-neoforge", "21.1")
+	vers("20.1-lexforge", "20.1")
+	branch("jei-api")
 }

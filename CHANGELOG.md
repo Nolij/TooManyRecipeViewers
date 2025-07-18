@@ -1,3 +1,4 @@
-- added error ingredient for conversion failures so broken recipes can be more easily identified and reported
-- use `EmiIngredient` instead of cycling slot widgets (this requires removing support for renderer overrides but greatly improves usability in other ways)
+- updated target JEI version on 21.1 to 19.22.0.315
+- fixed potential crashes when JEI plugins call `addIngredientsAtRuntime` or `removeIngredientsAtRuntime` after the registry has been locked
+- updated Stonecutter to 0.7
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

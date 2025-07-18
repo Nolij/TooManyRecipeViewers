@@ -1,5 +1,6 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 
+import com.mojang.datafixers.util.Either;
 import dev.emi.emi.mixin.accessor.OrderedTextTooltipComponentAccessor;
 import dev.nolij.toomanyrecipeviewers.util.ComponentFormattedCharSink;
 import dev.nolij.toomanyrecipeviewers.util.FormattedTextConsumer;
@@ -58,6 +59,24 @@ public class TMRVTooltipBuilder implements ITooltipBuilder {
 	@Override
 	public void clear() {
 		lines.clear();
+	}
+	
+	@Override
+	public void clearIngredient() {
+		setIngredient(null);
+	}
+	
+	@Override
+	public List<Either<FormattedText, TooltipComponent>> getLines() {
+		return lines.stream()
+			.map(x -> (x instanceof FormattedText || x instanceof TooltipComponent) ? x : getComponent(x))
+			.filter(Objects::nonNull)
+			.<Either<FormattedText, TooltipComponent>>map(line -> switch (line) {
+				case FormattedText x -> Either.left(x);
+				case TooltipComponent x -> Either.right(x);
+				default -> throw new IllegalStateException();
+			})
+			.toList();
 	}
 	//?}
 	

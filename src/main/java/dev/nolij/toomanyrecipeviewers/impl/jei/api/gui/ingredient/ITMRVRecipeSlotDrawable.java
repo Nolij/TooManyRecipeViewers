@@ -21,17 +21,29 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 		throw new UnsupportedOperationException();
 	}
 	
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	@Override
 	default List<Component> getTooltip() {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
 	
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	@Override
 	default void getTooltip(ITooltipBuilder tooltipBuilder) {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
+	
+	//? if >=21.1 {
+	@Override
+	default void drawTooltip(GuiGraphics guiGraphics, int i, int i1) {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+	//?}
 	
 	@SuppressWarnings("removal")
 	@Override

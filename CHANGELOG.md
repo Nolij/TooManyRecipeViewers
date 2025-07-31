@@ -1,4 +1,2 @@
-- updated target JEI version on 21.1 to 19.22.0.315
-- fixed potential crashes when JEI plugins call `addIngredientsAtRuntime` or `removeIngredientsAtRuntime` after the registry has been locked
-- updated Stonecutter to 0.7
+- fix bug when JEI plugin errors
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

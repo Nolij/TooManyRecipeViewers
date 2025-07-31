@@ -128,9 +128,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				
 				itemStacks.add(itemStack);
 				
-				uidLookup.put(getUid(VanillaTypes.ITEM_STACK, itemStack), x);
-				//? if >=21.1
-				uidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
+				try {
+					uidLookup.put(getUid(VanillaTypes.ITEM_STACK, itemStack), x);
+					//? if >=21.1
+					uidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
+				} catch (Throwable t) {
+					LOGGER.error("Broken ItemStack {}", itemStack.toString(), t);
+				}
 			});
 		
 		//noinspection rawtypes,unchecked
@@ -154,12 +158,16 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				
 				fluidStacks.add(fluidStack);
 				
-				//noinspection unchecked
-				uidLookup.put(getUid(fluidType, fluidStack), x);
-				//? if >=21.1 {
-				//noinspection unchecked
-				uidLookup.put(getLegacyUid(fluidType, fluidStack), x);
-				//?}
+				try {
+					//noinspection unchecked
+					uidLookup.put(getUid(fluidType, fluidStack), x);
+					//? if >=21.1 {
+					//noinspection unchecked
+					uidLookup.put(getLegacyUid(fluidType, fluidStack), x);
+					//?}
+				} catch (Throwable t) {
+					LOGGER.error("Broken FluidStack {}", fluidStack.toString(), t);
+				}
 			});
 	}
 	

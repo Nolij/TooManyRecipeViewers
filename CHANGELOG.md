@@ -1,2 +1,2 @@
-- fix bug when JEI plugin errors
+- fix unreported bug
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

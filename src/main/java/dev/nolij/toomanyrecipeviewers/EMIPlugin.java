@@ -98,8 +98,14 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		registry.addGenericStackProvider((screen, x, y) -> {
 			//noinspection removal
-			return new EmiStackInteraction(runtime.screenHelper.getClickableIngredientUnderMouse(screen, x, y)
-				.map(IClickableIngredient::getTypedIngredient).map(runtime.ingredientManager::getEMIStack).findFirst().orElse(EmiStack.EMPTY), null, false);
+			return new EmiStackInteraction(
+				runtime.screenHelper
+					.getClickableIngredientUnderMouse(screen, x, y)
+					.map(IClickableIngredient::getTypedIngredient)
+					.map(runtime.ingredientManager::getEMIStack)
+					.findFirst()
+					.orElse(EmiStack.EMPTY), 
+				null, false);
 		});
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
 		

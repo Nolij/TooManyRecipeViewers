@@ -473,7 +473,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> ingredientType, String uid) {
 		//noinspection unchecked
-		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(new TypedIngredientUID(ingredientType.getUid(), uid), null));
+		return Optional.ofNullable(
+			(ITypedIngredient<V>) uidLookup.getOrDefault(
+				new TypedIngredientUID(ingredientType.getUid(), uid), 
+				//? if >=21.1 {
+				uidLookup.getOrDefault(new TypedIngredientUID(ingredientType.getUid(), uid, true), null)
+				//?} else
+				/*null*/
+			)
+		);
 	}
 	
 	@Override

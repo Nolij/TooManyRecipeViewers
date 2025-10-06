@@ -2,6 +2,8 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 
 //? if >=21.1 {
 import com.mojang.serialization.Codec;
+import mezz.jei.api.gui.builder.IClickableIngredientFactory;
+import mezz.jei.common.input.ClickableIngredientFactory;
 //?}
 import com.google.common.collect.Lists;
 import dev.emi.emi.EmiPort;
@@ -53,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -229,7 +232,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	//region IIngredientManager	
 	@SuppressWarnings("unchecked")
-	private @Unmodifiable <V> Collection<ITypedIngredient<V>> getAllTypedIngredients(IIngredientType<V> ingredientType) {
+	public @Unmodifiable <V> Collection<ITypedIngredient<V>> getAllTypedIngredients(IIngredientType<V> ingredientType) {
 		return EmiStackList.stacks.stream()
 			.filter(ITypedIngredient.class::isInstance)
 			.map(ITypedIngredient.class::cast)
@@ -390,8 +393,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	//? if <21.1
 	/*@SuppressWarnings("UnnecessaryLocalVariable")*/
 	@Override
-	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> ingredientType, V ingredient) {
-		final var result = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, false);
+	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> ingredientType, V ingredient /*? if >=21.1 {*/, boolean normalize /*?}*/) {
+        //? if <21.1
+        /*boolean normalize = false;*/
+		final var result = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, normalize);
 		//? if >=21.1 {
 		return Optional.ofNullable(result);
 		//?} else
@@ -540,7 +545,21 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		registerIngredients(ingredientType, ingredients);
 		//noinspection unchecked
-		((IngredientInfo<V>) typeInfoMap.get(ingredientType)).addIngredients(ingredients);
+        var ingredientInfo = ((IngredientInfo<V>) typeInfoMap.get(ingredientType));
+        //? if <21.1 {
+        /*ingredientInfo.addIngredients(ingredients);
+        *///?} else {
+        List<ITypedIngredient<V>> typedIngredientList = new ArrayList<>(ingredients.size());
+        for (V ingredient : ingredients) {
+            var typed = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, false);
+            if (typed != null) {
+                typedIngredientList.add(typed);
+            } else {
+                LOGGER.warn("Attempting to add invalid ingredient {}", ingredientInfo.getIngredientHelper().getErrorInfo(ingredient));
+            }
+        }
+        ingredientInfo.addIngredients(typedIngredientList);
+        //?}
 	}
 	//endregion
 	
@@ -607,8 +626,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	//endregion
-	
-	private <V> void registerIngredients(IIngredientType<V> ingredientType, Collection<V> ingredients) {
+
+    //? if >=21.1 {
+    @Override
+    public IClickableIngredientFactory getClickableIngredientFactory() {
+        return new ClickableIngredientFactory(this);
+    }
+    //?}
+
+    private <V> void registerIngredients(IIngredientType<V> ingredientType, Collection<V> ingredients) {
 		if (locked)
 			throw new IllegalStateException("Tried to add ingredients after registry is locked");
 		

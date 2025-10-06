@@ -131,5 +131,46 @@ public class ClientConfig implements IClientConfig {
 	public boolean isShowCreativeTabNamesEnabled() {
 		return false;
 	}
-	
+
+    //? if >=21.1 {
+    @Override
+    public boolean isIngredientsSummaryEnabled() {
+        return false;
+    }
+
+    @Override
+    public boolean isLookupHistoryEnabled() {
+        return false;
+    }
+
+    @Override
+    public void setLookupHistoryEnabled(boolean b) {
+
+    }
+
+    @Override
+    public void addLookupHistoryEnabledListener(mezz.jei.common.config.file.IConfigListener<Boolean> iConfigListener) {
+
+    }
+
+    @Override
+    public void addLookupHistoryDisplaySideListener(mezz.jei.common.config.file.IConfigListener iConfigListener) {
+
+    }
+
+    @Override
+    public int getMaxLookupHistoryRows() {
+        return 0;
+    }
+
+    @Override
+    public int getMaxLookupHistoryIngredients() {
+        return 0;
+    }
+
+    @Override
+    public mezz.jei.common.config.HistoryDisplaySide getLookupHistoryDisplaySide() {
+        return null;
+    }
+    //?}
 }

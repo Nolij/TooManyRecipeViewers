@@ -217,11 +217,11 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
 		runtime.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
 		
-//		runtime.recipeManager.addRecipes(RecipeTypes.CRAFTING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING));
-		runtime.recipeManager.addRecipes(RecipeTypes.SMITHING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING));
-		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);
+
+//		runtime.recipeManager.addRecipes(RecipeTypes.CRAFTING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING));
+		runtime.recipeManager.addRecipes(RecipeTypes.SMITHING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING));
 	}
 	
 	private void registerRecipeCategories() {

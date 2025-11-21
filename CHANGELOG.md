@@ -1,2 +1,4 @@
-- update supported JEI API version to 19.25
+- fixed bug with text widgets
+- fixed Smithing recipe duplication
+- provide latest JEI
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

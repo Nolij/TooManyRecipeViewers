@@ -2,9 +2,11 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
 import mezz.jei.common.config.BookmarkTooltipFeature;
 import mezz.jei.common.config.GiveMode;
+import mezz.jei.common.config.HistoryDisplaySide;
 import mezz.jei.common.config.IClientConfig;
 import mezz.jei.common.config.IngredientSortStage;
 import mezz.jei.common.config.RecipeSorterStage;
+import mezz.jei.common.config.file.IConfigListener;
 
 import java.util.List;
 import java.util.Set;
@@ -131,46 +133,47 @@ public class ClientConfig implements IClientConfig {
 	public boolean isShowCreativeTabNamesEnabled() {
 		return false;
 	}
+	
+	@Override
+	public boolean isLookupHistoryEnabled() {
+		return false;
+	}
+	
+	@Override
+	public void setLookupHistoryEnabled(boolean b) {
 
-    //? if >=21.1 {
-    @Override
-    public boolean isIngredientsSummaryEnabled() {
-        return false;
-    }
+	}
 
-    @Override
-    public boolean isLookupHistoryEnabled() {
-        return false;
-    }
+	@Override
+	public void addLookupHistoryEnabledListener(IConfigListener<Boolean> iConfigListener) {
 
-    @Override
-    public void setLookupHistoryEnabled(boolean b) {
+	}
 
-    }
+	@Override
+	public void addLookupHistoryDisplaySideListener(IConfigListener iConfigListener) {
 
-    @Override
-    public void addLookupHistoryEnabledListener(mezz.jei.common.config.file.IConfigListener<Boolean> iConfigListener) {
+	}
 
-    }
+	@Override
+	public int getMaxLookupHistoryRows() {
+		return 0;
+	}
 
-    @Override
-    public void addLookupHistoryDisplaySideListener(mezz.jei.common.config.file.IConfigListener iConfigListener) {
+	@Override
+	public int getMaxLookupHistoryIngredients() {
+		return 0;
+	}
 
-    }
-
-    @Override
-    public int getMaxLookupHistoryRows() {
-        return 0;
-    }
-
-    @Override
-    public int getMaxLookupHistoryIngredients() {
-        return 0;
-    }
-
-    @Override
-    public mezz.jei.common.config.HistoryDisplaySide getLookupHistoryDisplaySide() {
-        return null;
-    }
-    //?}
+	@Override
+	public HistoryDisplaySide getLookupHistoryDisplaySide() {
+		return null;
+	}
+	
+	//? if >=21.1 {
+	@Override
+	public boolean isIngredientsSummaryEnabled() {
+		return false;
+	}
+	//?}
+	
 }

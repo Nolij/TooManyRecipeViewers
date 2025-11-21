@@ -75,7 +75,7 @@ public final class JEIPlugins {
 	
 	public static final List<IModPlugin> allPlugins = new ArrayList<>();
 	public static final List<IModPlugin> modPlugins = new ArrayList<>();
-	public static final VanillaPlugin vanillaPlugin;
+	public static final VanillaPlugin vanillaPlugin = new VanillaPlugin();
 	
 	static {
 		final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);
@@ -84,10 +84,10 @@ public final class JEIPlugins {
 		
 		// necessary ordering
 		pluginClasses.remove(VanillaPlugin.class);
-		pluginClasses.addFirst(VanillaPlugin.class);
 		pluginClasses.remove(JeiInternalPlugin.class);
 		pluginClasses.addLast(JeiInternalPlugin.class);
 		
+		allPlugins.add(vanillaPlugin);
 		for (final var pluginClass : pluginClasses) {
 			final IModPlugin plugin;
 			try {
@@ -109,18 +109,8 @@ public final class JEIPlugins {
 				continue;
 			
 			allPlugins.add(plugin);
-			if (plugin instanceof VanillaPlugin)
-				continue;
 			modPlugins.add(plugin);
 		}
-		
-		vanillaPlugin = 
-			allPlugins
-				.stream()
-				.filter(VanillaPlugin.class::isInstance)
-				.map(VanillaPlugin.class::cast)
-				.findFirst()
-				.orElseThrow();
 	}
 	
 	private static final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>());

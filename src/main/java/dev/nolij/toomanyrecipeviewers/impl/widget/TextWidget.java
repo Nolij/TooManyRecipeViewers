@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers.impl.widget;
 
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.Widget;
+import dev.emi.emi.runtime.EmiDrawContext;
 import mezz.jei.api.gui.placement.HorizontalAlignment;
 import mezz.jei.api.gui.placement.VerticalAlignment;
 import mezz.jei.api.gui.widgets.ITextWidget;
@@ -43,7 +44,12 @@ public class TextWidget extends Widget implements ITextWidget {
 	
 	@Override
 	public void render(GuiGraphics draw, int mouseX, int mouseY, float delta) {
-		delegate.drawWidget(draw, mouseX, mouseY);
+		final var position = delegate.getPosition();
+		final var context = EmiDrawContext.wrap(draw);
+		context.push();
+		context.matrices().translate(position.x(), position.y(), 0);
+		delegate.drawWidget(context.raw(), mouseX, mouseY);
+		context.pop();
 	}
 	
 	//region ITextWidget

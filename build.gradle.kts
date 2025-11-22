@@ -230,7 +230,6 @@ dependencies {
 		runtimeOnly("maven.modrinth:curios:9.2.2+1.21.1")
 		runtimeOnly("curse.maven:ars-nouveau-401955:6228434")
 		runtimeOnly("curse.maven:polymorph-388800:5995380")
-		runtimeOnly("curse.maven:corail-tombstone-243707:6171577")
 		runtimeOnly("curse.maven:laserio-626839:5730007")
 		runtimeOnly("curse.maven:chipped-456956:5813117")
 		runtimeOnly("curse.maven:resourceful-lib-570073:5793500")

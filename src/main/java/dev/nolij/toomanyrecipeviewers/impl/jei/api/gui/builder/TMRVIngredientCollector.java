@@ -4,12 +4,14 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
+import dev.emi.emi.jemi.JemiStack;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.util.IStackish;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
+import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.library.ingredients.TypedIngredient;
@@ -23,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -54,6 +57,19 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	
 	public EmiIngredient getEMIIngredient() {
 		return EmiIngredient.of(getEMIStacks());
+	}
+	
+	public EmiIngredient getEMIIngredient(Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides) {
+		return EmiIngredient.of(collectedIngredients.stream()
+			.map(typedIngredient -> {
+				final var type = typedIngredient.getType();
+				if (!rendererOverrides.containsKey(type))
+					return ingredientManager.getEMIStack(typedIngredient);
+				
+				//noinspection rawtypes
+				return new JemiStack(type, ingredientManager.getIngredientHelper(type), rendererOverrides.get(type), typedIngredient.getIngredient());
+			})
+			.toList());
 	}
 	
 	public void copy(TMRVIngredientCollector other) {

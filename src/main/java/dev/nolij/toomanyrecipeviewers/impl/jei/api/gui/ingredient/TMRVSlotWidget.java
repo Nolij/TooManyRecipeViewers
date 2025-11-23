@@ -72,6 +72,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	private final IngredientManager ingredientManager;
 	private final RecipeIngredientRole role;
 	private ImmutableRect2i rect;
+	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides;
 	private boolean visible = true;
 	
 	private final TMRVIngredientCollector ingredientCollector;
@@ -89,6 +90,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		this.ingredientManager = ingredientManager;
 		this.role = role;
 		this.rect = rect;
+		this.rendererOverrides = rendererOverrides;
 		this.ingredientCollector = new TMRVIngredientCollector(ingredientManager);
 	}
 	
@@ -164,7 +166,7 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	
 	@Override
 	public EmiIngredient getStack() {
-		return getActiveIngredientCollector().getEMIIngredient();
+		return getActiveIngredientCollector().getEMIIngredient(rendererOverrides);
 	}
 	
 	@Override

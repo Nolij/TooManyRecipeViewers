@@ -41,7 +41,6 @@ import mezz.jei.gui.input.UserInput;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.widgets.ScrollBoxRecipeWidget;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.FormattedText;
@@ -214,11 +213,11 @@ public class TMRVRecipe<T> implements EmiRecipe {
 			
 			context.resetColor();
 			context.pop();
-
+			
 			for (final var recipeWidget : recipeWidgets) {
 				context.push();
 
-				ScreenPosition position = recipeWidget.getPosition();
+				final var position = recipeWidget.getPosition();
 				context.matrices().translate(position.x(), position.y(), 0F);
 
 				recipeWidget.drawWidget(context.raw(), mouseX - position.x(), mouseY - position.y());
@@ -233,7 +232,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 			final var tooltipBuilder = new JemiTooltipBuilder();
 			jeiCategory.getTooltip(tooltipBuilder, jeiRecipe, slotsView, mouseX, mouseY);
 			for (final var recipeWidget : recipeWidgets) {
-				ScreenPosition position = recipeWidget.getPosition();
+				final var position = recipeWidget.getPosition();
 				recipeWidget.getTooltip(tooltipBuilder, mouseX - position.x(), mouseY - position.y());
 			}
 

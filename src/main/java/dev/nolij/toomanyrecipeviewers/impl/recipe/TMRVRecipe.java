@@ -216,9 +216,12 @@ public class TMRVRecipe<T> implements EmiRecipe {
 			
 			for (final var recipeWidget : recipeWidgets) {
 				context.push();
-				
-				recipeWidget.drawWidget(context.raw(), mouseX, mouseY);
-				
+
+				final var position = recipeWidget.getPosition();
+				context.matrices().translate(position.x(), position.y(), 0F);
+
+				recipeWidget.drawWidget(context.raw(), mouseX - position.x(), mouseY - position.y());
+
 				context.resetColor();
 				context.pop();
 			}
@@ -228,6 +231,11 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		public List<ClientTooltipComponent> getTooltip(int mouseX, int mouseY) {
 			final var tooltipBuilder = new JemiTooltipBuilder();
 			jeiCategory.getTooltip(tooltipBuilder, jeiRecipe, slotsView, mouseX, mouseY);
+			for (final var recipeWidget : recipeWidgets) {
+				final var position = recipeWidget.getPosition();
+				recipeWidget.getTooltip(tooltipBuilder, mouseX - position.x(), mouseY - position.y());
+			}
+
 			return tooltipBuilder.tooltip;
 		}
 		

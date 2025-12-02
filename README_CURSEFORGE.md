@@ -23,7 +23,8 @@ That being said, TMRV has two primary advantages over JEMI:
 TMRV has better coverage of JEI's API than JEMI does (with one exception - see [Known API Limitations](#known-api-limitations)). As of writing, this includes:
 
 - Better conversion of built-in recipe types (JEMI only supports crafting and info recipe types; TMRV supports all built-in JEI recipe types)
-- Ingredient/search aliases
+- Ingredient/search alias support
+- `createRecipeExtras` support
 
 ### 2. Efficiency
 

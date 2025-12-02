@@ -1,5 +1,1 @@
-- added support for renderer overrides on slot widgets
-- fixed bug with text widgets
-- fixed Smithing recipe duplication
-- provide latest JEI
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

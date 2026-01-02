@@ -15,17 +15,17 @@ pluginManagement {
 	}
 	
 	plugins {
-		operator fun String.invoke(): String = extra[this] as? String ?: error("Property $this not found")
+		fun property(name: String): String = extra[name] as? String ?: error("Property ${name} not found")
 		
-		id("org.gradle.toolchains.foojay-resolver-convention") version("foojay_resolver_convention_version"())
-		id("dev.kikugie.stonecutter") version("stonecutter_version"())
-		id("com.gradleup.shadow") version("shadow_version"())
-		id("xyz.wagyourtail.unimined") version("unimined_version"())
-		id("xyz.wagyourtail.jvmdowngrader") version("jvmdg_version"())
-		id("com.github.gmazzo.buildconfig") version("buildconfig_version"())
-		id("org.taumc.gradle.versioning") version("taugradle_version"())
-		id("org.taumc.gradle.compression") version("taugradle_version"())
-		id("org.taumc.gradle.publishing") version("taugradle_version"())
+		id("org.gradle.toolchains.foojay-resolver-convention") version(property("foojay_resolver_convention_version"))
+		id("dev.kikugie.stonecutter") version(property("stonecutter_version"))
+		id("com.gradleup.shadow") version(property("shadow_version"))
+		id("xyz.wagyourtail.unimined") version(property("unimined_version"))
+		id("xyz.wagyourtail.jvmdowngrader") version(property("jvmdg_version"))
+		id("com.github.gmazzo.buildconfig") version(property("buildconfig_version"))
+		id("org.taumc.gradle.versioning") version(property("taugradle_version"))
+		id("org.taumc.gradle.compression") version(property("taugradle_version"))
+		id("org.taumc.gradle.publishing") version(property("taugradle_version"))
 	}
 }
 

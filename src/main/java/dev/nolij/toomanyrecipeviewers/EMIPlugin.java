@@ -9,6 +9,7 @@ import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiInitRegistry;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
+import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.EmiStackInteraction;
 import dev.emi.emi.api.widget.Bounds;
@@ -17,6 +18,7 @@ import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiStackSerializer;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
+import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.advanced.RecipeManagerPluginHelper;
@@ -28,6 +30,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer
 import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
@@ -61,9 +64,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
 @EmiEntrypoint
 @ApiStatus.Internal
@@ -240,7 +246,22 @@ public final class EMIPlugin implements EmiPlugin {
 			);
 		JEIPlugins.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration);
 		
-		runtime.recipeCategories = recipeCategoryRegistration.getRecipeCategories();
+		final var emiCategoryIDs = EmiRecipes.categories.stream().map(EmiRecipeCategory::getId).collect(Collectors.toSet());
+		
+		final var recipeCategories = new ArrayList<IRecipeCategory<?>>();
+		for (final var category : recipeCategoryRegistration.getRecipeCategories()) {
+			final var recipeType = category.getRecipeType();
+			final var uid = recipeType.getUid();
+			if (!RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(recipeType) && 
+				emiCategoryIDs.contains(uid)) {
+				LOGGER.warn("Skipping JEI category with ID `{}` which already exists in EMI!", uid.toString());
+				continue;
+			}
+			
+			recipeCategories.add(category);
+		}
+		
+		runtime.recipeCategories = recipeCategories;
 	}
 	
 	private void registerRecipeCatalysts() {

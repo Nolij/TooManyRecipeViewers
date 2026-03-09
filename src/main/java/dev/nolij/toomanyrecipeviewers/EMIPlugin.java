@@ -222,6 +222,8 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
 		runtime.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
+		//? if >=21.1
+		runtime.recipeManager.addRecipeButtonControllerFactories(advancedRegistration.getRecipeButtonControllerFactories());
 		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		JEIPlugins.registerRecipes(recipeRegistration);

@@ -2,9 +2,10 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe;
 
 //? if >=21.1 {
 import mezz.jei.api.ingredients.IIngredientSupplier;
+import mezz.jei.api.recipe.advanced.IRecipeButtonControllerFactory;
 import mezz.jei.common.Internal;
+import mezz.jei.common.gui.RecipeLayoutDrawableErrored;
 import mezz.jei.common.gui.elements.DrawableBlank;
-import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
 import mezz.jei.library.util.IngredientSupplierHelper;
 import net.minecraft.world.item.crafting.RecipeHolder;
 //?}
@@ -72,7 +73,7 @@ import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
 import mezz.jei.library.gui.recipes.RecipeLayout;
 import mezz.jei.library.gui.recipes.layout.builder.RecipeSlotBuilder;
-import mezz.jei.library.util.RecipeErrorUtil;
+import mezz.jei.library.util.RecipeDebugUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -140,6 +141,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private final IIngredientVisibility ingredientVisibility;
 	
 	private ImmutableListMultimap<RecipeType<?>, IRecipeCategoryDecorator<?>> recipeCategoryDecorators;
+
+	//? if >=21.1
+	private List<IRecipeButtonControllerFactory> recipeButtonControllerFactories;
 	
 	private volatile boolean locked = false;
 	
@@ -465,7 +469,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		if (!jeiCategory.isHandled(jeiRecipe)) {
 			if (LOGGER.isDebugEnabled()) {
-				String recipeInfo = RecipeErrorUtil.getInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
+				String recipeInfo = RecipeDebugUtil.getDebugInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
 				LOGGER.debug("Recipe not added because the recipe category cannot handle it: {}", recipeInfo);
 			}
 			return;
@@ -483,7 +487,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				replacedRecipeIDs.add(recipe.getOriginalID());
 			}
 		} catch (RuntimeException | LinkageError e) {
-			final var recipeInfo = RecipeErrorUtil.getInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
+			final var recipeInfo = RecipeDebugUtil.getDebugInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
 			LOGGER.error("Found a broken recipe, failed to addRecipe: {}\n", recipeInfo, e);
 		}
 	}
@@ -596,6 +600,20 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		this.recipeCategoryDecorators = decorators;
 	}
+
+	//? if >=21.1 {
+	public void addRecipeButtonControllerFactories(List<IRecipeButtonControllerFactory> factories) {
+		if (locked)
+			throw new IllegalStateException("Tried to add recipe button controller factories after registry is locked");
+
+		this.recipeButtonControllerFactories = factories;
+	}
+
+	@Override
+	public List<IRecipeButtonControllerFactory> getRecipeButtonControllerFactories() {
+		return recipeButtonControllerFactories;
+	}
+	//?}
 	//endregion
 	
 	//region Additional Methods	

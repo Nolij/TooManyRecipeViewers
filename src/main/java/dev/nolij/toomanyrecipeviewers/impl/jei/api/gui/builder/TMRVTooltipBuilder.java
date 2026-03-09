@@ -6,9 +6,12 @@ import dev.nolij.toomanyrecipeviewers.util.ComponentFormattedCharSink;
 import dev.nolij.toomanyrecipeviewers.util.FormattedTextConsumer;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.api.runtime.IJeiKeyMapping;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
@@ -49,7 +52,20 @@ public class TMRVTooltipBuilder implements ITooltipBuilder {
 	public void add(TooltipComponent tooltipComponent) {
 		lines.add(tooltipComponent);
 	}
-	
+
+	//? if >=21.1 {
+	@Override
+	public void addKeyUsageComponent(String translationKey, IJeiKeyMapping keyMapping) {
+		Component boldKeyMapping = keyMapping.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.BOLD);
+
+		MutableComponent component = Component.translatable(translationKey, boldKeyMapping)
+				.withStyle(ChatFormatting.ITALIC)
+				.withStyle(ChatFormatting.GRAY);
+
+		add(component);
+	}
+	//?}
+
 	@Override
 	public void setIngredient(ITypedIngredient<?> typedIngredient) {
 		

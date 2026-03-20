@@ -1,2 +1,3 @@
-- provide latest JEI on 21.1
+- provide latest JEI
+- fix bugs
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

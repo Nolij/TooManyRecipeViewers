@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+
 public class ConnectionToServer implements IConnectionToServer {
 	
 	private final boolean serverHasJEI;
@@ -179,7 +181,11 @@ public class ConnectionToServer implements IConnectionToServer {
 		};
 
 		//noinspection unchecked
-		List<ItemStack> stacks = EmiRecipeFiller.getStacks(fakeRecipeHandler, fakeRecipe, containerScreen, ((PacketRecipeTransferAccessor)recipeTransferPacket).tmrv$isMaxTransfer() ? Integer.MAX_VALUE : 1);
+		final var stacks = (List<ItemStack>) EmiRecipeFiller.getStacks(fakeRecipeHandler, fakeRecipe, containerScreen, ((PacketRecipeTransferAccessor)recipeTransferPacket).tmrv$isMaxTransfer() ? Integer.MAX_VALUE : 1);
+		if (stacks == null) {
+			LOGGER.error("Failed to construct recipe transfer packet");
+			return;
+		}
 		
 		if (EmiClient.onServer) {
 			EmiNetwork.sendToServer(new FillRecipeC2SPacket(containerMenu, 0, inventorySlots, craftingSlots, null, stacks));

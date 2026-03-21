@@ -456,18 +456,19 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new HashSet<>());
 	private <T> void addRecipe(Category<T> category, T jeiRecipe) {
+		final var jeiCategory = category.getJEICategory();
+		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		//? if >=21.1 {
-		if (category.isVanillaType() &&
+		if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) &&
 			jeiRecipe instanceof RecipeHolder<?> holder && 
 			runtime.ignoredRecipes.contains(holder.value()))
 			return;
 		//?} else {
-		/*if (category.isVanillaType() &&
+		/*if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) &&
 			runtime.ignoredRecipes.contains(jeiRecipe))
 			return;
 		*///?}
-		final var jeiCategory = category.getJEICategory();
-		if (!Objects.requireNonNull(jeiCategory).isHandled(jeiRecipe)) {
+		if (!jeiCategory.isHandled(jeiRecipe)) {
 			if (LOGGER.isDebugEnabled()) {
 				String recipeInfo = RecipeDebugUtil.getDebugInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
 				LOGGER.debug("Recipe not added because the recipe category cannot handle it: {}", recipeInfo);
@@ -479,7 +480,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			final var recipe = category.recipe(jeiRecipe);
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
-			if (category.isVanillaType() && recipe.getOriginalID() != null) {
+			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && recipe.getOriginalID() != null) {
 				if (emiRecipe instanceof TMRVRecipe<?>)
 					LOGGER.warn("Recipe replacement for {} will not render properly!", recipe.getOriginalID());
 				
@@ -784,16 +785,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			}
 			
 			return Objects.requireNonNull(emiCategory);
-		}
-		
-		private @Nullable Boolean isVanillaType;
-		
-		public synchronized boolean isVanillaType() {
-			if (isVanillaType == null) {
-				final var recipeType = getJEIRecipeType();
-				isVanillaType = recipeType != null && vanillaJEITypeEMICategoryMap.containsKey(recipeType);
-			}
-			return isVanillaType;
 		}
 		
 		//region Recipe

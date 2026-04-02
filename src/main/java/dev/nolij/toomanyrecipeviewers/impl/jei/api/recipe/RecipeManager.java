@@ -456,17 +456,18 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new HashSet<>());
 	private <T> void addRecipe(Category<T> category, T jeiRecipe) {
+		final var jeiCategory = category.getJEICategory();
+		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		//? if >=21.1 {
-		if (jeiRecipe instanceof RecipeHolder<?> holder && 
+		if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) &&
+			jeiRecipe instanceof RecipeHolder<?> holder && 
 			runtime.ignoredRecipes.contains(holder.value()))
 			return;
 		//?} else {
-		/*if (runtime.ignoredRecipes.contains(jeiRecipe))
+		/*if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) &&
+			runtime.ignoredRecipes.contains(jeiRecipe))
 			return;
 		*///?}
-		
-		final var jeiCategory = category.getJEICategory();
-		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		if (!jeiCategory.isHandled(jeiRecipe)) {
 			if (LOGGER.isDebugEnabled()) {
 				String recipeInfo = RecipeDebugUtil.getDebugInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);

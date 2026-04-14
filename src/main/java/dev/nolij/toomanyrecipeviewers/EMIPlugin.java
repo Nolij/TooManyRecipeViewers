@@ -65,6 +65,8 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -251,12 +253,14 @@ public final class EMIPlugin implements EmiPlugin {
 		final var emiCategoryIDs = EmiRecipes.categories.stream().map(EmiRecipeCategory::getId).collect(Collectors.toSet());
 		
 		final var recipeCategories = new ArrayList<IRecipeCategory<?>>();
+		final var skippedRecipeTypes = new HashSet<mezz.jei.api.recipe.RecipeType<?>>();
 		for (final var category : recipeCategoryRegistration.getRecipeCategories()) {
 			final var recipeType = category.getRecipeType();
 			final var uid = recipeType.getUid();
 			if (!RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(recipeType) && 
 				emiCategoryIDs.contains(uid)) {
 				LOGGER.warn("Skipping JEI category with ID `{}` which already exists in EMI!", uid.toString());
+				skippedRecipeTypes.add(recipeType);
 				continue;
 			}
 			
@@ -264,6 +268,7 @@ public final class EMIPlugin implements EmiPlugin {
 		}
 		
 		runtime.recipeCategories = recipeCategories;
+		runtime.skippedRecipeTypes = Collections.unmodifiableSet(skippedRecipeTypes);
 	}
 	
 	private void registerRecipeCatalysts() {

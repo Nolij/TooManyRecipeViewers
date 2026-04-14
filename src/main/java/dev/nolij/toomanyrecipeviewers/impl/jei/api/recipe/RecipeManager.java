@@ -269,6 +269,12 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		if (locked)
 			throw new IllegalStateException("Tried to add recipes after registry is locked");
 		
+		if (runtime.skippedRecipeTypes.contains(jeiRecipeType)) {
+			LOGGER.debug("Skipping {} recipes for RecipeType {} (category handled natively by EMI)",
+				jeiRecipes.size(), jeiRecipeType.getUid());
+			return;
+		}
+		
 		final var category = category(jeiRecipeType);
 		
 		for (final var jeiRecipe : jeiRecipes) {
@@ -281,6 +287,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<ResourceLocation> idConsumer) {
 		if (locked)
 			throw new IllegalStateException();
+		
+		if (runtime.skippedRecipeTypes.contains(recipeType))
+			return;
 		
 		final var category = category(recipeType);
 		final var recipes = jeiRecipes.stream().map(category::recipe).toList();
@@ -307,6 +316,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		if (locked)
 			throw new IllegalStateException();
 		
+		if (runtime.skippedRecipeTypes.contains(recipeType))
+			return;
+		
 		hiddenCategories.add(category(recipeType).getEMICategory());
 	}
 	
@@ -314,6 +326,9 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	public void unhideRecipeCategory(RecipeType<?> recipeType) {
 		if (locked)
 			throw new IllegalStateException();
+		
+		if (runtime.skippedRecipeTypes.contains(recipeType))
+			return;
 		
 		hiddenCategories.remove(category(recipeType).getEMICategory());
 	}

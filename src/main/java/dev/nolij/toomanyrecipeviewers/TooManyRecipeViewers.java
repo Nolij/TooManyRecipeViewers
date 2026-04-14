@@ -84,6 +84,7 @@ public final class TooManyRecipeViewers {
 	public volatile @Unmodifiable List<IRecipeCategory<?>> recipeCategories = null;
 	public volatile ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = null;
 	public final Set<Object> ignoredRecipes = new HashSet<>();
+	public volatile Set<mezz.jei.api.recipe.RecipeType<?>> skippedRecipeTypes = Set.of();
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;

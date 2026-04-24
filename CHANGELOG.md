@@ -1,3 +1,1 @@
-- provide latest JEI
-- fail quietly instead of crashing if recipe transfer packet translation fails
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

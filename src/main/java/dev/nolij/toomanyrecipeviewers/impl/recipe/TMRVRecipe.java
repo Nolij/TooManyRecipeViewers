@@ -307,8 +307,11 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public void addSlottedWidget(ISlottedRecipeWidget slottedRecipeWidget, List<IRecipeSlotDrawable> slots) {
-			// TODO
-			throw new UnsupportedOperationException();
+			addWidget(slottedRecipeWidget);
+			if (slottedRecipeWidget instanceof IJeiInputHandler inputHandler)
+				addInputHandler(inputHandler);
+			if (slottedRecipeWidget instanceof IJeiGuiEventListener guiEventListener)
+				addGuiEventListener(guiEventListener);
 		}
 		
 		@Override

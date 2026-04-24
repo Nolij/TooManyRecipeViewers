@@ -5,6 +5,7 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.runtime.EmiDrawContext;
+import dev.emi.emi.screen.EmiScreenManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVTooltipBuilder;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.TMRVIngredientCollector;
@@ -178,6 +179,11 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 	//endregion
 	
 	//region ITMRVRecipeSlotDrawable
+	@Override
+	public void draw(GuiGraphics guiGraphics) {
+		render(guiGraphics, EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, 0F);
+	}
+	
 	@Override
 	public IIngredientConsumer createDisplayOverrides() {
 		if (overrideIngredientCollector == null)

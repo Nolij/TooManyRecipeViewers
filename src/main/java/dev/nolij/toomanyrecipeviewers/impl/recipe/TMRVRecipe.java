@@ -241,12 +241,14 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		@Override
 		public boolean mouseClicked(int mouseX, int mouseY, int button) {
-			return handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button), 0);
+			return 
+				handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button), 0, InputType.SIMULATE) &&
+				handleInput(mouseX, mouseY, InputConstants.Type.MOUSE.getOrCreate(button), 0, InputType.EXECUTE);
 		}
 		
 		@Override
 		public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode), modifiers);
+			return handleInput(EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, InputConstants.getKey(keyCode, scanCode), modifiers, InputType.IMMEDIATE);
 		}
 		
 		private static boolean containsPoint(ScreenRectangle area, int x, int y) {
@@ -255,8 +257,8 @@ public class TMRVRecipe<T> implements EmiRecipe {
 				area.left() <= x && x <= area.right();
 		}
 		
-		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key key, int modifiers) {
-			final var input = new UserInput(key, mouseX, mouseY, modifiers, InputType.IMMEDIATE);
+		private boolean handleInput(int mouseX, int mouseY, InputConstants.Key key, int modifiers, InputType inputType) {
+			final var input = new UserInput(key, mouseX, mouseY, modifiers, inputType);
 			
 			for (final var inputHandler : inputHandlers) {
 				final var area = inputHandler.getArea();

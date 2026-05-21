@@ -11,6 +11,7 @@
 		"ItemEmiStackMixin",
 		"JemiStackMixin",
 		"JemiUtilMixin",
+		"MekanismJEIMixin",
 		"NormalizedTypedItemMixin",
 		"NormalizedTypedItemStackMixin",
 		"PacketRecipeTransferAccessor",

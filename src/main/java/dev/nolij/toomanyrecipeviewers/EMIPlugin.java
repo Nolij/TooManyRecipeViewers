@@ -80,15 +80,18 @@ public final class EMIPlugin implements EmiPlugin {
 		onRuntimeUnavailable();
 		
 		EmiReloadManager.step(Component.literal("[TMRV] Initializing..."), 10L);
-		JEIPlugins.resetLoadTimes();
-		
-		runtime = new TooManyRecipeViewers();
 		
 		Internal.setServerConnection(new ConnectionToServer());
 	}
 	
 	@Override
 	public void register(EmiRegistry registry) {
+		runtime = new TooManyRecipeViewers();
+		runtime.jeiPluginManager = new JEIPluginManager(registry);
+		
+		LOGGER.info("Loading JEI Plugins: [{}]", runtime.jeiPluginManager.pluginListString);
+		runtime.jeiPluginManager.onConfigManagerAvailable(jeiConfigManager);
+		
 		runtime.emiRegistry = registry;
 		
 		registerSubtypes();
@@ -100,19 +103,16 @@ public final class EMIPlugin implements EmiPlugin {
 		registerGuiHandlers();
 		onRuntimeAvailable();
 		
-		JEIPlugins.logLoadTimes();
+		runtime.jeiPluginManager.logLoadTimes();
 		
-		registry.addGenericStackProvider((screen, x, y) -> {
-			//noinspection removal
-			return new EmiStackInteraction(
-				runtime.screenHelper
-					.getClickableIngredientUnderMouse(screen, x, y)
-					.map(IClickableIngredient::getTypedIngredient)
-					.map(runtime.ingredientManager::getEMIStack)
-					.findFirst()
-					.orElse(EmiStack.EMPTY), 
-				null, false);
-		});
+		registry.addGenericStackProvider((screen, x, y) -> new EmiStackInteraction(
+			runtime.screenHelper
+				.getClickableIngredientUnderMouse(screen, x, y)
+				.map(IClickableIngredient::getTypedIngredient)
+				.map(runtime.ingredientManager::getEMIStack)
+				.findFirst()
+				.orElse(EmiStack.EMPTY), 
+			null, false));
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
 		
 		runtime.lockRegistration();
@@ -120,18 +120,20 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	public static void onRuntimeUnavailable() {
 		if (runtime != null) {
+			final var jeiPlugins = runtime.jeiPluginManager;
+			
 			runtime = null;
 			Internal.setRuntime(null);
 			Internal.setServerConnection(null);
 			
-			JEIPlugins.onRuntimeUnavailable();
+			jeiPlugins.onRuntimeUnavailable();
 		}
 	}
 	
 	private void registerSubtypes() {
 		final var subtypeRegistration = new SubtypeRegistration();
-		JEIPlugins.registerItemSubtypes(subtypeRegistration);
-		JEIPlugins.registerFluidSubtypes(subtypeRegistration, fluidHelper);
+		runtime.jeiPluginManager.registerItemSubtypes(subtypeRegistration);
+		runtime.jeiPluginManager.registerFluidSubtypes(subtypeRegistration, fluidHelper);
 		runtime.subtypeManager = new SubtypeManager(subtypeRegistration.getInterpreters());
 		runtime.stackHelper = new StackHelper(runtime.subtypeManager);
 	}
@@ -155,9 +157,9 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime.colorHelper = new ColorHelper(new ColorNameConfig());
 		runtime.ingredientManager = new IngredientManager(runtime);
-		JEIPlugins.registerIngredients(runtime.ingredientManager);
-		JEIPlugins.registerExtraIngredients(runtime.ingredientManager);
-		JEIPlugins.registerIngredientAliases(runtime.ingredientManager);
+		runtime.jeiPluginManager.registerIngredients(runtime.ingredientManager);
+		runtime.jeiPluginManager.registerExtraIngredients(runtime.ingredientManager);
+		runtime.jeiPluginManager.registerIngredientAliases(runtime.ingredientManager);
 		
 		runtime.guiHelper = new GuiHelper(runtime.ingredientManager);
 		runtime.focusFactory = new FocusFactory(runtime.ingredientManager);
@@ -187,7 +189,7 @@ public final class EMIPlugin implements EmiPlugin {
 	private void registerModAliases() {
 		//? if >=21.1 {
 		final var modInfoRegistration = new ModInfoRegistration();
-		JEIPlugins.registerModInfo(modInfoRegistration);
+		runtime.jeiPluginManager.registerModInfo(modInfoRegistration);
 		runtime.modAliases = modInfoRegistration.getModAliases();
 		//?}
 		runtime.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), runtime.ingredientManager
@@ -218,7 +220,7 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.recipeManager = new RecipeManager(runtime);
 		final var recipeManagerPluginHelper = new RecipeManagerPluginHelper(runtime.recipeManager);
 		final var advancedRegistration = new AdvancedRegistration(runtime.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
-		JEIPlugins.registerAdvanced(advancedRegistration);
+		runtime.jeiPluginManager.registerAdvanced(advancedRegistration);
 		
 		runtime.recipeManager.addPlugins(advancedRegistration.getRecipeManagerPlugins());
 		runtime.recipeManager.addDecorators(advancedRegistration.getRecipeCategoryDecorators());
@@ -226,7 +228,7 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.recipeManager.addRecipeButtonControllerFactories(advancedRegistration.getRecipeButtonControllerFactories());
 		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
-		JEIPlugins.registerRecipes(recipeRegistration);
+		runtime.jeiPluginManager.registerRecipes(recipeRegistration);
 
 //		runtime.recipeManager.addRecipes(RecipeTypes.CRAFTING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING));
 		runtime.recipeManager.addRecipes(RecipeTypes.SMITHING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING));
@@ -234,11 +236,11 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void registerRecipeCategories() {
 		final var recipeCategoryRegistration = new RecipeCategoryRegistration(runtime.jeiHelpers);
-		JEIPlugins.registerCategories(recipeCategoryRegistration);
+		runtime.jeiPluginManager.registerCategories(recipeCategoryRegistration);
 		
-		runtime.craftingCategory = JEIPlugins.vanillaPlugin.getCraftingCategory()
+		runtime.craftingCategory = runtime.jeiPluginManager.vanillaPlugin.getCraftingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
-		runtime.smithingCategory = JEIPlugins.vanillaPlugin.getSmithingCategory()
+		runtime.smithingCategory = runtime.jeiPluginManager.vanillaPlugin.getSmithingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
 		final var vanillaCategoryExtensionRegistration =
 			new VanillaCategoryExtensionRegistration(
@@ -246,7 +248,7 @@ public final class EMIPlugin implements EmiPlugin {
 				runtime.smithingCategory,
 				runtime.jeiHelpers
 			);
-		JEIPlugins.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration);
+		runtime.jeiPluginManager.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration);
 		
 		final var emiCategoryIDs = EmiRecipes.categories.stream().map(EmiRecipeCategory::getId).collect(Collectors.toSet());
 		
@@ -256,8 +258,7 @@ public final class EMIPlugin implements EmiPlugin {
 			final var uid = recipeType.getUid();
 			if (!RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(recipeType) && 
 				emiCategoryIDs.contains(uid)) {
-				LOGGER.warn("Skipping JEI category with ID `{}` which already exists in EMI!", uid.toString());
-				continue;
+				LOGGER.warn("JEI category with ID `{}` already exists in EMI!", uid.toString());
 			}
 			
 			recipeCategories.add(category);
@@ -268,7 +269,7 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void registerRecipeCatalysts() {
 		final var recipeCatalystRegistration = new RecipeCatalystRegistration(runtime.ingredientManager, runtime.jeiHelpers);
-		JEIPlugins.registerRecipeCatalysts(recipeCatalystRegistration);
+		runtime.jeiPluginManager.registerRecipeCatalysts(recipeCatalystRegistration);
 		runtime.recipeCatalysts = recipeCatalystRegistration.getRecipeCatalysts();
 	}
 	
@@ -279,7 +280,7 @@ public final class EMIPlugin implements EmiPlugin {
 			, runtime.craftingCategory
 		);
 		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, runtime.jeiHelpers, Internal.getServerConnection());
-		JEIPlugins.registerRecipeTransferHandlers(recipeTransferRegistration);
+		runtime.jeiPluginManager.registerRecipeTransferHandlers(recipeTransferRegistration);
 		runtime.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();
 		
 		EmiRecipeFiller.extraHandlers = (handler, recipe) -> {
@@ -296,7 +297,7 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	private void registerGuiHandlers() {
 		final var guiHandlerRegistration = new GuiHandlerRegistration(runtime.jeiHelpers);
-		JEIPlugins.registerGuiHandlers(guiHandlerRegistration);
+		runtime.jeiPluginManager.registerGuiHandlers(guiHandlerRegistration);
 		runtime.screenHelper = guiHandlerRegistration.createGuiScreenHelper(runtime.ingredientManager);
 		
 		runtime.emiRegistry.addGenericExclusionArea((screen, consumer) -> {
@@ -312,13 +313,13 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime.jeiRuntime = new JEIRuntime(runtimeRegistration, jeiKeyMappings, jeiConfigManager);
 		Internal.setRuntime(runtime.jeiRuntime);
-		JEIPlugins.onRuntimeAvailable(runtime.jeiRuntime);
+		runtime.jeiPluginManager.onRuntimeAvailable(runtime.jeiRuntime);
 	}
 	
 	private @NotNull RuntimeRegistration registerRuntime() {
 		final var runtimeRegistration = new RuntimeRegistration(runtime);
 		
-		JEIPlugins.registerRuntime(runtimeRegistration);
+		runtime.jeiPluginManager.registerRuntime(runtimeRegistration);
 		
 		return runtimeRegistration;
 	}

@@ -125,18 +125,12 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			.put(RecipeTypes.COMPOSTING, VanillaEmiRecipeCategories.COMPOSTING)
 			.put(RecipeTypes.INFORMATION, VanillaEmiRecipeCategories.INFO)
 			.build();
-	public static final Map<EmiRecipeCategory, RecipeType<?>> vanillaEMICategoryJEIRecipeTypeMap;
-	static {
-		final var vanillaEMICategoryJEIRecipeClassMapBuilder = ImmutableMap.<EmiRecipeCategory, RecipeType<?>>builder();
-		vanillaJEITypeEMICategoryMap.forEach((k, v) ->
-			vanillaEMICategoryJEIRecipeClassMapBuilder.put(v, k));
-		vanillaEMICategoryJEIRecipeTypeMap = vanillaEMICategoryJEIRecipeClassMapBuilder.build();
-	}
 	
 	private final TooManyRecipeViewers runtime;
 	
 	private final EmiRegistry registry;
 	private final @Unmodifiable List<IRecipeCategory<?>> jeiRecipeCategories;
+	private final Map<ResourceLocation, EmiRecipeCategory> existingEMICategoryMap;
 	private final IngredientManager ingredientManager;
 	private final IIngredientVisibility ingredientVisibility;
 	
@@ -154,6 +148,17 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		this.jeiRecipeCategories = runtime.recipeCategories;
 		this.ingredientManager = runtime.ingredientManager;
 		this.ingredientVisibility = runtime.ingredientVisibility;
+		
+		this.existingEMICategoryMap = new HashMap<>();
+		for (final var emiCategory : EmiRecipes.categories) {
+			final var id = emiCategory.getId();
+			if (existingEMICategoryMap.containsKey(id)) {
+				LOGGER.error("Multiple EMI categories are registered with ID `{}`!", id);
+				continue;
+			}
+			
+			existingEMICategoryMap.put(id, emiCategory);
+		}
 		
 		for (final var jeiCategory : jeiRecipeCategories) {
 			final var jeiRecipeType = jeiCategory.getRecipeType();
@@ -778,6 +783,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				
 				if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
 					emiCategory = vanillaJEITypeEMICategoryMap.get(jeiRecipeType);
+				} else if (existingEMICategoryMap.containsKey(jeiRecipeType.getUid())) {
+					emiCategory = existingEMICategoryMap.get(jeiRecipeType.getUid());
 				} else {
 					emiCategory = new JemiCategory(jeiCategory);
 				}

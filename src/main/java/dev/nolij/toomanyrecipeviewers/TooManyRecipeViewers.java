@@ -63,6 +63,7 @@ public final class TooManyRecipeViewers {
 	
 	//region Storage
 	public volatile EmiRegistry emiRegistry = null;
+	public volatile JEIPluginManager jeiPluginManager = null;
 	public volatile SubtypeManager subtypeManager = null;
 	public volatile StackHelper stackHelper = null;
 	public volatile IColorHelper colorHelper = null;

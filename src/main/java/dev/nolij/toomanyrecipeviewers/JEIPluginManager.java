@@ -2,6 +2,8 @@ package dev.nolij.toomanyrecipeviewers;
 
 //? if >=21.1
 import mezz.jei.api.registration.IModInfoRegistration;
+import dev.emi.emi.api.EmiRegistry;
+import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.runtime.EmiReloadManager;
@@ -44,10 +46,7 @@ import java.util.stream.Collectors;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.*;
 
-public final class JEIPlugins {
-	
-	@Deprecated
-	private JEIPlugins() {}
+public final class JEIPluginManager {
 	
 	@SuppressWarnings("SameParameterValue")
 	private static <T> List<Class<? extends T>> getInstances(Class<?> annotationClass, Class<T> instanceClass) {
@@ -64,6 +63,16 @@ public final class JEIPlugins {
 		
 		return result;
 	}
+	private static final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);;
+	
+	static {
+		pluginClasses.remove(JemiPlugin.class);
+		
+		// necessary ordering
+		pluginClasses.remove(VanillaPlugin.class);
+		pluginClasses.remove(JeiInternalPlugin.class);
+		pluginClasses.addLast(JeiInternalPlugin.class);
+	}
 	
 	private static final InverseSet<String> forceLoadJEIPluginsFrom = InverseSet.of("emi", "jei", "jei-api", MOD_ID);
 	private static final Set<String> modsWithEMIPlugins =
@@ -73,19 +82,23 @@ public final class JEIPlugins {
 			.filter(forceLoadJEIPluginsFrom::contains)
 			.collect(Collectors.toUnmodifiableSet());
 	
-	public static final List<IModPlugin> allPlugins = new ArrayList<>();
-	public static final List<IModPlugin> modPlugins = new ArrayList<>();
-	public static final VanillaPlugin vanillaPlugin = new VanillaPlugin();
+	public final List<IModPlugin> allPlugins = new ArrayList<>();
+	public final List<IModPlugin> modPluginsNoDuplicates = new ArrayList<>();
+	public final List<IModPlugin> modPlugins = new ArrayList<>();
+	public final VanillaPlugin vanillaPlugin = new VanillaPlugin();
+	public final String pluginListString;
 	
-	static {
-		final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);
+	private final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>());
+	private long loadTime = 0L;
+	
+	// must run after all other EMI plugins are initialized
+	// ∴ require passing EmiRegistry to avoid future footguns
+	public JEIPluginManager(EmiRegistry ignored) {
+		var pluginListStringBuilder = new StringBuilder(vanillaPlugin.getPluginUid().toString());
 		
-		pluginClasses.remove(JemiPlugin.class);
-		
-		// necessary ordering
-		pluginClasses.remove(VanillaPlugin.class);
-		pluginClasses.remove(JeiInternalPlugin.class);
-		pluginClasses.addLast(JeiInternalPlugin.class);
+		final var additionalModIDs = EmiRecipes.categories.stream()
+			.map(x -> x.getId().getNamespace())
+			.collect(Collectors.toSet());
 		
 		allPlugins.add(vanillaPlugin);
 		for (final var pluginClass : pluginClasses) {
@@ -105,30 +118,30 @@ public final class JEIPlugins {
 				continue;
 			}
 			
-			if (modsWithEMIPlugins.contains(pluginID.getNamespace()))
-				continue;
-			
 			allPlugins.add(plugin);
 			modPlugins.add(plugin);
+			pluginListStringBuilder.append(", ");
+			pluginListStringBuilder.append(pluginID);
+			if (modsWithEMIPlugins.contains(pluginID.getNamespace())) {
+				pluginListStringBuilder.append("¹");
+			} else if (additionalModIDs.contains(pluginID.getNamespace())) {
+				pluginListStringBuilder.append("²");
+			} else {
+				modPluginsNoDuplicates.add(plugin);
+			}
 		}
+		
+		pluginListString = pluginListStringBuilder.toString();
 	}
 	
-	private static final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>());
-	private static long loadTime = 0L;
-	
-	public static void resetLoadTimes() {
-		loadTimes.clear();
-		loadTime = 0L;
-	}
-	
-	public static void logLoadTimes() {
+	public void logLoadTimes() {
 		for (final var plugin : allPlugins) {
 			LOGGER.info("[{}] Loaded in {}ms", plugin.getPluginUid(), loadTimes.get(plugin));
 		}
 		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
 	}
 	
-	private static void dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
+	private void dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
 		final var pluginId = plugin.getPluginUid();
 		final var pluginTimestamp = System.currentTimeMillis();
 		long dispatchTime;
@@ -145,13 +158,13 @@ public final class JEIPlugins {
 		loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
 	}
 	
-	private static void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
+	private void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
 		for (final var plugin : plugins) {
 			dispatchInternal(plugin, dispatcher, callerMethod);
 		}
 	}
 	
-	private static void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
+	private void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
 		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
 		
 		final var timestamp = System.currentTimeMillis();
@@ -167,74 +180,74 @@ public final class JEIPlugins {
 		loadTime += totalDispatchTime;
 	}
 	
-	public static void registerItemSubtypes(ISubtypeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerItemSubtypes(registration), false);
+	public void registerItemSubtypes(ISubtypeRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerItemSubtypes(registration), false);
 	}
 	
-	public static <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
-		dispatch(modPlugins, x -> x.registerFluidSubtypes(registration, platformFluidHelper), false);
+	public <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerFluidSubtypes(registration, platformFluidHelper), false);
 	}
 	
-	public static void registerIngredients(IModIngredientRegistration registration) {
+	public void registerIngredients(IModIngredientRegistration registration) {
 		dispatch(modPlugins, x -> x.registerIngredients(registration), false);
 	}
 	
-	public static void registerExtraIngredients(IExtraIngredientRegistration registration) {
-		dispatch(modPlugins, x -> x.registerExtraIngredients(registration), false);
+	public void registerExtraIngredients(IExtraIngredientRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerExtraIngredients(registration), false);
 	}
 	
-	public static void registerIngredientAliases(IIngredientAliasRegistration registration) {
-		dispatch(modPlugins, x -> x.registerIngredientAliases(registration), false);
+	public void registerIngredientAliases(IIngredientAliasRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerIngredientAliases(registration), false);
 	}
 	
 	//? if >=21.1 {
-	public static void registerModInfo(IModInfoRegistration modAliasRegistration) {
-		dispatch(modPlugins, x -> x.registerModInfo(modAliasRegistration), false);
+	public void registerModInfo(IModInfoRegistration modAliasRegistration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerModInfo(modAliasRegistration), false);
 	}
 	//?}
 	
-	public static void registerCategories(IRecipeCategoryRegistration registration) {
+	public void registerCategories(IRecipeCategoryRegistration registration) {
 		dispatch(allPlugins, x -> x.registerCategories(registration), false);
 	}
 	
-	public static void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
 		dispatch(allPlugins, x -> x.registerVanillaCategoryExtensions(registration), false);
 	}
 	
-	public static void registerRecipes(IRecipeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipes(registration), true);
+	public void registerRecipes(IRecipeRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipes(registration), true);
 	}
 	
-	public static void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipeTransferHandlers(registration), false);
+	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeTransferHandlers(registration), false);
 	}
 	
-	public static void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRecipeCatalysts(registration), false);
+	public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeCatalysts(registration), false);
 	}
 	
-	public static void registerGuiHandlers(IGuiHandlerRegistration registration) {
-		dispatch(modPlugins, x -> x.registerGuiHandlers(registration), false);
+	public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerGuiHandlers(registration), false);
 	}
 	
-	public static void registerAdvanced(IAdvancedRegistration registration) {
-		dispatch(modPlugins, x -> x.registerAdvanced(registration), false);
+	public void registerAdvanced(IAdvancedRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerAdvanced(registration), false);
 	}
 	
-	public static void registerRuntime(IRuntimeRegistration registration) {
-		dispatch(modPlugins, x -> x.registerRuntime(registration), false);
+	public void registerRuntime(IRuntimeRegistration registration) {
+		dispatch(modPluginsNoDuplicates, x -> x.registerRuntime(registration), false);
 	}
 	
-	public static void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-		dispatch(modPlugins, x -> x.onRuntimeAvailable(jeiRuntime), true);
+	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
+		dispatch(modPluginsNoDuplicates, x -> x.onRuntimeAvailable(jeiRuntime), true);
 	}
 	
-	public static void onRuntimeUnavailable() {
-		dispatch(modPlugins, IModPlugin::onRuntimeUnavailable, false);
+	public void onRuntimeUnavailable() {
+		dispatch(modPluginsNoDuplicates, IModPlugin::onRuntimeUnavailable, false);
 	}
 	
-	public static void onConfigManagerAvailable(IJeiConfigManager configManager) {
-		dispatch(modPlugins, x -> x.onConfigManagerAvailable(configManager), false);
+	public void onConfigManagerAvailable(IJeiConfigManager configManager) {
+		dispatch(modPluginsNoDuplicates, x -> x.onConfigManagerAvailable(configManager), false);
 	}
 	
 }

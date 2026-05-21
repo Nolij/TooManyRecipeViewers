@@ -17,7 +17,6 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.nolij.libnolij.refraction.Refraction;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.config.JEIClientConfigs;
-import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
 import mezz.jei.common.Internal;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
@@ -25,7 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.invoke.MethodHandles;
-import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
@@ -48,9 +46,6 @@ public class TooManyRecipeViewersMod {
 		JemiPlugin.runtime = staticJEIRuntime;
 		
 		Internal.setJeiClientConfigs(new JEIClientConfigs());
-		
-		LOGGER.info("Loading JEI Plugins: [{}]", JEIPlugins.allPlugins.stream().map(x -> x.getPluginUid().toString()).collect(Collectors.joining(", ")));
-		JEIPlugins.onConfigManagerAvailable(jeiConfigManager);
 		
 		modEventBus.addListener(this::onRegisterClientReloadListeners);
 		//? if >=21.1 {

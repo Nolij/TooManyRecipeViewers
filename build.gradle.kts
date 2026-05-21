@@ -82,10 +82,10 @@ dependencies {
 tasks.withType<JavaCompile> {
 	if (name !in arrayOf("compileMcLauncherJava", "compilePatchedMcJava")) {
 		options.encoding = "UTF-8"
-		sourceCompatibility = "21"
-		options.release = 21
+		sourceCompatibility = "25"
+		options.release = 25
 		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = JavaLanguageVersion.of(21)
+			languageVersion = JavaLanguageVersion.of(25)
 		}
 		options.compilerArgs.addAll(arrayOf("-Xplugin:Manifold no-bootstrap"))
 		options.forkOptions.jvmArgs?.add("-XX:+EnableDynamicAgentLoading")
@@ -153,7 +153,7 @@ unimined.minecraft {
 
 	runs {
 		config("client") {
-			javaVersion = JavaVersion.VERSION_21
+			javaVersion = JavaVersion.VERSION_25
 			jvmArgs("-Xmx4G")
 		}
 	}
@@ -313,13 +313,13 @@ tasks.named<RemapJarTask>("remapJar") {
 }
 val inputJar = tasks.getByName("remapJar") as AbstractArchiveTask
 
-val compressionInputJar = if (javaVersion.ordinal < JavaVersion.VERSION_21.ordinal) {
+val compressionInputJar = if (javaVersion.ordinal < JavaVersion.VERSION_25.ordinal) {
 	jvmdg.defaultTask {
 		inputFile = inputJar.archiveFile
 		downgradeTo = javaVersion
 	}
 
-	jvmdg.defaultShadeTask.get()
+	jvmdg.defaultShadeTask.get()!!
 } else {
 	inputJar
 }

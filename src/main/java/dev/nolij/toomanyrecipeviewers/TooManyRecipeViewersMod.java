@@ -34,7 +34,7 @@ import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.*;
 public class TooManyRecipeViewersMod {
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-	public static final Refraction REFRACTION = new Refraction(MethodHandles.lookup());
+	public static final Refraction REFRACTION = Refraction.safe(MethodHandles.lookup());
 	
 	public TooManyRecipeViewersMod(/*? if >=21.1 {*/IEventBus modEventBus/*?}*/) {
 		//? if <21.1 {

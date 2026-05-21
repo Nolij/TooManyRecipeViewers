@@ -73,7 +73,7 @@ public class ConnectionToServer implements IConnectionToServer {
 	//? if >=21.1 {
 	public <T extends PlayToServerPacket<T>> void sendPacketToServer(@NotNull T packet) {
 	//?} else
-	/*public void sendPacketToServer(PacketJei packet) {*/
+	//public void sendPacketToServer(PacketJei packet) {
 		if (!(packet instanceof PacketRecipeTransfer recipeTransferPacket))
 			return;
 		
@@ -100,11 +100,11 @@ public class ConnectionToServer implements IConnectionToServer {
 		final var containerMenu = containerScreen.getMenu();
 		final var inventorySlots = recipeTransferPacket.inventorySlots.stream()
 			//? if <21.1
-			/*.map(x -> x.index)*/
+			//.map(x -> x.index)
 			.map(containerMenu::getSlot).toList();
 		final var craftingSlots = recipeTransferPacket.craftingSlots.stream()
 			//? if <21.1
-			/*.map(x -> x.index)*/
+			//.map(x -> x.index)
 			.map(containerMenu::getSlot).toList();
 		
 		final var craftingSlotIndex = craftingSlots.stream().mapToInt(s -> s.index).toArray();

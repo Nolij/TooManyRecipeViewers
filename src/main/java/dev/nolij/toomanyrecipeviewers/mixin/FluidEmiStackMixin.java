@@ -27,7 +27,7 @@ public abstract class FluidEmiStackMixin implements ITypedIngredient<FluidStack>
 	//? if >=21.1 {
 	@Shadow @Final private DataComponentPatch componentChanges;
 	//?} else
-	/*@Shadow @Final private CompoundTag nbt;*/
+	//@Shadow @Final private CompoundTag nbt;
 	
 	@Shadow public abstract EmiStack copy();
 	
@@ -42,7 +42,7 @@ public abstract class FluidEmiStackMixin implements ITypedIngredient<FluidStack>
 		//? if >=21.1 {
 		return (FluidStack) fluidHelper.create(Holder.direct(fluid), tmrv$getAmount(), componentChanges);
 		//?} else
-		/*return (FluidStack) fluidHelper.create(fluid, tmrv$getAmount(), nbt);*/
+		//return (FluidStack) fluidHelper.create(fluid, tmrv$getAmount(), nbt);
 	}
 	
 	//? if >=21.1 {
@@ -66,7 +66,7 @@ public abstract class FluidEmiStackMixin implements ITypedIngredient<FluidStack>
 		//? if >=21.1 {
 		return componentChanges;
 		//?} else
-		/*return nbt;*/
+		//return nbt;
 	}
 	
 	@Override

@@ -56,7 +56,7 @@ public class TooManyRecipeViewersMod {
 		//? if >=21.1 {
 		NeoForge
 		//?} else
-		/*MinecraftForge*/
+		//MinecraftForge
 			.EVENT_BUS.addListener(this::onLoggingOut);
 		
 		//? if >=21.1

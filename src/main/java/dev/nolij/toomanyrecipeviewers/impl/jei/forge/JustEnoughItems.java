@@ -6,4 +6,4 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.forge;
 @Mod("jei")
 public class JustEnoughItems {
 }
-*/
+*///?}

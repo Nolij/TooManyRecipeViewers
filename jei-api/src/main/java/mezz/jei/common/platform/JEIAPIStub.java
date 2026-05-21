@@ -6,4 +6,4 @@ package mezz.jei.common.platform;
 @Mod("jei_api")
 public class JEIAPIStub {
 }
-*/
+*///?}

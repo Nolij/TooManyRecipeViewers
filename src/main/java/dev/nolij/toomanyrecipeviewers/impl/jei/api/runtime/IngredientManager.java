@@ -113,7 +113,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			Collections.emptyList(),
 			new ItemStackHelper(
 				//? if <21.1
-				/*runtime.subtypeManager,*/
+				//runtime.subtypeManager,
 				runtime.stackHelper,
 				runtime.colorHelper
 			),
@@ -391,16 +391,16 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	//? if <21.1
-	/*@SuppressWarnings("UnnecessaryLocalVariable")*/
+	//@SuppressWarnings("UnnecessaryLocalVariable")
 	@Override
 	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> ingredientType, V ingredient /*? if >=21.1 {*/, boolean normalize /*?}*/) {
         //? if <21.1
-        /*boolean normalize = false;*/
-		final var result = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, normalize);
+        //boolean normalize = false;
+		final var result = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, normalize);
 		//? if >=21.1 {
 		return Optional.ofNullable(result);
 		//?} else
-		/*return result;*/
+		//return result;
 	}
 	
 	@Override
@@ -414,7 +414,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	public <V> Optional<IClickableIngredient<V>> createClickableIngredient(IIngredientType<V> ingredientType, V ingredient, Rect2i area, boolean normalize) {
 		final var typedIngredient = TypedIngredient.createAndFilterInvalid(this, ingredientType, ingredient, normalize)
 			//? if <21.1
-			/*.orElse(null)*/
+			//.orElse(null)
 			;
 		if (typedIngredient == null) {
 			return Optional.empty();
@@ -484,7 +484,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				//? if >=21.1 {
 				uidLookup.getOrDefault(new TypedIngredientUID(ingredientType.getUid(), uid, true), null)
 				//?} else
-				/*null*/
+				//null
 			)
 		);
 	}

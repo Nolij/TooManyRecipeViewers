@@ -26,7 +26,7 @@ public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, 
 	//? if >=21.1 {
 	@Shadow @Final private DataComponentPatch componentChanges;
 	//?} else
-	/*@Shadow @Final private CompoundTag nbt;*/
+	//@Shadow @Final private CompoundTag nbt;
 	
 	@Shadow public abstract EmiStack copy();
 	
@@ -66,7 +66,7 @@ public abstract class ItemEmiStackMixin implements ITypedIngredient<ItemStack>, 
 		//? if >=21.1 {
 		return componentChanges;
 		//?} else
-		/*return nbt;*/
+		//return nbt;
 	}
 	
 	@Override

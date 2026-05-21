@@ -991,7 +991,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var craftingRecipeHolder = (RecipeHolder<CraftingRecipe>) this.jeiRecipe;
 				final var craftingRecipe = craftingRecipeHolder.value();
 				//?} else
-				/*final var craftingRecipe = (CraftingRecipe) this.jeiRecipe;*/
+				//final var craftingRecipe = (CraftingRecipe) this.jeiRecipe;
 				
 				if (craftingRecipe.canCraftInDimensions(3, 3)) {
 					if (craftingRecipe instanceof ShapelessRecipe shapelessRecipe) {
@@ -1069,7 +1069,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<SmeltingRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (SmeltingRecipe) this.jeiRecipe;*/
+				//final var recipe = (SmeltingRecipe) this.jeiRecipe;
 				
 				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.SMELTING, 1, false, getID());
 			}
@@ -1081,7 +1081,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<BlastingRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (BlastingRecipe) this.jeiRecipe;*/
+				//final var recipe = (BlastingRecipe) this.jeiRecipe;
 				
 				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.BLASTING, 2, false, getID());
 			}
@@ -1093,7 +1093,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<SmokingRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (SmokingRecipe) this.jeiRecipe;*/
+				//final var recipe = (SmokingRecipe) this.jeiRecipe;
 				
 				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.SMOKING, 2, false, getID());
 			}
@@ -1105,7 +1105,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<CampfireCookingRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (CampfireCookingRecipe) this.jeiRecipe;*/
+				//final var recipe = (CampfireCookingRecipe) this.jeiRecipe;
 				
 				return new EMICookingRecipeWithCustomID(recipe, VanillaEmiRecipeCategories.CAMPFIRE_COOKING, 1, true, getID());
 			}
@@ -1117,7 +1117,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<StonecutterRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (StonecutterRecipe) this.jeiRecipe;*/
+				//final var recipe = (StonecutterRecipe) this.jeiRecipe;
 				
 				return new EmiStonecuttingRecipe(recipe) {
 					@Override
@@ -1134,7 +1134,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				@SuppressWarnings("unchecked")
 				final var recipe = ((RecipeHolder<SmithingRecipe>) this.jeiRecipe).value();
 				//?} else
-				/*final var recipe = (SmithingRecipe) this.jeiRecipe;*/
+				//final var recipe = (SmithingRecipe) this.jeiRecipe;
 				
 				final var extension = ((SmithingRecipeCategoryAccessor) runtime.smithingCategory).tmrv$getExtension(recipe);
 				if (extension != null) {

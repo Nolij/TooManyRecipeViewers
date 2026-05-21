@@ -87,7 +87,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		} else {
 			final var typedIngredient = TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
 				//? if <21.1
-				/*.orElse(null)*/
+				//.orElse(null)
 				;
 			collectedIngredients.add(typedIngredient != null ? typedIngredient : ErrorIngredient.TYPED_INSTANCE);
 		}
@@ -124,7 +124,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		} else {
 			final var copy = TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)
 				//? if <21.1
-				/*.orElse(null)*/
+				//.orElse(null)
 				;
 			collectedIngredients.add(copy != null ? copy : ErrorIngredient.TYPED_INSTANCE);
 		}

@@ -57,7 +57,7 @@ public class ClientConfig implements IClientConfig {
 	//? if >=21.1 {
 	public boolean getShowHiddenIngredients() {
 	//?} else
-	/*public boolean isShowHiddenItemsEnabled() {*/
+	//public boolean isShowHiddenItemsEnabled() {
 		return true;
 	}
 	
@@ -120,7 +120,7 @@ public class ClientConfig implements IClientConfig {
 	//? if >=21.1 {
 	public boolean getHideSingleTagContentTooltipEnabled() {
 	//?} else
-	/*public boolean isHideSingleIngredientTagsEnabled() {*/
+	//public boolean isHideSingleIngredientTagsEnabled() {
 		return false;
 	}
 	

@@ -158,7 +158,7 @@ public final class TooManyRecipeViewers {
 		}
 		
 		//? if <21.1
-		/*@SuppressWarnings("removal")*/
+		//@SuppressWarnings("removal")
 		@Override
 		public Optional<RecipeType<?>> getRecipeType(ResourceLocation recipeUid) {
 			if (runtime == null || runtime.recipeManager == null)

@@ -1,1 +1,5 @@
+- correctly identify plugins with native replacement (EMI plugin equivalents) provided by other mods
+- partially load plugins with native replacements for compatibility
+- performance & memory usage improvements
+- updated provided JEI
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

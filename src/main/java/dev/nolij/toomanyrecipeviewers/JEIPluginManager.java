@@ -94,11 +94,11 @@ public final class JEIPluginManager {
 	// must run after all other EMI plugins are initialized
 	// ∴ require passing EmiRegistry to avoid future footguns
 	public JEIPluginManager(EmiRegistry ignored) {
-		var pluginListStringBuilder = new StringBuilder(vanillaPlugin.getPluginUid().toString());
-		
 		final var additionalModIDs = EmiRecipes.categories.stream()
 			.map(x -> x.getId().getNamespace())
 			.collect(Collectors.toSet());
+		
+		var pluginListStringBuilder = new StringBuilder(vanillaPlugin.getPluginUid().toString());
 		
 		allPlugins.add(vanillaPlugin);
 		for (final var pluginClass : pluginClasses) {

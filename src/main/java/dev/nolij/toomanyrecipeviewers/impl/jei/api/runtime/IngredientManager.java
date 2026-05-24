@@ -187,8 +187,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		else if (ingredient instanceof FluidStack fluidStack)
 			return getEMIStack(fluidStack);
 		
-		//noinspection unchecked
-		final var ingredientInfo = (IngredientInfo<T>) typeInfoMap.get(jeiType);
+		final var ingredientInfo = getIngredientInfo(jeiType);
 		if (ingredientInfo == null)
 			return ErrorEmiStack.INSTANCE;
 		

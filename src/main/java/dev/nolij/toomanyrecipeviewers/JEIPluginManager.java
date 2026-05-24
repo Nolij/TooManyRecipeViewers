@@ -82,13 +82,13 @@ public final class JEIPluginManager {
 			.filter(forceLoadJEIPluginsFrom::contains)
 			.collect(Collectors.toUnmodifiableSet());
 	
-	public final List<IModPlugin> allPlugins = new ArrayList<>();
-	public final List<IModPlugin> modPluginsNoDuplicates = new ArrayList<>();
-	public final List<IModPlugin> modPlugins = new ArrayList<>();
+	public final List<IModPlugin> allPlugins = new ArrayList<>(pluginClasses.size());
+	public final List<IModPlugin> modPluginsNoDuplicates = new ArrayList<>(pluginClasses.size());
+	public final List<IModPlugin> modPlugins = new ArrayList<>(pluginClasses.size());
 	public final VanillaPlugin vanillaPlugin = new VanillaPlugin();
 	public final String pluginListString;
 	
-	private final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>());
+	private final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>(pluginClasses.size()));
 	private long loadTime = 0L;
 	
 	// must run after all other EMI plugins are initialized

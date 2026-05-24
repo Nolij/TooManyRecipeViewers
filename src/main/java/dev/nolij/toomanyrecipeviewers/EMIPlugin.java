@@ -77,9 +77,8 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	@Override
 	public void initialize(EmiInitRegistry registry) {
-		onRuntimeUnavailable();
-		
 		EmiReloadManager.step(Component.literal("[TMRV] Initializing..."), 10L);
+		onRuntimeUnavailable();
 		
 		Internal.setServerConnection(new ConnectionToServer());
 	}

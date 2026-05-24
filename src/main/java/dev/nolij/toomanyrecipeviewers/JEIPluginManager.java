@@ -36,6 +36,7 @@ import org.objectweb.asm.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,10 +86,12 @@ public final class JEIPluginManager {
 	public final List<IModPlugin> allPlugins = new ArrayList<>(pluginClasses.size());
 	public final List<IModPlugin> modPluginsNoDuplicates = new ArrayList<>(pluginClasses.size());
 	public final List<IModPlugin> modPlugins = new ArrayList<>(pluginClasses.size());
+	public final Set<IModPlugin> partialLoadPlugins = new HashSet<>(pluginClasses.size());
 	public final VanillaPlugin vanillaPlugin = new VanillaPlugin();
 	public final String pluginListString;
 	
 	private final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>(pluginClasses.size()));
+	private long partialLoadTime = 0L;
 	private long loadTime = 0L;
 	
 	// must run after all other EMI plugins are initialized
@@ -124,8 +127,10 @@ public final class JEIPluginManager {
 			pluginListStringBuilder.append(pluginID);
 			if (modsWithEMIPlugins.contains(pluginID.getNamespace())) {
 				pluginListStringBuilder.append("¹");
+				partialLoadPlugins.add(plugin);
 			} else if (additionalModIDs.contains(pluginID.getNamespace())) {
 				pluginListStringBuilder.append("²");
+				partialLoadPlugins.add(plugin);
 			} else {
 				modPluginsNoDuplicates.add(plugin);
 			}
@@ -138,7 +143,7 @@ public final class JEIPluginManager {
 		for (final var plugin : allPlugins) {
 			LOGGER.info("[{}] Loaded in {}ms", plugin.getPluginUid(), loadTimes.get(plugin));
 		}
-		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
+		LOGGER.info("JEI plugins loaded in {}ms ({}ms for partial loads)", loadTime, partialLoadTime);
 	}
 	
 	private void dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
@@ -156,6 +161,8 @@ public final class JEIPluginManager {
 		}
 		
 		loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
+		if (partialLoadPlugins.contains(plugin))
+			partialLoadTime += dispatchTime;
 	}
 	
 	private void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {

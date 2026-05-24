@@ -78,18 +78,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
 	
-	private record TypedIngredientUID(
-		String typeUid, 
-		Object ingredientUid
-		//? if >=21.1
-		, boolean legacy
-	) {
-		//? if >=21.1 {
-		private TypedIngredientUID(String typeUid, Object ingredientUid) {
-			this(typeUid, ingredientUid, false);
-		}
-		//?}
-	}
+	private record TypedIngredientUID(String typeUid, String uid) {}
 	
 	private final Map<TypedIngredientUID, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
 	
@@ -132,8 +121,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				itemStacks.add(itemStack);
 				
 				try {
-					uidLookup.put(getUid(VanillaTypes.ITEM_STACK, itemStack), x);
-					//? if >=21.1
 					uidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
 				} catch (Throwable t) {
 					LOGGER.error("Broken ItemStack {}", itemStack.toString(), t);
@@ -163,11 +150,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				
 				try {
 					//noinspection unchecked
-					uidLookup.put(getUid(fluidType, fluidStack), x);
-					//? if >=21.1 {
-					//noinspection unchecked
 					uidLookup.put(getLegacyUid(fluidType, fluidStack), x);
-					//?}
 				} catch (Throwable t) {
 					LOGGER.error("Broken FluidStack {}", fluidStack.toString(), t);
 				}
@@ -430,27 +413,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.of(clickableIngredient);
 	}
 	
-	private <V> TypedIngredientUID getUid(IIngredientType<V> jeiType, V ingredient) {
-		//? if <21.1 {
-		/*return getLegacyUid(jeiType, ingredient);
-		*///?} else {
-		final var ingredientInfo = getIngredientInfo(jeiType);
-		final var ingredientHelper = ingredientInfo.getIngredientHelper();
-		final var typeUid = jeiType.getUid();
-		
-		try {
-			return new TypedIngredientUID(typeUid, ingredientHelper.getUid(ingredient, UidContext.Ingredient));
-		} catch (Throwable getUidException) {
-			try {
-				LOGGER.error("Failed to get UID for broken ingredient {}", ingredientHelper.getErrorInfo(ingredient), getUidException);
-			} catch (Throwable getErrorInfoException) {
-				LOGGER.error("Failed to get UID for broken ingredient", getErrorInfoException);
-			}
-			return null;
-		}
-		//?}
-	}
-	
 	//? if >=21.1
 	@SuppressWarnings("removal")
 	private <V> TypedIngredientUID getLegacyUid(IIngredientType<V> jeiType, V ingredient) {
@@ -459,10 +421,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		final var typeUid = jeiType.getUid();
 		
 		try {
-			return new TypedIngredientUID(typeUid, ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient)
-				//? if >=21.1
-				, true
-			);
+			return new TypedIngredientUID(typeUid, ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient));
 		} catch (Throwable throwable) {
 			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
 			return null;
@@ -482,15 +441,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> jeiType, String uid) {
 		//noinspection unchecked
-		return Optional.ofNullable(
-			(ITypedIngredient<V>) uidLookup.getOrDefault(
-				new TypedIngredientUID(jeiType.getUid(), uid), 
-				//? if >=21.1 {
-				uidLookup.getOrDefault(new TypedIngredientUID(jeiType.getUid(), uid, true), null)
-				//?} else
-				//null
-			)
-		);
+		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(new TypedIngredientUID(jeiType.getUid(), uid), null));
 	}
 	
 	@Override
@@ -651,8 +602,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			final var emiStack = getEMIStack(jeiType, ingredient);
 			//noinspection unchecked
 			final var typedIngredient = (ITypedIngredient<V>) emiStack;
-			uidLookup.put(getUid(jeiType, ingredient), typedIngredient);
-			//? if >=21.1
 			uidLookup.put(getLegacyUid(jeiType, ingredient), typedIngredient);
 			
 			if (!emiStack.isEmpty())

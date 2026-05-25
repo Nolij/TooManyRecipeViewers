@@ -80,12 +80,12 @@ public final class EMIPlugin implements EmiPlugin {
 		EmiReloadManager.step(Component.literal("[TMRV] Initializing..."), 10L);
 		onRuntimeUnavailable();
 		
+		runtime = new TooManyRecipeViewers();
 		Internal.setServerConnection(new ConnectionToServer());
 	}
 	
 	@Override
 	public void register(EmiRegistry registry) {
-		runtime = new TooManyRecipeViewers();
 		runtime.jeiPluginManager = new JEIPluginManager(registry);
 		
 		LOGGER.info("Loading JEI Plugins: [{}]", runtime.jeiPluginManager.pluginListString);

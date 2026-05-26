@@ -1,9 +1,10 @@
 package dev.nolij.toomanyrecipeviewers;
 
-//? if >=21.1
+//? if >=21.1 {
 import mezz.jei.api.helpers.ICodecHelper;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
+//?}
+import com.google.common.collect.ImmutableListMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;

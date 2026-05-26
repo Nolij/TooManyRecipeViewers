@@ -12,13 +12,13 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
-import dev.emi.emi.jemi.JemiStack;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
@@ -55,7 +55,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -192,7 +191,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		if (ingredientInfo == null)
 			return ErrorEmiStack.INSTANCE;
 		
-		return new JemiStack<>(jeiType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
+		return new TMRVStack<>(jeiType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
 	}
 	
 	@SuppressWarnings("UnstableApiUsage")
@@ -662,9 +661,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 						if (runtime.subtypeManager.hasSubtypes(jeiIngredientType, jeiIngredient)) {
 							//noinspection unchecked
 							runtime.emiRegistry.setDefaultComparison(jeiIngredientType.getBase(jeiIngredient), Comparison.compareData(stack -> {
-								if (stack instanceof final JemiStack<?> jemiStack) {
+								if (stack instanceof final TMRVStack<?> tmrvStack) {
 									//noinspection unchecked
-									return runtime.subtypeManager.getSubtypeInfo(jeiIngredientType, jemiStack.ingredient, UidContext.Recipe);
+									return runtime.subtypeManager.getSubtypeInfo(jeiIngredientType, tmrvStack.ingredient, UidContext.Recipe);
 								}
 								return null;
 							}));

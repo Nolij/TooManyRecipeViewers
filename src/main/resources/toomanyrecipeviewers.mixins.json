@@ -9,7 +9,7 @@
 		"FluidEmiStackMixin",
 		"FullTypedItemStackMixin",
 		"ItemEmiStackMixin",
-		"JemiStackMixin",
+		"TMRVStackMixin",
 		"JemiUtilMixin",
 		"MekanismJEIMixin",
 		"NormalizedTypedItemMixin",

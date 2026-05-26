@@ -14,8 +14,6 @@ import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.EmiStackInteraction;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.jemi.JemiRecipeHandler;
-import dev.emi.emi.jemi.JemiStack;
-import dev.emi.emi.jemi.JemiStackSerializer;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import dev.emi.emi.registry.EmiRecipes;
@@ -29,6 +27,8 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
 import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStackSerializer;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IClickableIngredient;
@@ -82,6 +82,8 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		runtime = new TooManyRecipeViewers();
 		Internal.setServerConnection(new ConnectionToServer());
+		
+		registry.addIngredientSerializer(TMRVStack.class, new TMRVStackSerializer(runtime));
 	}
 	
 	@Override
@@ -179,10 +181,6 @@ public final class EMIPlugin implements EmiPlugin {
 			serializer = VOID_SERIALIZER;
 		runtime.editModeConfig = new EditModeConfig(serializer, runtime.ingredientManager);
 		runtime.ingredientVisibility = new IngredientVisibility(runtime.blacklist, runtime.clientToggleState, runtime.editModeConfig, runtime.ingredientManager);
-		
-		// TODO: use init registry instead?
-		//noinspection deprecation
-		runtime.emiRegistry.addIngredientSerializer(JemiStack.class, new JemiStackSerializer(runtime.ingredientManager));
 	}
 	
 	private void registerModAliases() {

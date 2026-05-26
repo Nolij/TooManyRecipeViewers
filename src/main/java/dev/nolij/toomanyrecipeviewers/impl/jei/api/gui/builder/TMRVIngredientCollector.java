@@ -4,7 +4,7 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
-import dev.emi.emi.jemi.JemiStack;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.util.IStackish;
@@ -67,7 +67,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 					return ingredientManager.getEMIStack(typedIngredient);
 				
 				//noinspection rawtypes
-				return new JemiStack(type, ingredientManager.getIngredientHelper(type), rendererOverrides.get(type), typedIngredient.getIngredient());
+				return new TMRVStack(type, ingredientManager.getIngredientHelper(type), rendererOverrides.get(type), typedIngredient.getIngredient());
 			})
 			.toList());
 	}

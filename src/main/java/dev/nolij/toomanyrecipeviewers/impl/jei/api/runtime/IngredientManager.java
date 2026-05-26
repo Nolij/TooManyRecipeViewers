@@ -494,25 +494,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	//region IExtraIngredientRegistration
 	@Override
 	public <V> void addExtraIngredients(IIngredientType<V> jeiType, Collection<V> ingredients) {
-		if (!canGetIngredientInfo(jeiType))
-			throw new IllegalArgumentException();
-		
 		registerIngredients(jeiType, ingredients);
-        var ingredientInfo = getIngredientInfo(jeiType);
-        //? if <21.1 {
-        /*ingredientInfo.addIngredients(ingredients);
-        *///?} else {
-        List<ITypedIngredient<V>> typedIngredientList = new ArrayList<>(ingredients.size());
-        for (V ingredient : ingredients) {
-            var typed = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, false);
-            if (typed != null) {
-                typedIngredientList.add(typed);
-            } else {
-                LOGGER.warn("Attempting to add invalid ingredient {}", ingredientInfo.getIngredientHelper().getErrorInfo(ingredient));
-            }
-        }
-        ingredientInfo.addIngredients(typedIngredientList);
-        //?}
 	}
 	//endregion
 	

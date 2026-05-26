@@ -77,6 +77,7 @@ public final class TooManyRecipeViewers {
 	public volatile IClientToggleState clientToggleState = null;
 	public volatile EditModeConfig editModeConfig = null;
 	public volatile IIngredientVisibility ingredientVisibility = null;
+	//? if >=21.1
 	public volatile ImmutableSetMultimap<String, String> modAliases = null;
 	public volatile IModIdHelper modIdHelper = null;
 	public volatile JeiHelpers jeiHelpers = null;

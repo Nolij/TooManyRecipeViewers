@@ -677,6 +677,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		EmiReloadManager.step(Component.literal("[TMRV] Locking JEI Recipe Registry..."), 100L);
 		
+		// TODO: this probably doesn't work
 		registry.removeRecipes(x ->
 			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
 			hiddenRecipeIDs.contains(x.getId()) ||

@@ -78,9 +78,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<Object> fluidStacks = new ArrayList<>();
 	
-	private record TypedIngredientUID(String typeUid, String uid) {}
+	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
 	
-	private final Map<TypedIngredientUID, ITypedIngredient<?>> uidLookup = new ConcurrentHashMap<>();
+	private final Map<String, IIngredientType<?>> typeUidLookup = new ConcurrentHashMap<>();
+	private final Map<TypedIngredientUID, Object> ingredientUidLookup = new ConcurrentHashMap<>();
 	
 	private volatile boolean locked = false;
 	
@@ -121,7 +122,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				itemStacks.add(itemStack);
 				
 				try {
-					uidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
+					ingredientUidLookup.put(getLegacyUid(VanillaTypes.ITEM_STACK, itemStack), x);
 				} catch (Throwable t) {
 					LOGGER.error("Broken ItemStack {}", itemStack.toString(), t);
 				}
@@ -150,7 +151,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				
 				try {
 					//noinspection unchecked
-					uidLookup.put(getLegacyUid(fluidType, fluidStack), x);
+					ingredientUidLookup.put(getLegacyUid(fluidType, fluidStack), x);
 				} catch (Throwable t) {
 					LOGGER.error("Broken FluidStack {}", fluidStack.toString(), t);
 				}
@@ -212,8 +213,9 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.empty();
 	}
 	
-	public <T> boolean canGetIngredientInfo(IIngredientType<T> jeiType) {
-		return typeInfoMap.containsKey(jeiType);
+	public <T> IIngredientType<T> getIngredientType(String uid) {
+		//noinspection unchecked
+		return (IIngredientType<T>) typeUidLookup.get(uid);
 	}
 	
 	public <T> IngredientInfo<T> getIngredientInfo(IIngredientType<T> jeiType) {
@@ -281,10 +283,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public Optional<IIngredientType<?>> getIngredientTypeForUid(String uid) {
-		return getRegisteredIngredientTypes()
-			.stream()
-			.filter(x -> uid.equals(x.getUid()))
-			.findFirst();
+		return Optional.ofNullable(typeUidLookup.getOrDefault(uid, null));
 	}
 	
 	@Override
@@ -417,30 +416,37 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	private <V> TypedIngredientUID getLegacyUid(IIngredientType<V> jeiType, V ingredient) {
 		final var ingredientInfo = getIngredientInfo(jeiType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
-		final var typeUid = jeiType.getUid();
 		
 		try {
-			return new TypedIngredientUID(typeUid, ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient));
+			return new TypedIngredientUID(jeiType, ingredientHelper.getUniqueId(ingredient, UidContext.Ingredient));
 		} catch (Throwable throwable) {
 			LOGGER.error("Failed to get legacy UID for broken ingredient", throwable);
 			return null;
 		}
 	}
 	
-	//? if >=21.1
-	@SuppressWarnings("removal")
+	@SuppressWarnings({
+		//? if >=21.1
+		"removal",
+		"unchecked"})
 	@Override
 	public <V> Optional<V> getIngredientByUid(IIngredientType<V> jeiType, String uid) {
-		return getTypedIngredientByUid(jeiType, uid)
-			.map(ITypedIngredient::getIngredient);
+		if (jeiType == VanillaTypes.ITEM_STACK || jeiType == fluidHelper.getFluidIngredientType())
+			return Optional.ofNullable(((ITypedIngredient<V>) ingredientUidLookup.getOrDefault(new TypedIngredientUID(jeiType, uid), null)).getIngredient());
+		
+		return Optional.ofNullable((V) ingredientUidLookup.getOrDefault(new TypedIngredientUID(jeiType, uid), null));
 	}
 	
-	//? if >=21.1
-	@SuppressWarnings("removal")
+	@SuppressWarnings({
+		//? if >=21.1
+		"removal", 
+		"unchecked"})
 	@Override
 	public <V> Optional<ITypedIngredient<V>> getTypedIngredientByUid(IIngredientType<V> jeiType, String uid) {
-		//noinspection unchecked
-		return Optional.ofNullable((ITypedIngredient<V>) uidLookup.getOrDefault(new TypedIngredientUID(jeiType.getUid(), uid), null));
+		if (jeiType == VanillaTypes.ITEM_STACK || jeiType == fluidHelper.getFluidIngredientType())
+			return Optional.ofNullable((ITypedIngredient<V>) ingredientUidLookup.getOrDefault(new TypedIngredientUID(jeiType, uid), null));
+		
+		return Optional.ofNullable((ITypedIngredient<V>) getEMIStack(jeiType, (V) ingredientUidLookup.getOrDefault(new TypedIngredientUID(jeiType, uid), null)));
 	}
 	
 	@Override
@@ -581,9 +587,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		for (final var ingredient : ingredients) {
 			final var emiStack = getEMIStack(jeiType, ingredient);
-			//noinspection unchecked
-			final var typedIngredient = (ITypedIngredient<V>) emiStack;
-			uidLookup.put(getLegacyUid(jeiType, ingredient), typedIngredient);
+			
+			if (jeiType == VanillaTypes.ITEM_STACK || jeiType == fluidHelper.getFluidIngredientType())
+				ingredientUidLookup.put(getLegacyUid(jeiType, ingredient), emiStack);
+			else
+				ingredientUidLookup.put(getLegacyUid(jeiType, ingredient), ingredient);
 			
 			if (!emiStack.isEmpty())
 				runtime.emiRegistry.addEmiStack(emiStack);
@@ -602,6 +610,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		classTypeMap.put(jeiType.getIngredientClass(), jeiType);
 		if (jeiType instanceof IIngredientTypeWithSubtypes<?, ?> jeiTypeWithSubtypes)
 			baseClassTypeMap.put(jeiTypeWithSubtypes.getIngredientBaseClass(), jeiTypeWithSubtypes);
+		typeUidLookup.put(jeiType.getUid(), jeiType);
 		
 		if (jeiType == VanillaTypes.ITEM_STACK ||
 			jeiType == fluidHelper.getFluidIngredientType())

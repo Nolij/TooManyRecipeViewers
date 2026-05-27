@@ -5,14 +5,14 @@ import com.mojang.serialization.Codec;
 import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.common.input.ClickableIngredientFactory;
 //?}
-import com.google.common.collect.Lists;
-import dev.emi.emi.EmiPort;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
 import dev.emi.emi.api.stack.ItemEmiStack;
-import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.registry.EmiStackList;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
@@ -53,7 +53,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -68,14 +67,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private final TooManyRecipeViewers runtime;
 	
-	private final Map<IIngredientType<?>, IngredientInfo<?>> typeInfoMap = Collections.synchronizedMap(new HashMap<>());
-	private final Map<Class<?>, IIngredientType<?>> classTypeMap = Collections.synchronizedMap(new HashMap<>());
-	private final Map<Class<?>, IIngredientTypeWithSubtypes<?, ?>> baseClassTypeMap = Collections.synchronizedMap(new HashMap<>());
+	private final Map<IIngredientType<?>, IngredientInfo<?>> typeInfoMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, IIngredientType<?>> classTypeMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, IIngredientTypeWithSubtypes<?, ?>> baseClassTypeMap = new ConcurrentHashMap<>();
 	
 	private final WeakList<IIngredientListener> listeners = new WeakList<>();
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<FluidStack> fluidStacks = new ArrayList<>();
+	private @Nullable Multimap<IIngredientType<?>, ITypedIngredient<?>> typedIngredients = Multimaps.synchronizedMultimap(HashMultimap.create());
 	
 	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
 	
@@ -135,6 +135,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				case FluidStack fluidStack -> fluidStacks.add(fluidStack);
 				default -> {}
 			}
+			
+			typedIngredients.put(type, typedIngredient);
 			//noinspection unchecked
 			registerIngredientBaseComparison(type, ingredient);
 			
@@ -213,8 +215,13 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	//region IIngredientManager	
-	@SuppressWarnings("unchecked")
 	public @Unmodifiable <V> Collection<ITypedIngredient<V>> getAllTypedIngredients(IIngredientType<V> jeiType) {
+		if (typedIngredients != null) {
+			//noinspection rawtypes,unchecked
+			return (Collection) typedIngredients.get(jeiType);
+		}
+		
+		//noinspection unchecked
 		return EmiStackList.stacks.stream()
 			.filter(ITypedIngredient.class::isInstance)
 			.map(ITypedIngredient.class::cast)
@@ -583,6 +590,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			else
 				ingredientUidLookup.put(getLegacyUid(jeiType, ingredient), ingredient);
 			
+			if (typedIngredients != null) {
+				//noinspection unchecked
+				typedIngredients.put(jeiType, (ITypedIngredient<V>) emiStack);
+			}
+			
 			registerIngredientBaseComparison(jeiType, ingredient);
 			
 			if (!emiStack.isEmpty())
@@ -657,6 +669,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		itemStacks = null;
 		fluidStacks = null;
+		typedIngredients = null;
 	}
 	
 }

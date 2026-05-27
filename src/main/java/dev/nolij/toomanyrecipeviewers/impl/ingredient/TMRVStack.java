@@ -19,6 +19,7 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.TooltipFlag;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class TMRVStack<T> extends EmiStack {
 	public final IIngredientRenderer<T> renderer;
 	public final T ingredient;
 	
-	public final ResourceLocation id;
+	private @Nullable ResourceLocation id = null;
 	public final Object key;
 	public final float xRenderOffset;
 	public final float yRenderOffset;
@@ -41,8 +42,6 @@ public class TMRVStack<T> extends EmiStack {
 		this.helper = helper;
 		this.renderer = renderer;
 		this.ingredient = ingredient;
-		
-		this.id = helper.getResourceLocation(ingredient);
 		
 		if (type instanceof IIngredientTypeWithSubtypes<?, T> typeWithSubtypes) {
 			this.key = typeWithSubtypes.getBase(ingredient);
@@ -101,6 +100,9 @@ public class TMRVStack<T> extends EmiStack {
 	
 	@Override
 	public ResourceLocation getId() {
+		if (id == null)
+			this.id = helper.getResourceLocation(ingredient);
+		
 		return id;
 	}
 	
@@ -117,8 +119,8 @@ public class TMRVStack<T> extends EmiStack {
 		renderer.getTooltip(builder, ingredient, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL);
 		
 		final var result = new ArrayList<>(builder.tooltip);
-		if (EmiConfig.appendModId && id != null) {
-			final var modName = EmiUtil.getModName(id.getNamespace());
+		if (EmiConfig.appendModId && getId() != null) {
+			final var modName = EmiUtil.getModName(getId().getNamespace());
 			result.add(ClientTooltipComponent.create(EmiPort.ordered(EmiPort.literal(modName, ChatFormatting.BLUE, ChatFormatting.ITALIC))));
 		}
 		

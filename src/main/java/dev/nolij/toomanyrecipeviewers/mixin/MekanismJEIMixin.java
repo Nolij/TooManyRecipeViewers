@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MekanismJEIMixin {
 	
 	@Inject(method = "shouldLoad", at = @At("HEAD"), cancellable = true, require = 0)
-	private static void tmrv$shouldLoad(CallbackInfoReturnable<Boolean> cir) {
+	private static void tmrv$shouldLoad$HEAD(CallbackInfoReturnable<Boolean> cir) {
 		cir.setReturnValue(true);
 	}
 	

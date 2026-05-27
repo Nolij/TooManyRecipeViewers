@@ -1,13 +1,16 @@
 package dev.nolij.toomanyrecipeviewers;
 
-//? if >=21.1
+//? if >=21.1 {
 import mezz.jei.api.registration.IModInfoRegistration;
+//?}
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.libnolij.collect.InverseSet;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IPlatformFluidHelper;
@@ -31,16 +34,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.ModList;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -64,7 +68,7 @@ public final class JEIPluginManager {
 		
 		return result;
 	}
-	private static final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);;
+	private static final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);
 	
 	static {
 		pluginClasses.remove(JemiPlugin.class);
@@ -83,6 +87,8 @@ public final class JEIPluginManager {
 			.filter(forceLoadJEIPluginsFrom::contains)
 			.collect(Collectors.toUnmodifiableSet());
 	
+	private final ForkJoinPool dispatchPool = new ForkJoinPool();
+	
 	public final List<IModPlugin> allPlugins = new ArrayList<>(pluginClasses.size());
 	public final List<IModPlugin> modPluginsNoDuplicates = new ArrayList<>(pluginClasses.size());
 	public final List<IModPlugin> modPlugins = new ArrayList<>(pluginClasses.size());
@@ -90,8 +96,7 @@ public final class JEIPluginManager {
 	public final VanillaPlugin vanillaPlugin = new VanillaPlugin();
 	public final String pluginListString;
 	
-	private final Map<IModPlugin, Long> loadTimes = Collections.synchronizedMap(new HashMap<>(pluginClasses.size()));
-	private long partialLoadTime = 0L;
+	private final Object2LongMap<IModPlugin> loadTimes = new Object2LongOpenHashMap<>(pluginClasses.size());
 	private long loadTime = 0L;
 	
 	// must run after all other EMI plugins are initialized
@@ -141,120 +146,148 @@ public final class JEIPluginManager {
 	
 	public void logLoadTimes() {
 		for (final var plugin : allPlugins) {
-			LOGGER.info("[{}] Loaded in {}ms", plugin.getPluginUid(), loadTimes.get(plugin));
+			LOGGER.info("[{}] Loaded in {}ms", plugin.getPluginUid(), loadTimes.getLong(plugin));
 		}
-		LOGGER.info("JEI plugins loaded in {}ms ({}ms for partial loads)", loadTime, partialLoadTime);
+		LOGGER.info("JEI plugins loaded in {}ms", loadTime);
 	}
 	
-	private void dispatchInternal(IModPlugin plugin, Consumer<IModPlugin> dispatcher, String callerMethod) {
-		final var pluginId = plugin.getPluginUid();
-		final var pluginTimestamp = System.currentTimeMillis();
-		long dispatchTime;
-		try {
-			EmiReloadManager.step(Component.literal("[TMRV] %s: %s...".formatted(callerMethod, pluginId.toString())));
-			dispatcher.accept(plugin);
-			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
-			EmiReloadManager.step(Component.literal("[TMRV] %s: %s took %dms".formatted(callerMethod, pluginId.toString(), dispatchTime)));
-		} catch (Throwable t) {
-			dispatchTime = System.currentTimeMillis() - pluginTimestamp;
-			LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, dispatchTime, t);
+	private enum DispatchStrategy {
+		SYNC_EMI, SYNC_MAIN, ASYNC
+	}
+	
+	private record DispatchResult(IModPlugin plugin, long duration, @Nullable Throwable exception) {}
+	
+	private record DispatchThread(IModPlugin plugin, Consumer<IModPlugin> dispatcher) implements Callable<DispatchResult> {
+		
+		@Override
+		public DispatchResult call() {
+			final var timestamp = System.currentTimeMillis();
+			
+			try {
+				dispatcher.accept(plugin);
+				return new DispatchResult(plugin, System.currentTimeMillis() - timestamp, null);
+			} catch (Throwable t) {
+				return new DispatchResult(plugin, System.currentTimeMillis() - timestamp, t);
+			}
 		}
 		
-		loadTimes.put(plugin, loadTimes.computeIfAbsent(plugin, x -> 0L) + dispatchTime);
-		if (partialLoadPlugins.contains(plugin))
-			partialLoadTime += dispatchTime;
 	}
 	
-	private void dispatchInternal(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
+	private void singleThreadedDispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, String callerMethod) {
 		for (final var plugin : plugins) {
-			dispatchInternal(plugin, dispatcher, callerMethod);
+			final var pluginId = plugin.getPluginUid();
+			
+			final var result = new DispatchThread(plugin, dispatcher).call();
+			
+			if (result.exception != null) {
+				LOGGER.error("[{}] {} threw exception after {}ms: ", pluginId, callerMethod, result.duration(), result.exception());
+			}
+			
+			loadTimes.put(plugin, loadTimes.getOrDefault(plugin, 0L) + result.duration());
 		}
 	}
 	
-	private void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, boolean onMainThread) {
+	private void multiThreadedDispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher) {
+		final var results = dispatchPool
+			.invokeAll(plugins.stream()
+				.map(plugin -> new DispatchThread(plugin, dispatcher))
+				.toList())
+			.stream()
+			.map(Future::get)
+			.toList();
+		
+		for (final var result : results) {
+			loadTimes.put(result.plugin(), loadTimes.getOrDefault(result.plugin(), 0L) + result.duration());
+		}
+	}
+	
+	private void dispatch(List<IModPlugin> plugins, Consumer<IModPlugin> dispatcher, DispatchStrategy dispatchStrategy, long worry) {
 		final var callerMethod = new Exception().getStackTrace()[1].getMethodName();
 		
+		EmiReloadManager.step(Component.literal("[TMRV] Dispatching `%s` with strategy `%s`...".formatted(callerMethod, dispatchStrategy.name())), worry);
 		final var timestamp = System.currentTimeMillis();
 		
-		if (onMainThread) {
-			Minecraft.getInstance().executeBlocking(() -> dispatchInternal(plugins, dispatcher, callerMethod));
-		} else {
-			dispatchInternal(plugins, dispatcher, callerMethod);
+		// TODO: handle strategy on per-plugin basis
+		switch (dispatchStrategy) {
+			case SYNC_EMI -> singleThreadedDispatch(plugins, dispatcher, callerMethod);
+			case SYNC_MAIN -> Minecraft.getInstance().executeBlocking(() -> singleThreadedDispatch(plugins, dispatcher, callerMethod));
+			case ASYNC -> multiThreadedDispatch(plugins, dispatcher);
 		}
 		
 		final var totalDispatchTime = System.currentTimeMillis() - timestamp;
-		LOGGER.info("{} took {}ms", callerMethod, totalDispatchTime);
+		// TODO: track + output number of exceptions
+		EmiReloadManager.step(Component.literal("[TMRV] Dispatching `%s` with strategy `%s` took %dms".formatted(callerMethod, dispatchStrategy.name(), totalDispatchTime)));
 		loadTime += totalDispatchTime;
 	}
 	
 	public void registerItemSubtypes(ISubtypeRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerItemSubtypes(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerItemSubtypes(registration), DispatchStrategy.ASYNC, 10L);
 	}
 	
 	public <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerFluidSubtypes(registration, platformFluidHelper), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerFluidSubtypes(registration, platformFluidHelper), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void registerIngredients(IModIngredientRegistration registration) {
-		dispatch(modPlugins, x -> x.registerIngredients(registration), false);
+		dispatch(modPlugins, x -> x.registerIngredients(registration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void registerExtraIngredients(IExtraIngredientRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerExtraIngredients(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerExtraIngredients(registration), DispatchStrategy.ASYNC, 10L);
 	}
 	
 	public void registerIngredientAliases(IIngredientAliasRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerIngredientAliases(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerIngredientAliases(registration), DispatchStrategy.ASYNC, 10L);
 	}
 	
 	//? if >=21.1 {
 	public void registerModInfo(IModInfoRegistration modAliasRegistration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerModInfo(modAliasRegistration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerModInfo(modAliasRegistration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	//?}
 	
 	public void registerCategories(IRecipeCategoryRegistration registration) {
-		dispatch(allPlugins, x -> x.registerCategories(registration), false);
+		dispatch(allPlugins, x -> x.registerCategories(registration), DispatchStrategy.ASYNC, 100L);
 	}
 	
 	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
-		dispatch(allPlugins, x -> x.registerVanillaCategoryExtensions(registration), false);
+		dispatch(allPlugins, x -> x.registerVanillaCategoryExtensions(registration), DispatchStrategy.ASYNC, 100L);
 	}
 	
 	public void registerRecipes(IRecipeRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerRecipes(registration), true);
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipes(registration), DispatchStrategy.ASYNC, 500L);
 	}
 	
 	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeTransferHandlers(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeTransferHandlers(registration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeCatalysts(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerRecipeCatalysts(registration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void registerGuiHandlers(IGuiHandlerRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerGuiHandlers(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerGuiHandlers(registration), DispatchStrategy.ASYNC, 10L);
 	}
 	
 	public void registerAdvanced(IAdvancedRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerAdvanced(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerAdvanced(registration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void registerRuntime(IRuntimeRegistration registration) {
-		dispatch(modPluginsNoDuplicates, x -> x.registerRuntime(registration), false);
+		dispatch(modPluginsNoDuplicates, x -> x.registerRuntime(registration), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-		dispatch(modPluginsNoDuplicates, x -> x.onRuntimeAvailable(jeiRuntime), true);
+		dispatch(modPluginsNoDuplicates, x -> x.onRuntimeAvailable(jeiRuntime), DispatchStrategy.SYNC_EMI, 100L);
 	}
 	
 	public void onRuntimeUnavailable() {
-		dispatch(modPluginsNoDuplicates, IModPlugin::onRuntimeUnavailable, false);
+		dispatch(modPluginsNoDuplicates, IModPlugin::onRuntimeUnavailable, DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 	public void onConfigManagerAvailable(IJeiConfigManager configManager) {
-		dispatch(modPluginsNoDuplicates, x -> x.onConfigManagerAvailable(configManager), false);
+		dispatch(modPluginsNoDuplicates, x -> x.onConfigManagerAvailable(configManager), DispatchStrategy.SYNC_EMI, 10L);
 	}
 	
 }

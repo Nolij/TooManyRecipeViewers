@@ -116,6 +116,29 @@ public final class TooManyRecipeViewers {
 		lockAfterRegistration.clear();
 	}
 	
+	public interface IPostBakeListener {
+		void recipesBaked() throws IllegalStateException;
+	}
+	
+	private volatile boolean recipesBaked = false;
+	private final List<IPostBakeListener> postBakeListeners = Collections.synchronizedList(new ArrayList<>());
+	
+	public synchronized void addPostBakeListener(IPostBakeListener listener) throws IllegalStateException {
+		if (recipesBaked)
+			throw new IllegalStateException();
+		
+		postBakeListeners.add(listener);
+	}
+	
+	public synchronized void recipesBaked() throws IllegalStateException {
+		if (recipesBaked)
+			throw new IllegalStateException();
+		recipesBaked = true;
+		
+		postBakeListeners.forEach(IPostBakeListener::recipesBaked);
+		postBakeListeners.clear();
+	}
+	
 	//region Static Storage
 	public static final JEIConfigManager jeiConfigManager = new JEIConfigManager();
 	public static final IPlatformFluidHelperInternal<?> fluidHelper = new FluidHelper();

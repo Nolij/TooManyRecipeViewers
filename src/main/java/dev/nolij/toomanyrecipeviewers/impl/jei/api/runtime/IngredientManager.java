@@ -64,7 +64,7 @@ import java.util.stream.Stream;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
-public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, TooManyRecipeViewers.ILockable {
+public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
 	
 	private final TooManyRecipeViewers runtime;
 	
@@ -86,6 +86,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	public IngredientManager(TooManyRecipeViewers runtime) {
 		runtime.lockAfterRegistration(this);
+		runtime.addPostBakeListener(this);
 		this.runtime = runtime;
 		
 		registerIngredientType(new IngredientInfo<>(
@@ -691,6 +692,12 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerItemStackDefaultComparison();
 		registerFluidDefaultComparison();
 		registerOtherJEIIngredientTypeComparisons();
+	}
+	
+	@Override
+	public void recipesBaked() throws IllegalStateException {
+		if (!locked)
+			throw new IllegalStateException();
 		
 		removedStacks.clear();
 		

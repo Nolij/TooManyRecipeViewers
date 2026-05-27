@@ -5,6 +5,7 @@
 	"compatibilityLevel": "JAVA_${mixin_java_version}",
 	"client": [
 		"EmiAgnosMixin",
+		"EmiRecipesMixin",
 		"EmiReloadManager_ReloadWorkerMixin",
 		"FluidEmiStackMixin",
 		"FullTypedItemStackMixin",

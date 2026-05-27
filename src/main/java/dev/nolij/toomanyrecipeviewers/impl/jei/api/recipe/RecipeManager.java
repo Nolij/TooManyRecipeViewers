@@ -108,7 +108,7 @@ import java.util.stream.Stream;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.MOD_ID;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
-public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILockable {
+public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
 	
 	public static final Map<RecipeType<?>, EmiRecipeCategory> vanillaJEITypeEMICategoryMap =
 		ImmutableMap.<RecipeType<?>, EmiRecipeCategory>builder()
@@ -143,6 +143,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	
 	public RecipeManager(TooManyRecipeViewers runtime) {
 		runtime.lockAfterRegistration(this);
+		runtime.addPostBakeListener(this);
 		this.runtime = runtime;
 		this.registry = runtime.emiRegistry;
 		this.jeiRecipeCategories = runtime.recipeCategories;
@@ -677,17 +678,23 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		EmiReloadManager.step(Component.literal("[TMRV] Locking JEI Recipe Registry..."), 100L);
 		
-		// TODO: this probably doesn't work
 		registry.removeRecipes(x ->
 			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
 			hiddenRecipeIDs.contains(x.getId()) ||
 			hiddenCategories.contains(x.getCategory()));
 		
+		runtime.ignoredRecipes.clear();
+	}
+	
+	@Override
+	public void recipesBaked() throws IllegalStateException {
+		if (!locked)
+			throw new IllegalStateException();
+		
 		replacedRecipeIDs.clear();
 		replacementRecipes.clear();
 		hiddenRecipeIDs.clear();
 		hiddenCategories.clear();
-		runtime.ignoredRecipes.clear();
 	}
 	//endregion
 	

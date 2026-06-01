@@ -12,14 +12,13 @@ import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.jemi.impl.JemiTooltipBuilder;
 import dev.emi.emi.runtime.EmiDrawContext;
 import dev.emi.emi.screen.EmiScreenManager;
-import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.widget.DeferredPlaceableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.DrawableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.widgets.ScrollGridWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.FillingFlameWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.TextWidget;
-import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawablesView;
@@ -50,18 +49,16 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TMRVRecipe<T> implements EmiRecipe {
 	
-	private final TooManyRecipeViewers runtime;
+	private final IngredientManager ingredientManager;
 	
-	private final RecipeManager.Category<T> category;
+	private final EmiRecipeCategory emiCategory;
 	private final IRecipeCategory<T> jeiCategory;
 	
 	private final T jeiRecipe;
 	
-	public ResourceLocation originalId;
 	public ResourceLocation id;
 	
 	private final List<EmiIngredient> inputs;
@@ -69,16 +66,15 @@ public class TMRVRecipe<T> implements EmiRecipe {
 	private final List<EmiStack> outputs;
 	private final boolean supportsRecipeTree;
 	
-	public TMRVRecipe(TooManyRecipeViewers runtime, RecipeManager.Category<T> category, T jeiRecipe, ResourceLocation id) {
-		this.runtime = runtime;
-		this.category = category;
-		this.jeiCategory = Objects.requireNonNull(category.getJEICategory());
+	public TMRVRecipe(IngredientManager ingredientManager, EmiRecipeCategory emiCategory, IRecipeCategory<T> jeiCategory, T jeiRecipe, ResourceLocation id) {
+		this.ingredientManager = ingredientManager;
+		this.emiCategory = emiCategory;
+		this.jeiCategory = jeiCategory;
 		this.jeiRecipe = jeiRecipe;
 		
-		this.originalId = jeiCategory.getRegistryName(jeiRecipe);
 		this.id = id;
 		
-		final var builder = new RecipeLayoutBuilder(runtime.ingredientManager);
+		final var builder = new RecipeLayoutBuilder(ingredientManager);
 		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
 		
 		final var recipeData = builder.extractEMIRecipeData();
@@ -90,7 +86,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 	
 	@Override
 	public EmiRecipeCategory getCategory() {
-		return category.getEMICategory();
+		return emiCategory;
 	}
 	
 	@Override
@@ -152,7 +148,7 @@ public class TMRVRecipe<T> implements EmiRecipe {
 	
 	@Override
 	public void addWidgets(WidgetHolder widgets) {
-		final var builder = new RecipeLayoutBuilder(runtime.ingredientManager);
+		final var builder = new RecipeLayoutBuilder(ingredientManager);
 		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
 		
 		final var slotsView = new RecipeSlotsView();

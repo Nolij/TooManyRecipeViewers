@@ -954,7 +954,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					}
 					
 					if (emiRecipe == null) {
-						emiRecipe = new TMRVRecipe<>(runtime, Category.this, jeiRecipe, getID());
+						emiRecipe = new TMRVRecipe<>(ingredientManager, getEMICategory(), Objects.requireNonNull(getJEICategory()), jeiRecipe, getID());
 					}
 					
 					emiRecipeMap.put(emiRecipe, this);

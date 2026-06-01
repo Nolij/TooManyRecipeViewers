@@ -1183,8 +1183,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				final var rightInputs = jeiRecipe.getRightInputs().stream().map(ingredientManager::getEMIStack).toList();
 				final var outputs = jeiRecipe.getOutputs().stream().map(ingredientManager::getEMIStack).toList();
 				return new EmiRecipe() {
-					private final int unique = EmiUtil.RANDOM.nextInt();
-					
 					@Override
 					public EmiRecipeCategory getCategory() {
 						return VanillaEmiRecipeCategories.ANVIL_REPAIRING;

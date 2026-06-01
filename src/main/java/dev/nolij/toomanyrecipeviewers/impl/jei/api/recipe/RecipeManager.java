@@ -298,11 +298,17 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	
 	@Override
 	public <T> void hideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
+		if (locked)
+			throw new IllegalStateException();
+		
 		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::add);
 	}
 	
 	@Override
 	public <T> void unhideRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes) {
+		if (locked)
+			throw new IllegalStateException();
+		
 		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::remove);
 	}
 	

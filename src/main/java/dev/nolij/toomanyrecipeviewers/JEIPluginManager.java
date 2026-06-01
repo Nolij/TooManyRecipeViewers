@@ -9,6 +9,7 @@ import dev.emi.emi.jemi.JemiPlugin;
 import dev.emi.emi.jemi.JemiUtil;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.libnolij.collect.InverseSet;
+import dev.nolij.libnolij.collect.Pair;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import mezz.jei.api.IModPlugin;
@@ -69,6 +70,7 @@ public final class JEIPluginManager {
 		return result;
 	}
 	private static final List<Class<? extends IModPlugin>> pluginClasses = getInstances(JeiPlugin.class, IModPlugin.class);
+	private static final List<Pair<ResourceLocation, IModPlugin>> unfilteredPlugins = new ArrayList<>();
 	
 	static {
 		pluginClasses.remove(JemiPlugin.class);
@@ -77,6 +79,26 @@ public final class JEIPluginManager {
 		pluginClasses.remove(VanillaPlugin.class);
 		pluginClasses.remove(JeiInternalPlugin.class);
 		pluginClasses.addLast(JeiInternalPlugin.class);
+		
+		for (final var pluginClass : pluginClasses) {
+			final IModPlugin plugin;
+			try {
+				plugin = pluginClass.getDeclaredConstructor().newInstance();
+			} catch (Throwable t) {
+				LOGGER.error("Failed to initialize JEI plugin {}", pluginClass.getName(), t);
+				continue;
+			}
+			
+			final ResourceLocation pluginID;
+			try {
+				pluginID = Objects.requireNonNull(plugin.getPluginUid());
+			} catch (Throwable t) {
+				LOGGER.error("{}.getPluginUid() threw an exception or returned null", pluginClass.getName(), t);
+				continue;
+			}
+			
+			unfilteredPlugins.add(Pair.of(pluginID, plugin));
+		}
 	}
 	
 	private static final InverseSet<String> forceLoadJEIPluginsFrom = InverseSet.of("emi", "jei", "jei-api", MOD_ID);
@@ -109,22 +131,9 @@ public final class JEIPluginManager {
 		var pluginListStringBuilder = new StringBuilder(vanillaPlugin.getPluginUid().toString());
 		
 		allPlugins.add(vanillaPlugin);
-		for (final var pluginClass : pluginClasses) {
-			final IModPlugin plugin;
-			try {
-				plugin = pluginClass.getDeclaredConstructor().newInstance();
-			} catch (Throwable t) {
-				LOGGER.error("Failed to initialize JEI plugin {}", pluginClass.getName(), t);
-				continue;
-			}
-			
-			final ResourceLocation pluginID;
-			try {
-				pluginID = Objects.requireNonNull(plugin.getPluginUid());
-			} catch (Throwable t) {
-				LOGGER.error("{}.getPluginUid() threw an exception or returned null", pluginClass.getName(), t);
-				continue;
-			}
+		for (final var pluginWithID : unfilteredPlugins) {
+			final var pluginID = pluginWithID.value1();
+			final var plugin = pluginWithID.value2();
 			
 			allPlugins.add(plugin);
 			modPlugins.add(plugin);

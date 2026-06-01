@@ -75,7 +75,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<FluidStack> fluidStacks = new ArrayList<>();
-	private @Nullable Multimap<IIngredientType<?>, ITypedIngredient<?>> typedIngredients = Multimaps.synchronizedMultimap(HashMultimap.create());
+	private final Multimap<IIngredientType<?>, ITypedIngredient<?>> typedIngredients = Multimaps.synchronizedMultimap(HashMultimap.create());
 	
 	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
 	
@@ -216,18 +216,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	//region IIngredientManager	
 	public @Unmodifiable <V> Collection<ITypedIngredient<V>> getAllTypedIngredients(IIngredientType<V> jeiType) {
-		if (typedIngredients != null) {
-			//noinspection rawtypes,unchecked
-			return (Collection) typedIngredients.get(jeiType);
-		}
-		
-		//noinspection unchecked
-		return EmiStackList.stacks.stream()
-			.filter(ITypedIngredient.class::isInstance)
-			.map(ITypedIngredient.class::cast)
-			.filter(x -> x.getType() == jeiType)
-			.map(x -> (ITypedIngredient<V>) x)
-			.toList();
+		//noinspection rawtypes,unchecked
+		return (Collection) typedIngredients.get(jeiType);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -590,10 +580,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			else
 				ingredientUidLookup.put(getLegacyUid(jeiType, ingredient), ingredient);
 			
-			if (typedIngredients != null) {
-				//noinspection unchecked
-				typedIngredients.put(jeiType, (ITypedIngredient<V>) emiStack);
-			}
+			//noinspection unchecked
+			typedIngredients.put(jeiType, (ITypedIngredient<V>) emiStack);
 			
 			registerIngredientBaseComparison(jeiType, ingredient);
 			
@@ -669,7 +657,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		itemStacks = null;
 		fluidStacks = null;
-		typedIngredients = null;
 	}
 	
 }

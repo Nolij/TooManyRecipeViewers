@@ -492,12 +492,15 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			final var recipe = category.recipe(jeiRecipe);
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
-			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && recipe.getOriginalID() != null) {
-				if (emiRecipe instanceof TMRVRecipe<?>)
-					LOGGER.warn("Recipe replacement for {} will not render properly!", recipe.getOriginalID());
-				
-				replacementRecipes.add(emiRecipe);
-				replacedRecipeIDs.add(recipe.getOriginalID());
+			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
+				final var originalID = recipe.getOriginalID();
+				if (originalID != null) {
+					if (emiRecipe instanceof TMRVRecipe<?>)
+						LOGGER.warn("Recipe replacement for {} will not render properly!", originalID);
+					
+					replacementRecipes.add(emiRecipe);
+					replacedRecipeIDs.add(originalID);
+				}
 			}
 		} catch (RuntimeException | LinkageError e) {
 			final var recipeInfo = RecipeDebugUtil.getDebugInfoFromRecipe(jeiRecipe, jeiCategory, ingredientManager);
@@ -852,7 +855,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private @Nullable T jeiRecipe;
 			private @Nullable EmiRecipe emiRecipe;
 			
-			private @Nullable ResourceLocation originalID = null;
 			private @Nullable ResourceLocation id = null;
 			
 			private record ExtractedRecipeData(
@@ -894,10 +896,10 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			}
 			
 			public synchronized @Nullable ResourceLocation getOriginalID() {
-				if (originalID == null && jeiRecipe != null && getJEICategory() != null)
-					originalID = getJEICategory().getRegistryName(jeiRecipe);
+				if (jeiRecipe != null && getJEICategory() != null)
+					return getJEICategory().getRegistryName(jeiRecipe);
 				
-				return originalID;
+				return null;
 			}
 			
 			public synchronized @Nullable ResourceLocation getID() {
@@ -905,8 +907,12 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 					if (emiRecipe != null)
 						id = emiRecipe.getId();
 					
-					if (id == null && getOriginalID() != null)
-						id = ResourceLocation.fromNamespaceAndPath(MOD_ID, "/" + EmiUtil.subId(getOriginalID()));
+					if (id == null) {
+						final var originalID = getOriginalID();
+						if (originalID != null) {
+							id = ResourceLocation.fromNamespaceAndPath(MOD_ID, "/" + EmiUtil.subId(originalID));
+						}
+					}
 				}
 				
 				return id;

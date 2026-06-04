@@ -202,6 +202,9 @@ dependencies {
 
 	shade("dev.nolij:libnolij:${"libnolij_version"()}")
 	minecraftLibraries("dev.nolij:libnolij:${"libnolij_version"()}")
+
+	shade("dev.nolij:zson:${"zson_version"()}")
+	minecraftLibraries("dev.nolij:zson:${"zson_version"()}")
 	
 	if (minecraftVersion >= "20.2")
 		implementation("dev.emi:emi-${modLoader.commonName}:${"emi_version"()}")
@@ -336,6 +339,7 @@ tasks.shadowJar {
 	archiveClassifier = "unremapped"
 
 	relocate("dev.nolij.libnolij", "dev.nolij.toomanyrecipeviewers.libnolij")
+	relocate("dev.nolij.zson", "dev.nolij.toomanyrecipeviewers.zson")
 }
 
 tasks.named<RemapJarTask>("remapJar") {

@@ -1,4 +1,4 @@
-package dev.nolij.toomanyrecipeviewers;
+package dev.nolij.toomanyrecipeviewers.plugin;
 
 //? if >=21.1 {
 import mezz.jei.library.helpers.CodecHelper;
@@ -29,6 +29,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStackSerializer;
+import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IClickableIngredient;
@@ -91,7 +92,6 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.jeiPluginManager = new JEIPluginManager(registry);
 		
 		LOGGER.info("Loading JEI Plugins: [{}]", runtime.jeiPluginManager.pluginListString);
-		runtime.jeiPluginManager.onConfigManagerAvailable(jeiConfigManager);
 		
 		runtime.emiRegistry = registry;
 		
@@ -235,9 +235,9 @@ public final class EMIPlugin implements EmiPlugin {
 		final var recipeCategoryRegistration = new RecipeCategoryRegistration(runtime.jeiHelpers);
 		runtime.jeiPluginManager.registerCategories(recipeCategoryRegistration);
 		
-		runtime.craftingCategory = runtime.jeiPluginManager.vanillaPlugin.getCraftingCategory()
+		runtime.craftingCategory = JEIPluginManager.vanillaPlugin.getCraftingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
-		runtime.smithingCategory = runtime.jeiPluginManager.vanillaPlugin.getSmithingCategory()
+		runtime.smithingCategory = JEIPluginManager.vanillaPlugin.getSmithingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
 		final var vanillaCategoryExtensionRegistration =
 			new VanillaCategoryExtensionRegistration(

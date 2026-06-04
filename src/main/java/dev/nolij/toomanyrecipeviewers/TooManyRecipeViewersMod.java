@@ -17,12 +17,16 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import dev.emi.emi.jemi.JemiPlugin;
 import dev.nolij.libnolij.refraction.Refraction;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.config.JEIClientConfigs;
+import dev.nolij.toomanyrecipeviewers.plugin.EMIPlugin;
+import dev.nolij.toomanyrecipeviewers.plugin.JEIPluginManager;
 import mezz.jei.common.Internal;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.lang.invoke.MethodHandles;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
@@ -33,6 +37,7 @@ public class TooManyRecipeViewersMod {
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 	public static final Refraction REFRACTION = Refraction.safe(MethodHandles.lookup());
+	public static final File PLUGIN_CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("tmrv_plugins.json5").toFile();
 	
 	public TooManyRecipeViewersMod(/*? if >=21.1 {*/IEventBus modEventBus/*?}*/) {
 		//? if <21.1 {
@@ -41,6 +46,8 @@ public class TooManyRecipeViewersMod {
 		
 		@SuppressWarnings("removal") final var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		*///?}
+		
+		JEIPluginManager.init();
 		
 		Internal.setKeyMappings(jeiKeyMappings);
 		JemiPlugin.runtime = staticJEIRuntime;

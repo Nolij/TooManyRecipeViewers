@@ -91,6 +91,7 @@ public class ErrorEmiStack extends EmiStack {
 				- What recipe you were trying to view
 				- Which mod adds it (including version)
 				- TooManyRecipeViewers version
+				- Config and log files
 				- Any other potentially useful information""")
 		);
 	}

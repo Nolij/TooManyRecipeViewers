@@ -1,7 +1,7 @@
 package dev.nolij.toomanyrecipeviewers.mixin;
 
 import dev.emi.emi.registry.EmiPluginContainer;
-import dev.nolij.toomanyrecipeviewers.EMIPlugin;
+import dev.nolij.toomanyrecipeviewers.plugin.EMIPlugin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

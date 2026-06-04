@@ -16,6 +16,7 @@ import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
+import dev.nolij.toomanyrecipeviewers.plugin.JEIPluginManager;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -313,6 +314,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			return;
 		}
 		
+		final var threadContext = JEIPluginManager.threadContext.get();
+		if (threadContext != null && threadContext.plugin().type().partialLoad)
+			return;
+		
 		final var ingredientInfo = getIngredientInfo(jeiType);
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
 		
@@ -449,6 +454,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public void registerIngredientListener(IIngredientListener listener) {
+		final var threadContext = JEIPluginManager.threadContext.get();
+		if (threadContext != null && threadContext.plugin().type().partialLoad)
+			return;
+		
 		listeners.add(listener);
 	}
 	//endregion
@@ -492,6 +501,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	public <I> void addAlias(ITypedIngredient<I> typedIngredient, String alias) {
 		if (locked)
 			throw new IllegalStateException("Tried to add ingredient alias after registry is locked");
+		
+		final var threadContext = JEIPluginManager.threadContext.get();
+		if (threadContext != null && threadContext.plugin().type().partialLoad)
+			return;
 		
 		final var emiStack = getEMIStack(typedIngredient);
 		//noinspection UnstableApiUsage
@@ -564,6 +577,10 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
     private <V> void registerIngredients(IIngredientType<V> jeiType, Collection<V> ingredients) {
 		if (locked)
 			throw new IllegalStateException("Tried to add ingredients after registry is locked");
+		
+		final var threadContext = JEIPluginManager.threadContext.get();
+		if (threadContext != null && threadContext.plugin().type().partialLoad)
+			return;
 		
 		if (itemStacks != null && jeiType == VanillaTypes.ITEM_STACK)
 			//noinspection unchecked

@@ -489,19 +489,22 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	//region IIngredientAliasRegistration
 	@Override
-	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
+	public <I> void addAlias(ITypedIngredient<I> typedIngredient, String alias) {
 		if (locked)
 			throw new IllegalStateException("Tried to add ingredient alias after registry is locked");
 		
-		final var emiStack = getEMIStack(type, ingredient);
-		final var normalizedEMIStack = emiStack.getEmiStacks().getFirst();
+		final var emiStack = getEMIStack(typedIngredient);
 		//noinspection UnstableApiUsage
-		runtime.emiRegistry.addAlias(normalizedEMIStack, Component.translatable(alias));
+		runtime.emiRegistry.addAlias(emiStack, Component.translatable(alias));
 	}
 	
 	@Override
-	public <I> void addAlias(ITypedIngredient<I> typedIngredient, String alias) {
-		addAlias(typedIngredient.getType(), typedIngredient.getIngredient(), alias);
+	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
+		addAlias(
+			TypedIngredient.createAndFilterInvalid(this, type, ingredient, true)
+				//? if <21.1
+				//.orElseThrow()
+			, alias);
 	}
 	
 	@Override

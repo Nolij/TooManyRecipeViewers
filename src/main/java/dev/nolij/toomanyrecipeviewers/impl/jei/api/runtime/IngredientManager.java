@@ -274,7 +274,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <V> void addIngredientsAtRuntime(IIngredientType<V> jeiType, Collection<V> ingredients) {
 		if (locked) {
-			LOGGER.error(new IllegalStateException("Tried to add ingredients after registry is locked"));
+			LOGGER.error("Tried to add ingredients after registry is locked", new IllegalStateException());
 			return;
 		}
 		
@@ -309,7 +309,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@Override
 	public <V> void removeIngredientsAtRuntime(IIngredientType<V> jeiType, Collection<V> ingredients) {
 		if (locked) {
-			LOGGER.error(new IllegalStateException("Tried to remove ingredients after registry is locked"));
+			LOGGER.error("Tried to remove ingredients after registry is locked", new IllegalStateException());
 			return;
 		}
 		

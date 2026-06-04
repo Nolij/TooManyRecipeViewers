@@ -9,6 +9,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.TMRVSlotWidget
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.TMRVTankWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.util.FluidRendererParameters;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
@@ -24,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +45,7 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	private boolean outputSlotBackground = false;
 	private @Nullable OffsetDrawable background = null;
 	private @Nullable OffsetDrawable overlay = null;
-	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides = new HashMap<>();
+	private final Map<IIngredientType<?>, IIngredientRenderer<?>> rendererOverrides = new Reference2ReferenceOpenHashMap<>();
 	private @Nullable FluidRendererParameters fluidRendererParameters = null;
 	private ImmutableRect2i rect = new ImmutableRect2i(0, 0, 16, 16);
 	

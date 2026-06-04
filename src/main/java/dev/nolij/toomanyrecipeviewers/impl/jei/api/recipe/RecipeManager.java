@@ -45,6 +45,9 @@ import dev.nolij.toomanyrecipeviewers.mixin.SmithingRecipeCategoryAccessor;
 import dev.nolij.toomanyrecipeviewers.impl.recipe.ExtendedSmithingRecipe;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
 import mezz.jei.api.gui.drawable.IScalableDrawable;
@@ -94,7 +97,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +133,11 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	private final EmiRegistry registry;
 	private final @Unmodifiable List<IRecipeCategory<?>> jeiRecipeCategories;
 	private final Map<ResourceLocation, EmiRecipeCategory> existingEMICategoryMap;
+	
+	private final Set<ResourceLocation> hiddenRecipeIDs = Collections.synchronizedSet(new HashSet<>());
+	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
+	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
+	
 	private final IngredientManager ingredientManager;
 	private final IIngredientVisibility ingredientVisibility;
 	
@@ -150,7 +157,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		this.ingredientManager = runtime.ingredientManager;
 		this.ingredientVisibility = runtime.ingredientVisibility;
 		
-		this.existingEMICategoryMap = new HashMap<>();
+		this.existingEMICategoryMap = new Object2ReferenceOpenHashMap<>();
 		for (final var emiCategory : EmiRecipes.categories) {
 			final var id = emiCategory.getId();
 			if (existingEMICategoryMap.containsKey(id)) {
@@ -282,8 +289,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 	}
 	
-	private final Set<ResourceLocation> hiddenRecipeIDs = Collections.synchronizedSet(new HashSet<>());
-	
 	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<ResourceLocation> idConsumer) {
 		if (locked)
 			throw new IllegalStateException();
@@ -312,7 +317,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::remove);
 	}
 	
-	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new HashSet<>());
+	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
 	
 	@Override
 	public void hideRecipeCategory(RecipeType<?> recipeType) {
@@ -465,8 +470,6 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	//endregion
 	
 	//region RecipeManagerInternal
-	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
-	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new HashSet<>());
 	private <T> void addRecipe(Category<T> category, T jeiRecipe) {
 		final var jeiCategory = category.getJEICategory();
 		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
@@ -709,8 +712,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	
 	//region Interop
 	//region RecipeCategory
-	private final Map<RecipeType<?>, Category<?>> jeiRecipeTypeMap = Collections.synchronizedMap(new HashMap<>());
-	private final Map<EmiRecipeCategory, Category<?>> emiCategoryMap = Collections.synchronizedMap(new HashMap<>());
+	private final Map<RecipeType<?>, Category<?>> jeiRecipeTypeMap = Collections.synchronizedMap(new Object2ReferenceOpenHashMap<>());
+	private final Map<EmiRecipeCategory, Category<?>> emiCategoryMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	
 	public <T> Category<T> category(
 		@Nullable IRecipeCategory<T> jeiCategory,
@@ -812,8 +815,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		}
 		
 		//region Recipe
-		private final Map<T, Recipe> jeiRecipeMap = Collections.synchronizedMap(new HashMap<>());
-		private final Map<EmiRecipe, Recipe> emiRecipeMap = Collections.synchronizedMap(new HashMap<>());
+		private final Map<T, Recipe> jeiRecipeMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
+		private final Map<EmiRecipe, Recipe> emiRecipeMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 		
 		public Recipe recipe(@Nullable T jeiRecipe, @Nullable EmiRecipe emiRecipe) {
 			if (jeiRecipe == null && emiRecipe == null)

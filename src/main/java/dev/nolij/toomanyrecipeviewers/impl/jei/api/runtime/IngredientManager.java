@@ -5,9 +5,6 @@ import com.mojang.serialization.Codec;
 import mezz.jei.api.gui.builder.IClickableIngredientFactory;
 import mezz.jei.common.input.ClickableIngredientFactory;
 //?}
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -20,6 +17,9 @@ import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.ingredients.IIngredientHelper;
@@ -36,7 +36,6 @@ import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.common.input.ClickableIngredient;
 import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.core.util.WeakList;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
 import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
@@ -53,11 +52,10 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
@@ -67,20 +65,21 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private final TooManyRecipeViewers runtime;
 	
-	private final Map<IIngredientType<?>, IngredientInfo<?>> typeInfoMap = new ConcurrentHashMap<>();
-	private final Map<Class<?>, IIngredientType<?>> classTypeMap = new ConcurrentHashMap<>();
-	private final Map<Class<?>, IIngredientTypeWithSubtypes<?, ?>> baseClassTypeMap = new ConcurrentHashMap<>();
+	private final Map<IIngredientType<?>, IngredientInfo<?>> typeInfoMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
+	private final Map<Class<?>, IIngredientType<?>> classTypeMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
+	private final Map<Class<?>, IIngredientTypeWithSubtypes<?, ?>> baseClassTypeMap = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	
-	private final WeakList<IIngredientListener> listeners = new WeakList<>();
+	private final List<IIngredientListener> listeners = new ArrayList<>();
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<FluidStack> fluidStacks = new ArrayList<>();
-	private final Multimap<IIngredientType<?>, ITypedIngredient<?>> typedIngredients = Multimaps.synchronizedMultimap(HashMultimap.create());
+	private final Set<EmiStack> removedStacks = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
+	private final Map<IIngredientType<?>, List<ITypedIngredient<?>>> typedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	
 	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
 	
-	private final Map<String, IIngredientType<?>> typeUidLookup = new ConcurrentHashMap<>();
-	private final Map<TypedIngredientUID, Object> ingredientUidLookup = new ConcurrentHashMap<>();
+	private final Map<String, IIngredientType<?>> typeUidLookup = Collections.synchronizedMap(new Object2ReferenceOpenHashMap<>());
+	private final Map<TypedIngredientUID, Object> ingredientUidLookup = Collections.synchronizedMap(new Object2ReferenceOpenHashMap<>());
 	
 	private volatile boolean locked = false;
 	
@@ -136,7 +135,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				default -> {}
 			}
 			
-			typedIngredients.put(type, typedIngredient);
+			typedIngredients.get(type).add(typedIngredient);
 			//noinspection unchecked
 			registerIngredientBaseComparison(type, ingredient);
 			
@@ -306,8 +305,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			this.listeners.forEach(listener -> listener.onIngredientsAdded(ingredientHelper, typedIngredients));
 		}
 	}
-	
-	private final Set<EmiStack> removedStacks = Collections.synchronizedSet(new HashSet<>());
 	
 	@Override
 	public <V> void removeIngredientsAtRuntime(IIngredientType<V> jeiType, Collection<V> ingredients) {
@@ -572,6 +569,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			//noinspection unchecked
 			fluidStacks.addAll((Collection<FluidStack>) ingredients);
 		
+		final var typedIngredients = this.typedIngredients.get(jeiType);
+		
 		for (final var ingredient : ingredients) {
 			final var emiStack = getEMIStack(jeiType, ingredient);
 			
@@ -581,7 +580,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 				ingredientUidLookup.put(getLegacyUid(jeiType, ingredient), ingredient);
 			
 			//noinspection unchecked
-			typedIngredients.put(jeiType, (ITypedIngredient<V>) emiStack);
+			typedIngredients.add((ITypedIngredient<V>) emiStack);
 			
 			registerIngredientBaseComparison(jeiType, ingredient);
 			
@@ -627,6 +626,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		if (jeiType instanceof IIngredientTypeWithSubtypes<?, ?> jeiTypeWithSubtypes)
 			baseClassTypeMap.put(jeiTypeWithSubtypes.getIngredientBaseClass(), jeiTypeWithSubtypes);
 		typeUidLookup.put(jeiType.getUid(), jeiType);
+		
+		typedIngredients.put(jeiType, new ArrayList<>());
 		
 		if (jeiType == VanillaTypes.ITEM_STACK ||
 			jeiType == fluidHelper.getFluidIngredientType())

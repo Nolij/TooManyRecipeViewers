@@ -11,6 +11,7 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIKeyMappings;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.config.JEIConfigManager;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.helpers.IJeiHelpers;
@@ -52,7 +53,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -86,7 +86,7 @@ public final class TooManyRecipeViewers {
 	public volatile SmithingRecipeCategory smithingCategory = null;
 	public volatile @Unmodifiable List<IRecipeCategory<?>> recipeCategories = null;
 	public volatile ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = null;
-	public final Set<Object> ignoredRecipes = new HashSet<>();
+	public final Set<Object> ignoredRecipes = new ReferenceOpenHashSet<>();
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;

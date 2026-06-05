@@ -18,6 +18,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,6 +80,15 @@ public class TMRVStack<T> extends EmiStack {
 	public boolean isEmpty() {
 		// TODO: use ErrorEmiStack instead?
 		return !isValid;
+	}
+	
+	@Override
+	public ItemStack getItemStack() {
+		if (ingredient instanceof ItemStack itemStack) {
+			return itemStack;
+		}
+		
+		return super.getItemStack();
 	}
 	
 	//? if >=21.1 {

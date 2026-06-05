@@ -183,7 +183,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		if (ingredientInfo == null)
 			return ErrorEmiStack.INSTANCE;
 		
-		return new TMRVStack<>(jeiType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
+		return TMRVStack.create(jeiType, ingredientInfo.getIngredientHelper(), ingredientInfo.getIngredientRenderer(), ingredient);
 	}
 	
 	@SuppressWarnings("UnstableApiUsage")

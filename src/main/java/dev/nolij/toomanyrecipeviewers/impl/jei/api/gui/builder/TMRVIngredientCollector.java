@@ -11,6 +11,7 @@ import dev.nolij.toomanyrecipeviewers.util.IStackish;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IIngredientConsumer;
+import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -67,7 +68,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 					return ingredientManager.getEMIStack(typedIngredient);
 				
 				//noinspection rawtypes
-				return new TMRVStack(type, ingredientManager.getIngredientHelper(type), rendererOverrides.get(type), typedIngredient.getIngredient());
+				return TMRVStack.create((IIngredientType) type, (IIngredientHelper) ingredientManager.getIngredientHelper(type), (IIngredientRenderer) rendererOverrides.get(type), typedIngredient.getIngredient());
 			})
 			.toList());
 	}

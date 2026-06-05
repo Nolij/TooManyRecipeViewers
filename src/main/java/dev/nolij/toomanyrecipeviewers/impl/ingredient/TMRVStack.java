@@ -27,6 +27,13 @@ import java.util.List;
 
 public class TMRVStack<T> extends EmiStack {
 	
+	public static <T> EmiStack create(IIngredientType<T> type, IIngredientHelper<T> helper, IIngredientRenderer<T> renderer, T ingredient) {
+		if (!helper.isValidIngredient(ingredient))
+			return ErrorEmiStack.INSTANCE;
+		
+		return new TMRVStack<>(type, helper, renderer, ingredient);
+	}
+	
 	public final IIngredientType<T> type;
 	public final IIngredientHelper<T> helper;
 	public final IIngredientRenderer<T> renderer;
@@ -36,9 +43,8 @@ public class TMRVStack<T> extends EmiStack {
 	public final Object key;
 	public final float xRenderOffset;
 	public final float yRenderOffset;
-	public final boolean isValid;
 	
-	public TMRVStack(IIngredientType<T> type, IIngredientHelper<T> helper, IIngredientRenderer<T> renderer, T ingredient) {
+	private TMRVStack(IIngredientType<T> type, IIngredientHelper<T> helper, IIngredientRenderer<T> renderer, T ingredient) {
 		this.type = type;
 		this.helper = helper;
 		this.renderer = renderer;
@@ -55,8 +61,6 @@ public class TMRVStack<T> extends EmiStack {
 		
 		this.xRenderOffset = (16F - (float) renderer.getWidth()) * 0.5F;
 		this.yRenderOffset = (16F - (float) renderer.getHeight()) * 0.5F;
-		
-		this.isValid = helper.isValidIngredient(ingredient);
 	}
 	
 	@Override
@@ -78,8 +82,7 @@ public class TMRVStack<T> extends EmiStack {
 	
 	@Override
 	public boolean isEmpty() {
-		// TODO: use ErrorEmiStack instead?
-		return !isValid;
+		return false;
 	}
 	
 	@Override

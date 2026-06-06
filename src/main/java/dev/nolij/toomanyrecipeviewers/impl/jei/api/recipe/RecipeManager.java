@@ -338,6 +338,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	//? if >=21.1 {
 	@Override
 	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
+		//noinspection DuplicatedCode
 		ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
 		ErrorUtil.checkNotNull(recipe, "recipe");
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");
@@ -371,6 +372,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	
 	@Override
 	public <T> Optional<IRecipeLayoutDrawable<T>> createRecipeLayoutDrawable(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
+		//noinspection DuplicatedCode
 		ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
 		ErrorUtil.checkNotNull(recipe, "recipe");
 		ErrorUtil.checkNotNull(focusGroup, "focusGroup");

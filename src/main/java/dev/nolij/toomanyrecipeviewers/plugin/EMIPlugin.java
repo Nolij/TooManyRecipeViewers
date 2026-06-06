@@ -127,7 +127,9 @@ public final class EMIPlugin implements EmiPlugin {
 			Internal.setRuntime(null);
 			Internal.setServerConnection(null);
 			
-			jeiPlugins.onRuntimeUnavailable();
+			if (jeiPlugins != null) {
+				jeiPlugins.onRuntimeUnavailable();
+			}
 		}
 	}
 	

@@ -190,6 +190,9 @@ public final class JEIPluginManager {
 	
 	public void logLoadTimes() {
 		for (final var plugin : plugins) {
+			if (plugin.type() == PluginType.DISABLED)
+				continue;
+			
 			LOGGER.info("[{}] Loaded in {}ms", plugin, loadTimes.getLong(plugin));
 		}
 		LOGGER.info("JEI plugins loaded in {}ms", loadTime);

@@ -163,7 +163,8 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 	private final List<IRecipeCategory<?>> jeiRecipeCategories = new ArrayList<>();
 	private final Map<ResourceLocation, EmiRecipeCategory> existingEMICategoryMap;
 	
-	private final Set<ResourceLocation> hiddenRecipeIDs = Collections.synchronizedSet(new HashSet<>());
+	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
+	private final Set<EmiRecipe> hiddenRecipes = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
 	private final Set<ResourceLocation> replacedRecipeIDs = Collections.synchronizedSet(new HashSet<>());
 	private final Set<EmiRecipe> replacementRecipes = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
 	
@@ -304,16 +305,16 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		}
 	}
 	
-	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<ResourceLocation> idConsumer) {
+	private <T> void collectRecipes(RecipeType<T> recipeType, Collection<T> jeiRecipes, Consumer<EmiRecipe> recipeConsumer) {
 		if (locked)
 			throw new IllegalStateException();
 		
 		final var category = category(recipeType);
 		final var recipes = jeiRecipes.stream().map(category::recipe).toList();
 		recipes.stream()
-			.map(Category.Recipe::getID)
+			.map(Category.Recipe::getEMIRecipe)
 			.filter(Objects::nonNull)
-			.forEach(idConsumer);
+			.forEach(recipeConsumer);
 	}
 	
 	@Override
@@ -321,7 +322,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		if (locked)
 			throw new IllegalStateException();
 		
-		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::add);
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::add);
 	}
 	
 	@Override
@@ -329,10 +330,8 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		if (locked)
 			throw new IllegalStateException();
 		
-		collectRecipes(recipeType, jeiRecipes, hiddenRecipeIDs::remove);
+		collectRecipes(recipeType, jeiRecipes, hiddenRecipes::remove);
 	}
-	
-	private final Set<EmiRecipeCategory> hiddenCategories = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
 	
 	@Override
 	public void hideRecipeCategory(RecipeType<?> recipeType) {
@@ -578,8 +577,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		final var catalysts = workstations
 			.stream()
 			.map(x -> ingredientManager.getTypedIngredient(x.getEmiStacks().getFirst()))
-			.filter(Optional::isPresent)
-			.map(Optional::get)
+			.filter(Objects::nonNull)
 			.map((Function<ITypedIngredient<?>, ITypedIngredient<?>>) x -> x);
 		
 		if (includeHidden) {
@@ -1016,7 +1014,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		
 		registry.removeRecipes(x ->
 			(replacedRecipeIDs.contains(x.getId()) && !replacementRecipes.contains(x)) ||
-			hiddenRecipeIDs.contains(x.getId()) ||
+			hiddenRecipes.contains(x) ||
 			hiddenCategories.contains(x.getCategory()));
 	}
 	
@@ -1027,7 +1025,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		
 		replacedRecipeIDs.clear();
 		replacementRecipes.clear();
-		hiddenRecipeIDs.clear();
+		hiddenRecipes.clear();
 		hiddenCategories.clear();
 	}
 	//endregion

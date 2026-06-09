@@ -55,7 +55,7 @@ public class JemiUtilMixin {
 	@Inject(method = "getTyped", at = @At("HEAD"), cancellable = true)
 	private static void tmrv$getTyped$HEAD(EmiStack emiStack, CallbackInfoReturnable<Optional<ITypedIngredient<?>>> cir) {
 		tmrv$withIngredientManager(
-			ingredientManager -> cir.setReturnValue(ingredientManager.getTypedIngredient(emiStack)),
+			ingredientManager -> cir.setReturnValue(Optional.ofNullable(ingredientManager.getTypedIngredient(emiStack))),
 			() -> cir.setReturnValue(Optional.empty())
 		);
 	}

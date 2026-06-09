@@ -75,7 +75,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<FluidStack> fluidStacks = new ArrayList<>();
-	private final Set<EmiStack> removedStacks = Collections.synchronizedSet(new ReferenceOpenHashSet<>());
+	private final Map<IIngredientType<?>, Set<Object>> removedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	private final Map<IIngredientType<?>, List<ITypedIngredient<?>>> typedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	
 	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
@@ -206,11 +206,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		};
 	}
 	
-	public Optional<ITypedIngredient<?>> getTypedIngredient(EmiStack emiStack) {
+	public ITypedIngredient<?> getTypedIngredient(EmiStack emiStack) {
 		if (emiStack instanceof ITypedIngredient<?> typedIngredient)
-			return Optional.of(typedIngredient);
+			return typedIngredient;
 		
-		return Optional.empty();
+		return null;
 	}
 	
 	public <T> IIngredientType<T> getIngredientType(String uid) {
@@ -331,9 +331,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
 		
 		for (final var ingredient : ingredients) {
-			final var emiStack = getEMIStack(jeiType, ingredient);
-			if (!emiStack.isEmpty())
-				removedStacks.add(emiStack);
+			removedIngredients.computeIfAbsent(jeiType, _ -> new ReferenceOpenHashSet<>()).add(ingredient);
 		}
 		
 		if (!this.listeners.isEmpty()) {
@@ -673,8 +671,15 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		EmiReloadManager.step(Component.literal("[TMRV] Locking JEI Ingredient Registry..."), 100L);
 		
-		if (!removedStacks.isEmpty()) {
-			runtime.emiRegistry.removeEmiStacks(removedStacks::contains);
+		if (!removedIngredients.isEmpty()) {
+			runtime.emiRegistry.removeEmiStacks(stack -> {
+				final var typedIngredient = getTypedIngredient(stack);
+				if (typedIngredient == null)
+					return false;
+				
+				final var set = removedIngredients.getOrDefault(typedIngredient.getType(), null);
+				return set == null || set.contains(typedIngredient.getIngredient());
+			});
 		}
 	}
 	
@@ -683,7 +688,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		if (!locked)
 			throw new IllegalStateException();
 		
-		removedStacks.clear();
+		removedIngredients.clear();
 		
 		itemStacks = null;
 		fluidStacks = null;

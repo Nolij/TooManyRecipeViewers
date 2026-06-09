@@ -58,7 +58,6 @@ import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +69,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
-import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.*;
 
 @EmiEntrypoint
 @ApiStatus.Internal
@@ -89,11 +88,10 @@ public final class EMIPlugin implements EmiPlugin {
 	
 	@Override
 	public void register(EmiRegistry registry) {
+		runtime.emiRegistry = registry;
 		runtime.jeiPluginManager = new JEIPluginManager(registry);
 		
 		LOGGER.info("Loading JEI Plugins: [{}]", runtime.jeiPluginManager.pluginListString);
-		
-		runtime.emiRegistry = registry;
 		
 		registerSubtypes();
 		registerIngredients();
@@ -155,7 +153,7 @@ public final class EMIPlugin implements EmiPlugin {
 	private static final Path BLACKLIST_PATH = FMLPaths.CONFIGDIR.get().resolve("jei").resolve("blacklist.json");
 	
 	private void registerIngredients() {
-		if (!FMLEnvironment.production)
+		if (shouldShowDebugInfo())
 			runtime.emiRegistry.addEmiStack(ErrorEmiStack.INSTANCE);
 		
 		runtime.colorHelper = new ColorHelper(new ColorNameConfig());

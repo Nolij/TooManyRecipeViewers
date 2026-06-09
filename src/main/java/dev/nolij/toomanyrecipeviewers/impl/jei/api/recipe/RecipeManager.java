@@ -44,6 +44,7 @@ import dev.nolij.toomanyrecipeviewers.impl.recipe.TMRVRecipe;
 import dev.nolij.toomanyrecipeviewers.mixin.SmithingRecipeCategoryAccessor;
 import dev.nolij.toomanyrecipeviewers.impl.recipe.ExtendedSmithingRecipe;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
+import dev.nolij.toomanyrecipeviewers.plugin.Plugin;
 import dev.nolij.toomanyrecipeviewers.util.ResourceLocationHolderComparator;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -282,10 +283,13 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		if (locked)
 			throw new IllegalStateException("Tried to add recipes after registry is locked");
 		
+		final var threadContext = JEIPluginManager.threadContext.get();
+		final var plugin = threadContext != null ? threadContext.plugin() : null;
+		
 		final var category = category(jeiRecipeType);
 		
 		for (final var jeiRecipe : jeiRecipes) {
-			addRecipe(category, jeiRecipe);
+			addRecipe(category, jeiRecipe, plugin);
 		}
 	}
 	
@@ -472,7 +476,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 	//endregion
 	
 	//region RecipeManagerInternal
-	private <T> void addRecipe(Category<T> category, T jeiRecipe) {
+	private <T> void addRecipe(Category<T> category, T jeiRecipe, Plugin plugin) {
 		final var jeiCategory = category.getJEICategory();
 		final var jeiRecipeType = Objects.requireNonNull(jeiCategory).getRecipeType();
 		//? if >=21.1 {
@@ -495,6 +499,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		
 		try {
 			final var recipe = category.recipe(jeiRecipe);
+			recipe.setPlugin(plugin);
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
@@ -861,6 +866,7 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			private @Nullable EmiRecipe emiRecipe;
 			
 			private @Nullable ResourceLocation id = null;
+			private @Nullable Plugin plugin = null;
 			
 			private record ExtractedRecipeData(
 				List<EmiIngredient> emiInputs,
@@ -921,6 +927,17 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 				}
 				
 				return id;
+			}
+			
+			private synchronized void setPlugin(Plugin plugin) {
+				if (this.plugin != null)
+					throw new IllegalStateException();
+				
+				this.plugin = plugin;
+			}
+			
+			public @Nullable Plugin getPlugin() {
+				return plugin;
 			}
 			
 			public synchronized @Nullable T getJEIRecipe() {

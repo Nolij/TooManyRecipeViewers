@@ -15,6 +15,7 @@ import dev.nolij.toomanyrecipeviewers.impl.widget.DeferredPlaceableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.DrawableWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.FillingFlameWidget;
 import dev.nolij.toomanyrecipeviewers.impl.widget.TextWidget;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawablesView;
@@ -30,7 +31,6 @@ import mezz.jei.api.gui.widgets.IScrollGridWidget;
 import mezz.jei.api.gui.widgets.ISlottedRecipeWidget;
 import mezz.jei.api.gui.widgets.ITextWidget;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.gui.input.InputType;
 import mezz.jei.gui.input.UserInput;
 import mezz.jei.library.gui.widgets.ScrollBoxRecipeWidget;
@@ -43,10 +43,10 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.ArrayList;
 import java.util.List;
 
-class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
+abstract class TMRVRecipeWidget extends Widget implements IRecipeExtrasBuilder {
 	
-	private static class RecipeSlotsView implements IRecipeSlotsView {
-		private final List<IRecipeSlotView> slots = new ArrayList<>();
+	protected static class RecipeSlotsView implements IRecipeSlotsView {
+		protected final List<IRecipeSlotView> slots = new ArrayList<>();
 		
 		@Override
 		public @Unmodifiable List<IRecipeSlotView> getSlotViews() {
@@ -54,8 +54,8 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 		}
 	}
 	
-	private static class RecipeSlotDrawablesView implements IRecipeSlotDrawablesView {
-		private final List<IRecipeSlotDrawable> slots = new ArrayList<>();
+	protected static class RecipeSlotDrawablesView implements IRecipeSlotDrawablesView {
+		protected final List<IRecipeSlotDrawable> slots = new ArrayList<>();
 		
 		@Override
 		public @Unmodifiable List<IRecipeSlotDrawable> getSlots() {
@@ -64,23 +64,19 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 	}
 	
 	private final WidgetHolder widgets;
-	private final RecipeSlotsView slotsView;
-	private final RecipeSlotDrawablesView slotDrawablesView;
-	private final Bounds bounds;
-	private final IRecipeCategory<T> jeiCategory;
-	private final T jeiRecipe;
+	protected final RecipeSlotsView slotsView;
+	protected final RecipeSlotDrawablesView slotDrawablesView;
+	protected final Bounds bounds;
 	
 	private final ArrayList<IRecipeWidget> recipeWidgets = new ArrayList<>();
 	private final ArrayList<IJeiInputHandler> inputHandlers = new ArrayList<>();
 	private final ArrayList<IJeiGuiEventListener> guiEventListeners = new ArrayList<>();
 	
-	TMRVRecipeWidget(WidgetHolder widgets, int width, int height, IRecipeCategory<T> jeiCategory, T jeiRecipe) {
+	TMRVRecipeWidget(WidgetHolder widgets, int width, int height) {
 		this.widgets = widgets;
 		this.slotsView = new RecipeSlotsView();
 		this.slotDrawablesView = new RecipeSlotDrawablesView();
 		this.bounds = new Bounds(0, 0, width, height);
-		this.jeiCategory = jeiCategory;
-		this.jeiRecipe = jeiRecipe;
 	}
 	
 	void addSlotWidgets(RecipeLayoutBuilder builder, EmiRecipe emiRecipe) {
@@ -102,21 +98,13 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 		return bounds;
 	}
 	
+	protected abstract void renderSetup(EmiDrawContext context, int mouseX, int mouseY, float delta);
+	
 	@Override
 	public void render(GuiGraphics draw, int mouseX, int mouseY, float delta) {
 		final var context = EmiDrawContext.wrap(draw);
-		context.push();
-		context.matrices().translate(0F, 0F, 0F);
-		//noinspection removal
-		final var categoryBackground = jeiCategory.getBackground();
-		if (categoryBackground != null) {
-			categoryBackground.draw(context.raw());
-		}
 		
-		jeiCategory.draw(jeiRecipe, slotsView, context.raw(), mouseX, mouseY);
-		
-		context.resetColor();
-		context.pop();
+		renderSetup(context, mouseX, mouseY, delta);
 		
 		for (final var recipeWidget : recipeWidgets) {
 			context.push();
@@ -131,10 +119,12 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 		}
 	}
 	
+	protected abstract void buildTooltip(ITooltipBuilder builder, int mouseX, int mouseY);
+	
 	@Override
 	public List<ClientTooltipComponent> getTooltip(int mouseX, int mouseY) {
 		final var tooltipBuilder = new JemiTooltipBuilder();
-		jeiCategory.getTooltip(tooltipBuilder, jeiRecipe, slotsView, mouseX, mouseY);
+		buildTooltip(tooltipBuilder, mouseX, mouseY);
 		for (final var recipeWidget : recipeWidgets) {
 			final var position = recipeWidget.getPosition();
 			recipeWidget.getTooltip(tooltipBuilder, mouseX - position.x(), mouseY - position.y());
@@ -160,6 +150,8 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 			area.top() <= y && y <= area.bottom() &&
 				area.left() <= x && x <= area.right();
 	}
+	
+	protected abstract boolean handleInput(int mouseX, int mouseY, InputConstants.Key key);
 	
 	private boolean handleInput(int mouseX, int mouseY, InputConstants.Key key, int modifiers, InputType inputType) {
 		final var input = new UserInput(key, mouseX, mouseY, modifiers, inputType);
@@ -187,8 +179,7 @@ class TMRVRecipeWidget<T> extends Widget implements IRecipeExtrasBuilder {
 			}
 		}
 		
-		//noinspection removal
-		return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, key);
+		return handleInput(mouseX, mouseY, key);
 	}
 	
 	@Override

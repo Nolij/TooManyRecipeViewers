@@ -1,12 +1,15 @@
 package dev.nolij.toomanyrecipeviewers.impl.recipe;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
+import dev.emi.emi.runtime.EmiDrawContext;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.library.focus.FocusGroup;
 import net.minecraft.resources.ResourceLocation;
@@ -93,7 +96,35 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 		final var builder = new RecipeLayoutBuilder(ingredientManager);
 		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
 		
-		final var rootWidget = widgets.add(new TMRVRecipeWidget<>(widgets, getDisplayWidth(), getDisplayHeight(), jeiCategory, jeiRecipe));
+		final var rootWidget = widgets.add(new TMRVRecipeWidget(widgets, getDisplayWidth(), getDisplayHeight()) {
+			@SuppressWarnings("removal")
+			@Override
+			protected void renderSetup(EmiDrawContext context, int mouseX, int mouseY, float delta) {
+				context.push();
+				context.matrices().translate(0F, 0F, 0F);
+				
+				context.resetColor();
+				context.pop();
+				
+				final var categoryBackground = jeiCategory.getBackground();
+				if (categoryBackground != null) {
+					categoryBackground.draw(context.raw());
+				}
+				
+				jeiCategory.draw(jeiRecipe, slotsView, context.raw(), mouseX, mouseY);
+			}
+			
+			@Override
+			protected void buildTooltip(ITooltipBuilder builder, int mouseX, int mouseY) {
+				jeiCategory.getTooltip(builder, jeiRecipe, slotsView, mouseX, mouseY);
+			}
+			
+			@SuppressWarnings("removal")
+			@Override
+			protected boolean handleInput(int mouseX, int mouseY, InputConstants.Key key) {
+				return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, key);
+			}
+		});
 		
 		rootWidget.addSlotWidgets(builder, this);
 		jeiCategory.createRecipeExtras(rootWidget, jeiRecipe, FocusGroup.EMPTY);

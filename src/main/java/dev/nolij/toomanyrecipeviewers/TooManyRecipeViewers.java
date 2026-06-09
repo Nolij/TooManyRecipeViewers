@@ -4,7 +4,6 @@ package dev.nolij.toomanyrecipeviewers;
 import mezz.jei.api.helpers.ICodecHelper;
 import com.google.common.collect.ImmutableSetMultimap;
 //?}
-import com.google.common.collect.ImmutableListMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
@@ -12,18 +11,15 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIKeyMappings;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.config.JEIConfigManager;
 import dev.nolij.toomanyrecipeviewers.plugin.JEIPluginManager;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.helpers.IJeiHelpers;
 import mezz.jei.api.helpers.IModIdHelper;
 import mezz.jei.api.helpers.IPlatformFluidHelper;
 import mezz.jei.api.helpers.IStackHelper;
-import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.IFocusFactory;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeType;
-import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.recipe.transfer.IRecipeTransferManager;
 import mezz.jei.api.recipe.vanilla.IVanillaRecipeFactory;
 import mezz.jei.api.runtime.IBookmarkOverlay;
@@ -50,13 +46,11 @@ import mezz.jei.library.plugins.vanilla.crafting.CraftingRecipeCategory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.neoforge.platform.FluidHelper;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public final class TooManyRecipeViewers {
@@ -85,9 +79,6 @@ public final class TooManyRecipeViewers {
 	public volatile JeiHelpers jeiHelpers = null;
 	public volatile CraftingRecipeCategory craftingCategory = null;
 	public volatile SmithingRecipeCategory smithingCategory = null;
-	public volatile @Unmodifiable List<IRecipeCategory<?>> recipeCategories = null;
-	public volatile ImmutableListMultimap<RecipeType<?>, ITypedIngredient<?>> recipeCatalysts = null;
-	public final Set<Object> ignoredRecipes = new ReferenceOpenHashSet<>();
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;

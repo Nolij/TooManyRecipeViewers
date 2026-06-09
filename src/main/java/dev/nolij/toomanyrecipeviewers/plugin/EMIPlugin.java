@@ -9,14 +9,12 @@ import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiInitRegistry;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
-import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.EmiStackInteraction;
 import dev.emi.emi.api.widget.Bounds;
 import dev.emi.emi.jemi.JemiRecipeHandler;
 import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
-import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.impl.decorator.TMRVDebugDecorator;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
@@ -31,8 +29,6 @@ import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStackSerializer;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
-import mezz.jei.api.constants.RecipeTypes;
-import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.common.Internal;
 import mezz.jei.common.JeiFeatures;
@@ -49,25 +45,19 @@ import mezz.jei.library.ingredients.IngredientVisibility;
 import mezz.jei.library.ingredients.subtypes.SubtypeManager;
 import mezz.jei.library.load.registration.AdvancedRegistration;
 import mezz.jei.library.load.registration.GuiHandlerRegistration;
-import mezz.jei.library.load.registration.RecipeCatalystRegistration;
-import mezz.jei.library.load.registration.RecipeCategoryRegistration;
 import mezz.jei.library.load.registration.RecipeTransferRegistration;
 import mezz.jei.library.load.registration.SubtypeRegistration;
-import mezz.jei.library.load.registration.VanillaCategoryExtensionRegistration;
 import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.*;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.*;
@@ -214,10 +204,13 @@ public final class EMIPlugin implements EmiPlugin {
 	}
 	
 	private void createRecipeManager() {
-		registerRecipeCategories();
-		registerRecipeCatalysts();
-		
 		runtime.recipeManager = new RecipeManager(runtime);
+		runtime.jeiPluginManager.registerCategories(runtime.recipeManager);
+		
+		registerVanillaCategoryExtensions();
+		
+		runtime.jeiPluginManager.registerRecipeCatalysts(runtime.recipeManager);
+		
 		final var recipeManagerPluginHelper = new RecipeManagerPluginHelper(runtime.recipeManager);
 		final var advancedRegistration = new AdvancedRegistration(runtime.jeiHelpers, new JeiFeatures(), recipeManagerPluginHelper);
 		runtime.jeiPluginManager.registerAdvanced(advancedRegistration);
@@ -229,48 +222,16 @@ public final class EMIPlugin implements EmiPlugin {
 		
 		final var recipeRegistration = new RecipeRegistration(runtime.jeiHelpers, runtime.ingredientManager, runtime.recipeManager);
 		runtime.jeiPluginManager.registerRecipes(recipeRegistration);
-
-//		runtime.recipeManager.addRecipes(RecipeTypes.CRAFTING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING));
-		runtime.recipeManager.addRecipes(RecipeTypes.SMITHING, runtime.emiRegistry.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING));
+		
+		runtime.recipeManager.registerExtendedVanillaRecipes();
 	}
 	
-	private void registerRecipeCategories() {
-		final var recipeCategoryRegistration = new RecipeCategoryRegistration(runtime.jeiHelpers);
-		runtime.jeiPluginManager.registerCategories(recipeCategoryRegistration);
-		
+	private void registerVanillaCategoryExtensions() {
 		runtime.craftingCategory = JEIPluginManager.vanillaPlugin.getCraftingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
 		runtime.smithingCategory = JEIPluginManager.vanillaPlugin.getSmithingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
-		final var vanillaCategoryExtensionRegistration =
-			new VanillaCategoryExtensionRegistration(
-				runtime.craftingCategory,
-				runtime.smithingCategory,
-				runtime.jeiHelpers
-			);
-		runtime.jeiPluginManager.registerVanillaCategoryExtensions(vanillaCategoryExtensionRegistration);
-		
-		final var emiCategoryIDs = EmiRecipes.categories.stream().map(EmiRecipeCategory::getId).collect(Collectors.toSet());
-		
-		final var recipeCategories = new ArrayList<IRecipeCategory<?>>();
-		for (final var category : recipeCategoryRegistration.getRecipeCategories()) {
-			final var recipeType = category.getRecipeType();
-			final var uid = recipeType.getUid();
-			if (!RecipeManager.vanillaJEITypeEMICategoryMap.containsKey(recipeType) && 
-				emiCategoryIDs.contains(uid)) {
-				LOGGER.warn("JEI category with ID `{}` already exists in EMI!", uid.toString());
-			}
-			
-			recipeCategories.add(category);
-		}
-		
-		runtime.recipeCategories = recipeCategories;
-	}
-	
-	private void registerRecipeCatalysts() {
-		final var recipeCatalystRegistration = new RecipeCatalystRegistration(runtime.ingredientManager, runtime.jeiHelpers);
-		runtime.jeiPluginManager.registerRecipeCatalysts(recipeCatalystRegistration);
-		runtime.recipeCatalysts = recipeCatalystRegistration.getRecipeCatalysts();
+		runtime.jeiPluginManager.registerVanillaCategoryExtensions(runtime.recipeManager);
 	}
 	
 	private void registerRecipeTransferHandlers() {

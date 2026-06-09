@@ -4,9 +4,11 @@
 	"package": "dev.nolij.toomanyrecipeviewers.mixin",
 	"compatibilityLevel": "JAVA_${mixin_java_version}",
 	"client": [
+		"CraftingRecipeCategoryAccessor",
 		"EmiAgnosMixin",
 		"EmiRecipesMixin",
 		"EmiReloadManager_ReloadWorkerMixin",
+		"ExtendableRecipeCategoryHelperMixin",
 		"FluidEmiStackMixin",
 		"FullTypedItemStackMixin",
 		"ItemEmiStackMixin",
@@ -18,8 +20,7 @@
 		"SmithingRecipeCategoryAccessor",
 		"TMRVStackMixin",
 		"TypedIngredientMixin",
-		"TypedItemStackMixin",
-		"VanillaPluginMixin"
+		"TypedItemStackMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

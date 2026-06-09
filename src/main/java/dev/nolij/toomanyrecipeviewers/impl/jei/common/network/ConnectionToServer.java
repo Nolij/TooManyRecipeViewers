@@ -180,7 +180,7 @@ public class ConnectionToServer implements IConnectionToServer {
 			}
 		};
 
-		//noinspection unchecked
+		@SuppressWarnings("unchecked")
 		final var stacks = (List<ItemStack>) EmiRecipeFiller.getStacks(fakeRecipeHandler, fakeRecipe, containerScreen, ((PacketRecipeTransferAccessor)recipeTransferPacket).tmrv$isMaxTransfer() ? Integer.MAX_VALUE : 1);
 		if (stacks == null) {
 			LOGGER.error("Failed to construct recipe transfer packet");

@@ -900,7 +900,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 	//?} else {
 	/*private <R extends CraftingRecipe> ExtensionLookupResult<ICraftingCategoryExtension> getCraftingCategoryExtension(R recipe) {
 		@SuppressWarnings("unchecked")
-		final var handler = ((ITMRVExtendableRecipeCategoryHelper<CraftingRecipe, ICraftingCategoryExtension>) runtime.craftingCategory).tmrv$getRecipeHandler(recipe);
+		final var handler = ((ITMRVExtendableRecipeCategoryHelper<CraftingRecipe, ICraftingCategoryExtension>) ((CraftingRecipeCategoryAccessor) runtime.craftingCategory).tmrv$getExtendableHelper()).tmrv$getRecipeHandler(recipe);
 		
 		if (handler == null)
 			return null;

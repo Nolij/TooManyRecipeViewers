@@ -1,6 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.plugin;
 
-import com.sun.jdi.InvalidTypeException;
 import dev.nolij.zson.Zson;
 import dev.nolij.zson.ZsonField;
 import dev.nolij.zson.ZsonValue;
@@ -35,7 +34,7 @@ public class TMRVPluginConfig {
 				
 				try {
 					if (!(value.value instanceof String stringValue))
-						throw new InvalidTypeException();
+						throw new AssertionError();
 					
 					final var id = ResourceLocation.parse(key);
 					final var type = PluginType.valueOf(stringValue);
@@ -56,7 +55,7 @@ public class TMRVPluginConfig {
 				
 				try {
 					if (!(value.value instanceof String stringValue))
-						throw new InvalidTypeException();
+						throw new AssertionError();
 					
 					final var dispatchStrategy = DispatchStrategy.valueOf(stringValue);
 					
@@ -76,7 +75,7 @@ public class TMRVPluginConfig {
 				
 				try {
 					if (!(value.value instanceof Map<?, ?>))
-						throw new InvalidTypeException();
+						throw new AssertionError();
 					
 					final var id = ResourceLocation.parse(key);
 					final var pluginOverrides = (Map<String, ZsonValue>) value.value;
@@ -88,7 +87,7 @@ public class TMRVPluginConfig {
 						
 						try {
 							if (!(_value.value instanceof String _stringValue))
-								throw new InvalidTypeException();
+								throw new AssertionError();
 							
 							final var dispatchStrategy = DispatchStrategy.valueOf(_stringValue);
 							

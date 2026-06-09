@@ -349,7 +349,6 @@ tasks.named<RemapJarTask>("remapJar") {
 
 	mixinRemap {
 		enableMixinExtra()
-		disableRefmap()
 	}
 }
 val inputJar = tasks.getByName("remapJar") as AbstractArchiveTask

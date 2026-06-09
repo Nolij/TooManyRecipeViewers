@@ -4,8 +4,9 @@ import mezz.jei.common.network.packets.PacketRecipeTransfer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(PacketRecipeTransfer.class)
+@Mixin(value = PacketRecipeTransfer.class, remap = false)
 public interface PacketRecipeTransferAccessor {
-    @Accessor("maxTransfer")
-    boolean tmrv$isMaxTransfer();
+    
+    @Accessor("maxTransfer") boolean tmrv$isMaxTransfer();
+    
 }

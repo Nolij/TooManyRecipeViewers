@@ -42,6 +42,7 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	private boolean visible = true;
 	private @Nullable String name;
 	private final List<IRecipeSlotRichTooltipCallback> tooltipCallbacks = new ArrayList<>();
+	private boolean drawBack = false;
 	private boolean outputSlotBackground = false;
 	private @Nullable OffsetDrawable background = null;
 	private @Nullable OffsetDrawable overlay = null;
@@ -96,7 +97,7 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 		
 		final ITMRVSlotWidget widget = getWidget();
 		
-		widget.drawBack(false);
+		widget.drawBack(drawBack);
 		widget.large(outputSlotBackground);
 		widget.setName(name);
 		widget.addTooltipCallbacks(tooltipCallbacks);
@@ -133,18 +134,21 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	
 	@Override
 	public IRecipeSlotBuilder setStandardSlotBackground() {
-		outputSlotBackground = false;
+		this.drawBack = true;
+		this.outputSlotBackground = false;
 		return this;
 	}
 	
 	@Override
 	public IRecipeSlotBuilder setOutputSlotBackground() {
-		outputSlotBackground = true;
+		this.drawBack = true;
+		this.outputSlotBackground = true;
 		return this;
 	}
 	
 	@Override
 	public IRecipeSlotBuilder setBackground(IDrawable background, int xOffset, int yOffset) {
+		this.drawBack = false;
 		this.background = new OffsetDrawable(background, xOffset, yOffset);
 		return this;
 	}

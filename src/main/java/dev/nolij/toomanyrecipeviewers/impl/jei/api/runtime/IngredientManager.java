@@ -46,6 +46,7 @@ import mezz.jei.library.render.ItemStackRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -167,6 +168,14 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			return FluidEmiStack.EMPTY;
 		
 		return FluidEmiStack.of(stack.getFluid(), stack.getComponentsPatch(), stack.getAmount());
+	}
+	
+	@SuppressWarnings("UnstableApiUsage")
+	public EmiStack getEMIStack(ItemLike itemLike) {
+		if (itemLike == null)
+			return ItemEmiStack.EMPTY;
+		
+		return ItemEmiStack.of(itemLike);
 	}
 	
 	public <T> EmiStack getEMIStack(IIngredientType<T> jeiType, T ingredient) {

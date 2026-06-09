@@ -1,7 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.impl.recipe;
 
-import dev.emi.emi.api.recipe.EmiRecipe;
-import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.recipe.VanillaEmiRecipeCategories;
 import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -17,34 +15,21 @@ import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.library.focus.FocusGroup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.SmithingRecipe;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 @SuppressWarnings("NonExtendableApiUsage")
-public class ExtendedSmithingRecipe<R extends SmithingRecipe> implements EmiRecipe {
+public class ExtendedSmithingRecipe<R extends SmithingRecipe> extends ExtendedRecipe<R> implements IDebuggableRecipe {
 	
 	private final TooManyRecipeViewers runtime;
 	private final R backingRecipe;
 	private final ISmithingCategoryExtension<R> extension;
-	private final ResourceLocation id;
 	
 	public ExtendedSmithingRecipe(TooManyRecipeViewers runtime, R backingRecipe, ISmithingCategoryExtension<R> extension, ResourceLocation id) {
+		super(VanillaEmiRecipeCategories.SMITHING, backingRecipe, id);
 		this.runtime = runtime;
 		this.backingRecipe = backingRecipe;
 		this.extension = extension;
-		this.id = id;
-	}
-	
-	@Override
-	public EmiRecipeCategory getCategory() {
-		return VanillaEmiRecipeCategories.SMITHING;
-	}
-	
-	@Override
-	public @Nullable ResourceLocation getId() {
-		return id;
 	}
 	
 	@Override
@@ -99,6 +84,11 @@ public class ExtendedSmithingRecipe<R extends SmithingRecipe> implements EmiReci
 		final var outputSlot = addSlot(widgets, extension::setOutput, origin.addOffset(94, 0), RecipeIngredientRole.OUTPUT);
 		outputSlot.recipeContext(this);
 		extension.onDisplayedIngredientsUpdate(backingRecipe, templateSlot, baseSlot, additionSlot, outputSlot, FocusGroup.EMPTY);
+	}
+	
+	@Override
+	public DebugInfo getDebugInfo() {
+		return new DebugInfo("ExtendedSmithingRecipe", id, 0x7700FF00, 0x7700FFFF);
 	}
 	
 }

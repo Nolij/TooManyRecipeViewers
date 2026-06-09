@@ -18,6 +18,7 @@ import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import dev.emi.emi.registry.EmiRecipes;
 import dev.emi.emi.runtime.EmiReloadManager;
+import dev.nolij.toomanyrecipeviewers.impl.decorator.TMRVDebugDecorator;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.advanced.RecipeManagerPluginHelper;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.registration.RecipeRegistration;
@@ -113,6 +114,8 @@ public final class EMIPlugin implements EmiPlugin {
 				.orElse(EmiStack.EMPTY), 
 			null, false));
 		registry.addGenericDragDropHandler(new JemiDragDropHandler());
+		//noinspection UnstableApiUsage
+		registry.addRecipeDecorator(new TMRVDebugDecorator(runtime));
 		
 		runtime.lockRegistration();
 	}

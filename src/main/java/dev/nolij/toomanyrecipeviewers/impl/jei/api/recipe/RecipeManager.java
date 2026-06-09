@@ -40,6 +40,7 @@ import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.recipe.ExtendedRecipe;
 import dev.nolij.toomanyrecipeviewers.impl.recipe.TMRVRecipe;
 import dev.nolij.toomanyrecipeviewers.mixin.SmithingRecipeCategoryAccessor;
 import dev.nolij.toomanyrecipeviewers.impl.recipe.ExtendedSmithingRecipe;
@@ -502,7 +503,8 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 			recipe.setPlugin(plugin);
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
-			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType)) {
+			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && 
+				!(jeiRecipe instanceof ExtendedRecipe<?>)) {
 				final var originalID = recipe.getOriginalID();
 				if (originalID != null) {
 					if (emiRecipe instanceof TMRVRecipe<?>)
@@ -776,6 +778,19 @@ public class RecipeManager implements IRecipeManager, TooManyRecipeViewers.ILock
 		private @Nullable IRecipeCategory<T> jeiCategory;
 		private @Nullable RecipeType<T> jeiRecipeType;
 		private @Nullable EmiRecipeCategory emiCategory;
+		
+		private @Nullable Plugin plugin;
+		
+		private synchronized void setPlugin(Plugin plugin) {
+			if (this.plugin != null)
+				throw new IllegalStateException();
+			
+			this.plugin = plugin;
+		}
+		
+		public @Nullable Plugin getPlugin() {
+			return plugin;
+		}
 		
 		public synchronized @Nullable IRecipeCategory<T> getJEICategory() {
 			if (jeiCategory == null) {

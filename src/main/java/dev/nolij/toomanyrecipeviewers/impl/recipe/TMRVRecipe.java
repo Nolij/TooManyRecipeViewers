@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class TMRVRecipe<T> implements EmiRecipe {
+public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	private final IngredientManager ingredientManager;
 	
@@ -97,6 +97,11 @@ public class TMRVRecipe<T> implements EmiRecipe {
 		
 		rootWidget.addSlotWidgets(builder, this);
 		jeiCategory.createRecipeExtras(rootWidget, jeiRecipe, FocusGroup.EMPTY);
+	}
+	
+	@Override
+	public DebugInfo getDebugInfo() {
+		return new DebugInfo("TMRVRecipe", id, 0x7700FF00);
 	}
 	
 }

@@ -714,7 +714,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 					return false;
 				
 				final var set = removedIngredients.getOrDefault(typedIngredient.getType(), null);
-				return set == null || set.contains(typedIngredient.getIngredient());
+				if (set == null)
+					return false;
+				
+				final var ingredient = typedIngredient.getIngredient();
+				return ingredient != null && set.contains(typedIngredient.getIngredient());
 			});
 		}
 	}

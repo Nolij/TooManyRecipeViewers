@@ -18,9 +18,10 @@ import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.plugin.JEIPluginManager;
 import dev.nolij.toomanyrecipeviewers.util.IItemStackish;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IColorHelper;
 import mezz.jei.api.ingredients.IIngredientHelper;
@@ -75,7 +76,26 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	private @Nullable Collection<ItemStack> itemStacks = new ArrayList<>();
 	private @Nullable Collection<FluidStack> fluidStacks = new ArrayList<>();
-	private final Map<IIngredientType<?>, Set<Object>> removedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
+	
+	private class IngredientHashStrategy<T> implements Hash.Strategy<T> {
+		private final IIngredientHelper<T> helper;
+		
+		public IngredientHashStrategy(IIngredientType<T> type) {
+			this.helper = getIngredientHelper(type);
+		}
+		
+		@Override
+		public int hashCode(T ingredient) {
+			return helper.getUid(ingredient, UidContext.Ingredient).hashCode();
+		}
+		
+		@Override
+		public boolean equals(T leftIngredient, T rightIngredient) {
+			return helper.getUid(leftIngredient, UidContext.Ingredient).equals(helper.getUid(rightIngredient, UidContext.Ingredient));
+		}
+	}
+	
+	private final Map<IIngredientType<?>, Set<?>> removedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	private final Map<IIngredientType<?>, List<ITypedIngredient<?>>> typedIngredients = Collections.synchronizedMap(new Reference2ReferenceOpenHashMap<>());
 	
 	private record TypedIngredientUID(IIngredientType<?> type, String uid) {}
@@ -331,7 +351,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		final var ingredientHelper = ingredientInfo.getIngredientHelper();
 		
 		for (final var ingredient : ingredients) {
-			removedIngredients.computeIfAbsent(jeiType, _ -> new ReferenceOpenHashSet<>()).add(ingredient);
+			//noinspection rawtypes,unchecked
+			((Set) removedIngredients.computeIfAbsent(jeiType, _ -> new ObjectOpenCustomHashSet<>(new IngredientHashStrategy<>(jeiType)))).add(ingredient);
 		}
 		
 		if (!this.listeners.isEmpty()) {

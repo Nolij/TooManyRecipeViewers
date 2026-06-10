@@ -319,11 +319,11 @@ public final class JEIPluginManager {
 	}
 	
 	public void registerItemSubtypes(ISubtypeRegistration registration) {
-		dispatch(x -> x.registerItemSubtypes(registration), DispatchStrategy.ASYNC, true, false, 50L);
+		dispatch(x -> x.registerItemSubtypes(registration), DispatchStrategy.SYNC_EMI, true, false, 50L);
 	}
 	
 	public <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
-		dispatch(x -> x.registerFluidSubtypes(registration, platformFluidHelper), DispatchStrategy.ASYNC, true, false, 10L);
+		dispatch(x -> x.registerFluidSubtypes(registration, platformFluidHelper), DispatchStrategy.SYNC_EMI, true, false, 10L);
 	}
 	
 	public void registerIngredients(IModIngredientRegistration registration) {

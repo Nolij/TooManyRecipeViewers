@@ -503,7 +503,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			final var emiRecipe = Objects.requireNonNull(recipe.getEMIRecipe());
 			registry.addRecipe(emiRecipe);
 			if (vanillaJEITypeEMICategoryMap.containsKey(jeiRecipeType) && 
-				!(jeiRecipe instanceof ExtendedRecipe<?>)) {
+				!(emiRecipe instanceof ExtendedRecipe<?>)) {
 				final var originalID = recipe.getOriginalID();
 				if (originalID != null) {
 					if (emiRecipe instanceof TMRVRecipe<?>)

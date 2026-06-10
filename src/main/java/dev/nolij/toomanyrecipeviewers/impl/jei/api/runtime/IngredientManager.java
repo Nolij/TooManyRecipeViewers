@@ -86,12 +86,18 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		
 		@Override
 		public int hashCode(T ingredient) {
+			//? if >=21.1 {
 			return helper.getUid(ingredient, UidContext.Ingredient).hashCode();
+			//?} else
+			//return helper.getUniqueId(ingredient, UidContext.Ingredient).hashCode();
 		}
 		
 		@Override
 		public boolean equals(T leftIngredient, T rightIngredient) {
+			//? if >=21.1 {
 			return helper.getUid(leftIngredient, UidContext.Ingredient).equals(helper.getUid(rightIngredient, UidContext.Ingredient));
+			//?} else
+			//return helper.getUniqueId(leftIngredient, UidContext.Ingredient).equals(helper.getUniqueId(rightIngredient, UidContext.Ingredient));
 		}
 	}
 	

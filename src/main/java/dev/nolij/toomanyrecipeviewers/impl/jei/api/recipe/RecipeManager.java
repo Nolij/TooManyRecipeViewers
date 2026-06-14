@@ -1315,7 +1315,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 					}
 					
 					if (emiRecipe == null) {
-						emiRecipe = new TMRVRecipe<>(ingredientManager, getEMICategory(), Objects.requireNonNull(getJEICategory()), jeiRecipe, getID());
+						emiRecipe = new TMRVRecipe<>(runtime, Category.this, jeiRecipe, getID());
 					}
 					
 					emiRecipeMap.put(emiRecipe, this);

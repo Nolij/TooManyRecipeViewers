@@ -7,22 +7,24 @@ import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.runtime.EmiDrawContext;
+import dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder.RecipeLayoutBuilder;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
-import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.library.focus.FocusGroup;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	private final IngredientManager ingredientManager;
 	
-	private final EmiRecipeCategory emiCategory;
-	private final IRecipeCategory<T> jeiCategory;
+	private final RecipeManager.Category<T> category;
 	
 	private final T jeiRecipe;
 	
@@ -33,27 +35,32 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	private final List<EmiStack> outputs;
 	private final boolean supportsRecipeTree;
 	
-	public TMRVRecipe(IngredientManager ingredientManager, EmiRecipeCategory emiCategory, IRecipeCategory<T> jeiCategory, T jeiRecipe, ResourceLocation id) {
-		this.ingredientManager = ingredientManager;
-		this.emiCategory = emiCategory;
-		this.jeiCategory = jeiCategory;
+	public TMRVRecipe(TooManyRecipeViewers runtime, RecipeManager.Category<T> category, T jeiRecipe, ResourceLocation id) {
+		Objects.requireNonNull(category.getJEICategory());
+		this.ingredientManager = runtime.ingredientManager;
+		this.category = category;
 		this.jeiRecipe = jeiRecipe;
 		
 		this.id = id;
 		
-		final var builder = new RecipeLayoutBuilder(ingredientManager);
-		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
-		
-		final var recipeData = builder.extractEMIRecipeData();
+		final var recipeData = buildRecipe().extractEMIRecipeData();
 		inputs = recipeData.inputs();
 		catalysts = recipeData.catalysts();
 		outputs = recipeData.outputs();
 		supportsRecipeTree = recipeData.supportsRecipeTree();
 	}
 	
+	private @NotNull RecipeLayoutBuilder buildRecipe() {
+		final var builder = new RecipeLayoutBuilder(ingredientManager);
+		//noinspection DataFlowIssue
+		category.getJEICategory().setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
+		
+		return builder;
+	}
+	
 	@Override
 	public EmiRecipeCategory getCategory() {
-		return emiCategory;
+		return category.getEMICategory();
 	}
 	
 	@Override
@@ -78,12 +85,14 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	@Override
 	public int getDisplayWidth() {
-		return jeiCategory.getWidth();
+		//noinspection DataFlowIssue
+		return category.getJEICategory().getWidth();
 	}
 	
 	@Override
 	public int getDisplayHeight() {
-		return jeiCategory.getHeight();
+		//noinspection DataFlowIssue
+		return category.getJEICategory().getHeight();
 	}
 	
 	@Override
@@ -93,8 +102,7 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	@Override
 	public void addWidgets(WidgetHolder widgets) {
-		final var builder = new RecipeLayoutBuilder(ingredientManager);
-		jeiCategory.setRecipe(builder, jeiRecipe, FocusGroup.EMPTY);
+		final var builder = buildRecipe();
 		
 		final var rootWidget = widgets.add(new TMRVRecipeWidget(widgets, getDisplayWidth(), getDisplayHeight()) {
 			@SuppressWarnings("removal")
@@ -106,28 +114,32 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 				context.resetColor();
 				context.pop();
 				
-				final var categoryBackground = jeiCategory.getBackground();
+				@SuppressWarnings("DataFlowIssue")
+				final var categoryBackground = category.getJEICategory().getBackground();
 				if (categoryBackground != null) {
 					categoryBackground.draw(context.raw());
 				}
 				
-				jeiCategory.draw(jeiRecipe, slotsView, context.raw(), mouseX, mouseY);
+				category.getJEICategory().draw(jeiRecipe, slotsView, context.raw(), mouseX, mouseY);
 			}
 			
 			@Override
 			protected void buildTooltip(ITooltipBuilder builder, int mouseX, int mouseY) {
-				jeiCategory.getTooltip(builder, jeiRecipe, slotsView, mouseX, mouseY);
+				//noinspection DataFlowIssue
+				category.getJEICategory().getTooltip(builder, jeiRecipe, slotsView, mouseX, mouseY);
 			}
 			
 			@SuppressWarnings("removal")
 			@Override
 			protected boolean handleInput(int mouseX, int mouseY, InputConstants.Key key) {
-				return jeiCategory.handleInput(jeiRecipe, mouseX, mouseY, key);
+				//noinspection DataFlowIssue
+				return category.getJEICategory().handleInput(jeiRecipe, mouseX, mouseY, key);
 			}
 		});
 		
 		rootWidget.addSlotWidgets(builder, this);
-		jeiCategory.createRecipeExtras(rootWidget, jeiRecipe, FocusGroup.EMPTY);
+		//noinspection DataFlowIssue
+		category.getJEICategory().createRecipeExtras(rootWidget, jeiRecipe, FocusGroup.EMPTY);
 	}
 	
 	@Override

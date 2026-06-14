@@ -204,6 +204,7 @@ public final class JEIPluginManager {
 		
 		@Override
 		public DispatchResult call() {
+			Thread.currentThread().setContextClassLoader(JEIPluginManager.class.getClassLoader());
 			final var timestamp = System.currentTimeMillis();
 			
 			try {

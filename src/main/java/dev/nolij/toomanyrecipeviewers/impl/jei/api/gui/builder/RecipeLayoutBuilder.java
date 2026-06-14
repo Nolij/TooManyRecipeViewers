@@ -31,8 +31,14 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 	}
 	
 	public ExtractedEMIRecipeData extractEMIRecipeData() {
+		final var inputSlots = slots.stream().filter(x -> x.role == RecipeIngredientRole.INPUT).toList();
+		final var inputs = new ArrayList<EmiIngredient>(inputSlots.size());
+		for (final var inputSlot : inputSlots) {
+			inputs.add(inputSlot.getEMIIngredient());
+		}
+		
 		final var outputSlots = slots.stream().filter(x -> x.role == RecipeIngredientRole.OUTPUT).toList();
-		final var outputs = new ArrayList<EmiStack>();
+		final var outputs = new ArrayList<EmiStack>(outputSlots.size());
 		
 		var supportsRecipeTree = true;
 		for (final var outputSlot : outputSlots) {
@@ -44,10 +50,7 @@ public class RecipeLayoutBuilder implements IRecipeLayoutBuilder {
 		}
 		
 		return new ExtractedEMIRecipeData(
-			slots.stream()
-				.filter(x -> x.role == RecipeIngredientRole.INPUT)
-				.map(RecipeSlotBuilder::getEMIIngredient)
-				.toList(),
+			inputs,
 			slots.stream()
 				.filter(x -> x.role == RecipeIngredientRole.CATALYST)
 				.map(RecipeSlotBuilder::getEMIIngredient)

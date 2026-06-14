@@ -746,8 +746,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			if (locked)
 				throw new IllegalStateException();
 			
-			if (plugin.type() != PluginType.VANILLA_PLUGIN)
-				modRecipeCategoryExtensions.put(extension, plugin);
+			modRecipeCategoryExtensions.put(extension, plugin);
 		}
 		
 		//? if >=21.1 {
@@ -928,7 +927,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		final var craftingCategory = category(RecipeTypes.CRAFTING);
 		for (final var craftingRecipe : runtime.emiRegistry.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING)) {
 			final var result = getCraftingCategoryExtension(craftingRecipe); 
-			if (result != null) {
+			if (result != null && result.plugin().type() != PluginType.VANILLA_PLUGIN) {
 				addRecipe(craftingCategory, craftingRecipe, result.plugin());
 				craftingRecipes++;
 			}
@@ -943,7 +942,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 				//? if >=21.1
 				.value()
 			);
-			if (result != null) {
+			if (result != null && result.plugin().type() != PluginType.VANILLA_PLUGIN) {
 				addRecipe(smithingCategory, smithingRecipe, result.plugin());
 				smithingRecipes++;
 			}

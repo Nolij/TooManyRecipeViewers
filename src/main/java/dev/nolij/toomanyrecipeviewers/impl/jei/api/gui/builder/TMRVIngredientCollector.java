@@ -153,7 +153,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	
 	@Override
 	public IIngredientConsumer addItemLike(ItemLike itemLike) {
-		return addTypedIngredient((ITypedIngredient<ItemStack>) ItemEmiStack.of(itemLike));
+		return addTypedIngredient((ITypedIngredient<ItemStack>) ingredientManager.getEMIStack(itemLike));
 	}
 	
 	@Override

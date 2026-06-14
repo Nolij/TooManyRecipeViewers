@@ -48,6 +48,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -124,7 +125,13 @@ public final class JEIPluginManager {
 	public record ThreadContext(Plugin plugin, String phase) {}
 	public static final ThreadLocal<@Nullable ThreadContext> threadContext = ThreadLocal.withInitial(() -> null);
 	
-	private final ForkJoinPool dispatchPool = new ForkJoinPool();
+	private static final AtomicInteger poolIndex = new AtomicInteger(0);
+	private final AtomicInteger threadIndex = new AtomicInteger(0);
+	private final ForkJoinPool dispatchPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors(), pool -> {
+		final var thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+		thread.setName("TMRV-JEIPluginManager-%d-worker-%d".formatted(poolIndex.getAndIncrement(), threadIndex.getAndIncrement()));
+		return thread;
+	}, null, false);
 	
 	private final List<Plugin> plugins = new ArrayList<>(unfilteredPlugins.size());
 	private final Map<String, DispatchStrategy> defaultPhaseOverrides;

@@ -20,7 +20,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +38,7 @@ public class TMRVStack<T> extends EmiStack {
 	public final IIngredientRenderer<T> renderer;
 	public final T ingredient;
 	
-	private @Nullable ResourceLocation id = null;
 	public final Object key;
-	public final float xRenderOffset;
-	public final float yRenderOffset;
 	
 	private TMRVStack(IIngredientType<T> type, IIngredientHelper<T> helper, IIngredientRenderer<T> renderer, T ingredient) {
 		this.type = type;
@@ -58,9 +54,6 @@ public class TMRVStack<T> extends EmiStack {
 			//?} else
 			//this.key = helper.getUniqueId(ingredient, UidContext.Ingredient);
 		}
-		
-		this.xRenderOffset = (16F - (float) renderer.getWidth()) * 0.5F;
-		this.yRenderOffset = (16F - (float) renderer.getHeight()) * 0.5F;
 	}
 	
 	@Override
@@ -73,6 +66,10 @@ public class TMRVStack<T> extends EmiStack {
 		final var context = EmiDrawContext.wrap(draw);
 		
 		context.push();
+		
+		final var xRenderOffset = (16F - (float) renderer.getWidth()) * 0.5F;
+		final var yRenderOffset = (16F - (float) renderer.getHeight()) * 0.5F;
+		
 		context.matrices().translate(x + xRenderOffset, y + yRenderOffset, 0F);
 		
 		renderer.render(context.raw(), ingredient);
@@ -113,10 +110,7 @@ public class TMRVStack<T> extends EmiStack {
 	
 	@Override
 	public ResourceLocation getId() {
-		if (id == null)
-			this.id = helper.getResourceLocation(ingredient);
-		
-		return id;
+		return helper.getResourceLocation(ingredient);
 	}
 	
 	//? if <21.1

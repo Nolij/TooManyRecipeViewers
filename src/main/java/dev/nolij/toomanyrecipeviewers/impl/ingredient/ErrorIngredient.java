@@ -44,6 +44,7 @@ public class ErrorIngredient implements IIngredientType<ErrorIngredient>, IIngre
 		return "ERROR";
 	}
 	
+	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	public String getUniqueId(ErrorIngredient errorIngredient, UidContext uidContext) {

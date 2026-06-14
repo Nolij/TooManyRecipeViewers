@@ -3,6 +3,7 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.SlotWidget;
+import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.drawable.OffsetDrawable;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.ITMRVSlotWidget;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.ingredient.TMRVSlotWidget;
@@ -79,6 +80,10 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 			widget = new TMRVSlotWidget(ingredientManager, role, rect, rendererOverrides);
 		} else {
 			for (final var ingredient : getCollectedIngredients()) {
+				if (ingredient.getType() == ErrorIngredient.INSTANCE) {
+					widget = new TMRVSlotWidget(ingredientManager, role, rect, rendererOverrides);
+					return widget;
+				}
 				if (ingredient.getType() != fluidHelper.getFluidIngredientType())
 					throw new IllegalStateException("Mixed fluids and non-fluids");
 			}

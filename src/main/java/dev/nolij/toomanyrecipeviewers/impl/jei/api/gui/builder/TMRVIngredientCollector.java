@@ -118,6 +118,17 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		return this;
 	}
 	
+	private TMRVIngredientCollector addEMIStack(EmiStack emiStack) {
+		if (emiStack instanceof IStackish<?> ||
+			emiStack instanceof ITypedIngredient<?>) {
+			addTypedIngredient((ITypedIngredient<?>) emiStack);
+		} else {
+			collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
+		}
+		
+		return this;
+	}
+	
 	@Override
 	public <I> TMRVIngredientCollector addTypedIngredient(ITypedIngredient<I> typedIngredient) {
 		if (typedIngredient instanceof IStackish<?>) {
@@ -153,22 +164,22 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 	
 	@Override
 	public IIngredientConsumer addItemLike(ItemLike itemLike) {
-		return addTypedIngredient((ITypedIngredient<ItemStack>) ingredientManager.getEMIStack(itemLike));
+		return addEMIStack(ingredientManager.getEMIStack(itemLike));
 	}
 	
 	@Override
 	public TMRVIngredientCollector addFluidStack(Fluid fluid) {
-		return addTypedIngredient((ITypedIngredient<FluidStack>) FluidEmiStack.of(fluid));
+		return addEMIStack(FluidEmiStack.of(fluid));
 	}
 	
 	@Override
 	public TMRVIngredientCollector addFluidStack(Fluid fluid, long amount) {
-		return addTypedIngredient((ITypedIngredient<FluidStack>) FluidEmiStack.of(fluid, amount));
+		return addEMIStack(FluidEmiStack.of(fluid, amount));
 	}
 	
 	@Override
 	public TMRVIngredientCollector addFluidStack(Fluid fluid, long amount, DataComponentPatch dataComponentPatch) {
-		return addTypedIngredient((ITypedIngredient<FluidStack>) FluidEmiStack.of(fluid, dataComponentPatch, amount));
+		return addEMIStack(FluidEmiStack.of(fluid, dataComponentPatch, amount));
 	}
 	//endregion
 	

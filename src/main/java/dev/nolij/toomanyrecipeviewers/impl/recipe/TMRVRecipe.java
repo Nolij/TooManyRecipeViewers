@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
+public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe, TooManyRecipeViewers.IPostBakeListener {
 	
 	private final IngredientManager ingredientManager;
 	
@@ -30,13 +30,15 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	public ResourceLocation id;
 	
-	private final List<EmiIngredient> inputs;
 	private final List<EmiIngredient> catalysts;
-	private final List<EmiStack> outputs;
 	private final boolean supportsRecipeTree;
+	
+	private @Nullable List<EmiIngredient> inputs;
+	private @Nullable List<EmiStack> outputs;
 	
 	public TMRVRecipe(TooManyRecipeViewers runtime, RecipeManager.Category<T> category, T jeiRecipe, ResourceLocation id) {
 		Objects.requireNonNull(category.getJEICategory());
+		runtime.addPostBakeListener(this);
 		this.ingredientManager = runtime.ingredientManager;
 		this.category = category;
 		this.jeiRecipe = jeiRecipe;
@@ -70,7 +72,10 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	@Override
 	public List<EmiIngredient> getInputs() {
-		return inputs;
+		if (inputs != null)
+			return inputs;
+		
+		return buildRecipe().extractEMIRecipeData().inputs();
 	}
 	
 	@Override
@@ -80,7 +85,10 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	
 	@Override
 	public List<EmiStack> getOutputs() {
-		return outputs;
+		if (outputs != null)
+			return outputs;
+		
+		return buildRecipe().extractEMIRecipeData().outputs();
 	}
 	
 	@Override
@@ -145,6 +153,12 @@ public class TMRVRecipe<T> implements EmiRecipe, IDebuggableRecipe {
 	@Override
 	public DebugInfo getDebugInfo() {
 		return new DebugInfo("TMRVRecipe", id, 0x7700FF00);
+	}
+	
+	@Override
+	public void recipesBaked() throws IllegalStateException {
+		inputs = null;
+		outputs = null;
 	}
 	
 }

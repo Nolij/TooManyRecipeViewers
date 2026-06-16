@@ -250,12 +250,12 @@ abstract class TMRVRecipeWidget extends Widget implements IRecipeExtrasBuilder {
 	
 	@Override
 	public IPlaceable<?> addAnimatedRecipeArrow(int cookTime) {
-		return new DeferredPlaceableWidget((x, y) -> widgets.addFillingArrow(x, y, cookTime), EmiTexture.EMPTY_ARROW.width, EmiTexture.EMPTY_ARROW.height);
+		return new DeferredPlaceableWidget((x, y) -> widgets.addFillingArrow(x, y, cookTime * 50), EmiTexture.EMPTY_ARROW.width, EmiTexture.EMPTY_ARROW.height);
 	}
 	
 	@Override
 	public IPlaceable<?> addAnimatedRecipeFlame(int cookTime) {
-		return new DeferredPlaceableWidget((x, y) -> widgets.add(new FillingFlameWidget(x, y, cookTime)), EmiTexture.EMPTY_FLAME.width, EmiTexture.EMPTY_FLAME.height);
+		return new DeferredPlaceableWidget((x, y) -> widgets.add(new FillingFlameWidget(x, y, cookTime * 50)), EmiTexture.EMPTY_FLAME.width, EmiTexture.EMPTY_FLAME.height);
 	}
 	
 	@Override

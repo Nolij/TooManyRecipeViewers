@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 public class FillingFlameWidget extends AnimatedTextureWidget {
 	
 	public FillingFlameWidget(int x, int y, int time) {
-		super(EmiRenderHelper.WIDGETS, x, y, 14, 14, 68, 0, time, false, false, false);
+		super(EmiRenderHelper.WIDGETS, x, y, 14, 14, 68, 0, time, false, true, true);
 	}
 	
 	@Override

@@ -3,7 +3,6 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.FluidEmiStack;
-import dev.emi.emi.api.stack.ItemEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorIngredient;
@@ -21,7 +20,6 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -77,6 +75,16 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		collectedIngredients.addAll(other.collectedIngredients);
 	}
 	
+	private TMRVIngredientCollector addEMIStack(EmiStack emiStack) {
+		if (emiStack instanceof ITypedIngredient<?> typedIngredient) {
+			collectedIngredients.add(typedIngredient);
+		} else {
+			collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
+		}
+		
+		return this;
+	}
+	
 	//region IIngredientAcceptor
 	@Override
 	public <I> TMRVIngredientCollector addIngredient(IIngredientType<I> type, I ingredient) {
@@ -118,20 +126,11 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		return this;
 	}
 	
-	private TMRVIngredientCollector addEMIStack(EmiStack emiStack) {
-		if (emiStack instanceof IStackish<?> ||
-			emiStack instanceof ITypedIngredient<?>) {
-			addTypedIngredient((ITypedIngredient<?>) emiStack);
-		} else {
-			collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
-		}
-		
-		return this;
-	}
-	
 	@Override
 	public <I> TMRVIngredientCollector addTypedIngredient(ITypedIngredient<I> typedIngredient) {
-		if (typedIngredient instanceof IStackish<?>) {
+		if (typedIngredient == null) {
+			collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
+		} else if (typedIngredient instanceof IStackish<?>) {
 			collectedIngredients.add(typedIngredient);
 		} else {
 			final var copy = TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)

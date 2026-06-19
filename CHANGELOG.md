@@ -1,1 +1,8 @@
+- added async plugin loading
+- reduced post-bake memory usage
+- added config file
+  - plugins can now be disabled
+  - plugins can be forced to fully load even if a duplicate EMI plugin is detected
+  - async can be disabled (and enabled only for certain plugins via overrides)
+- fixed ingredient hiding for items and fluids and most modded ingredient types
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

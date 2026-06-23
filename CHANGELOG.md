@@ -1,8 +1,9 @@
 - added async plugin loading
-- reduced post-bake memory usage
 - added config file
   - plugins can now be disabled
   - plugins can be forced to fully load even if a duplicate EMI plugin is detected
   - async can be disabled (and enabled only for certain plugins via overrides)
+- added support for crafting category extensions (this is probably the last major part of the JEI API that can be sanely supported by TMRV)
+- reduced post-bake memory usage
 - fixed ingredient hiding for items and fluids and most modded ingredient types
 - further improvements to overall system stability and other minor adjustments have been made to enhance the user experience

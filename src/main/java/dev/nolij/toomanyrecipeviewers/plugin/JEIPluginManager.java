@@ -193,6 +193,8 @@ public final class JEIPluginManager {
 		}
 		
 		pluginListString = String.join(", ", plugins.stream().map(Plugin::toString).toList());
+		
+		config.write(PLUGIN_CONFIG_FILE);
 	}
 	
 	public void logLoadTimes() {

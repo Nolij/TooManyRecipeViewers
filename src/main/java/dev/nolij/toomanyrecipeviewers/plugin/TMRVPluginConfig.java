@@ -146,14 +146,8 @@ public class TMRVPluginConfig {
 	
 	public void write(final File file) {
 		try (final var writer = new FileWriter(file)) {
-			write(writer);
+			ZSON.write(Zson.obj2Map(this), writer);
 			writer.flush();
-		}
-	}
-	
-	public void write(final Appendable output) {
-		try {
-			ZSON.write(Zson.obj2Map(this), output);
 		} catch (Throwable t) {
 			LOGGER.error("Error writing config: ", t);
 		}

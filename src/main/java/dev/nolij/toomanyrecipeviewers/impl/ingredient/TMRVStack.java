@@ -27,7 +27,7 @@ import java.util.List;
 public class TMRVStack<T> extends EmiStack {
 	
 	public static <T> EmiStack create(IIngredientType<T> type, IIngredientHelper<T> helper, IIngredientRenderer<T> renderer, T ingredient) {
-		if (!helper.isValidIngredient(ingredient))
+		if (ingredient == null || !helper.isValidIngredient(ingredient))
 			return ErrorEmiStack.INSTANCE;
 		
 		return new TMRVStack<>(type, helper, renderer, ingredient);

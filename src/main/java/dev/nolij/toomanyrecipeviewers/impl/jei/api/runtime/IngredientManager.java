@@ -550,6 +550,11 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 			return;
 		
 		final var emiStack = getEMIStack(typedIngredient);
+		if (emiStack.isEmpty() || emiStack instanceof ErrorEmiStack) {
+			LOGGER.error("Failed to register alias `{}` for invalid or null ingredient", alias);
+			return;
+		}
+		
 		//noinspection UnstableApiUsage
 		runtime.emiRegistry.addAlias(emiStack, Component.translatable(alias));
 	}

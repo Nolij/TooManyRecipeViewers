@@ -40,19 +40,19 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 ### Load Times
 
-|           | TMRV                                                      | JEMI                                                          | Comparison                                                      |
-|-----------|-----------------------------------------------------------|---------------------------------------------------------------|-----------------------------------------------------------------|
-| Craftoria | 2538ms (4ms before world load, 2534ms after world load)   | 13843ms (12580ms before world load, 1263ms after world load)  | -11305ms (-12576ms before world load, +1271ms after world load) |
-| ATM10     | 7946ms (2ms before world load, 7944ms after world load)   | 17919ms (13150ms before world load, 4769ms after world load)  | -9973ms (-13148ms before world load, +3175ms after world load)  |
-| ATM9      | 16271ms (3ms before world load, 16268ms after world load) | 53911ms (39460ms before world load, 14451ms after world load) | -37640ms (-39457ms before world load, +1817ms after world load) |
+|                 | TMRV                                                    | JEMI                                                         | Comparison                                                     |
+|-----------------|---------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------|
+| Craftoria       | 1582ms (5ms before world load, 1577ms after world load) | 11036ms (10000ms before world load, 1036ms after world load) | -9454ms (-9995ms before world load, +541ms after world load)   |
+| ATM10           | 4951ms (3ms before world load, 4948ms after world load) | 20132ms (15550ms before world load, 4582ms after world load) | -15181ms (-15547ms before world load, +366ms after world load) |
+| Finality: Omnia | 3010ms (6ms before world load, 3004ms after world load) | 6354ms (4425ms before world load, 1929ms after world load)   | -3344ms (-4419ms before world load, +1075ms after world load)  |
 
 ### Memory Usage
 
-|           | TMRV      | JEMI      | Comparison               |
-|-----------|-----------|-----------|--------------------------|
-| Craftoria | 4.301 GiB | 4.492 GiB | -195.6 MiB (approximate) |
-| ATM10     | 4.899 GiB | 5.282 GiB | -392.2 MiB (approximate) |
-| ATM9      | 5.740 GiB | 6.770 GiB | -1.03 GiB                |
+|                 | TMRV      | JEMI      | Comparison               |
+|-----------------|-----------|-----------|--------------------------|
+| Craftoria       | 4.278 GiB | 4.386 GiB | -110.6 MiB (approximate) |
+| ATM10           | 4.401 GiB | 5.273 GiB | -892.9 MiB (approximate) |
+| Finality: Omnia | 1.947 GiB | 2.065 GiB | -120.8 MiB (approximate) |
 
 # Known API Limitations
 

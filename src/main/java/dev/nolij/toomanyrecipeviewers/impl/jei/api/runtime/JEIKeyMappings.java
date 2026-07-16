@@ -179,6 +179,13 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 		return dummy;
 	}
 	
+	//? if >=21.1 {
+	@Override
+	public IJeiKeyMapping getQuickMove() {
+		return dummy;
+	}
+	//?}
+	
 	@Override
 	public IJeiKeyMapping getCheatOneItem() {
 		return cheatOneToInventory;

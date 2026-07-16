@@ -76,7 +76,12 @@ public class TooManyRecipeViewersMod {
 	}
 	
 	private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
-		event.registerReloadListener(Internal.getTextures().getSpriteUploader());
+		event.registerReloadListener(Internal.getTextures()
+			//? if >=21.1 {
+			.getGuiSpriteManager()
+			//?} else
+			//.getSpriteUploader()
+		);
 	}
 	
 	//? if >=21.1 {

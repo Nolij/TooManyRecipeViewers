@@ -17,6 +17,7 @@ import dev.emi.emi.jemi.runtime.JemiDragDropHandler;
 import dev.emi.emi.registry.EmiRecipeFiller;
 import dev.emi.emi.runtime.EmiReloadManager;
 import dev.nolij.toomanyrecipeviewers.impl.decorator.TMRVDebugDecorator;
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.helpers.ModIDHelper;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.advanced.RecipeManagerPluginHelper;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.registration.RecipeRegistration;
@@ -24,7 +25,6 @@ import dev.nolij.toomanyrecipeviewers.impl.jei.api.registration.RuntimeRegistrat
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.JEIRuntime;
 import dev.nolij.toomanyrecipeviewers.impl.jei.common.network.ConnectionToServer;
-import dev.nolij.toomanyrecipeviewers.impl.jei.library.config.ModIDFormatConfig;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.ErrorEmiStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStackSerializer;
@@ -39,7 +39,6 @@ import mezz.jei.library.config.ColorNameConfig;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.focus.FocusFactory;
 import mezz.jei.library.gui.helpers.GuiHelper;
-import mezz.jei.library.helpers.ModIdHelper;
 import mezz.jei.library.ingredients.IngredientBlacklistInternal;
 import mezz.jei.library.ingredients.IngredientVisibility;
 import mezz.jei.library.ingredients.subtypes.SubtypeManager;
@@ -47,6 +46,7 @@ import mezz.jei.library.load.registration.AdvancedRegistration;
 import mezz.jei.library.load.registration.GuiHandlerRegistration;
 import mezz.jei.library.load.registration.RecipeTransferRegistration;
 import mezz.jei.library.load.registration.SubtypeRegistration;
+import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.plugins.vanilla.VanillaRecipeFactory;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.library.transfer.RecipeTransferHandlerHelper;
@@ -150,6 +150,12 @@ public final class EMIPlugin implements EmiPlugin {
 			runtime.emiRegistry.addEmiStack(ErrorEmiStack.INSTANCE);
 		
 		runtime.colorHelper = new ColorHelper(new ColorNameConfig());
+		runtime.itemStackHelper = new ItemStackHelper(
+			//? if <21.1
+			//runtime.subtypeManager,
+			runtime.stackHelper,
+			runtime.colorHelper
+		);
 		runtime.ingredientManager = new IngredientManager(runtime);
 		runtime.jeiPluginManager.registerIngredients(runtime.ingredientManager);
 		runtime.jeiPluginManager.registerExtraIngredients(runtime.ingredientManager);
@@ -159,7 +165,12 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.focusFactory = new FocusFactory(runtime.ingredientManager);
 		//? if >=21.1
 		runtime.codecHelper = new CodecHelper(runtime.ingredientManager, runtime.focusFactory);
-		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(runtime.ingredientManager);
+		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(
+			//? if >=21.1 {
+			runtime.itemStackHelper
+			//?} else
+			//runtime.ingredientManager
+		);
 		
 		runtime.blacklist = new IngredientBlacklistInternal();
 		runtime.ingredientManager.registerIngredientListener(runtime.blacklist);
@@ -182,10 +193,7 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.jeiPluginManager.registerModInfo(modInfoRegistration);
 		runtime.modAliases = modInfoRegistration.getModAliases();
 		//?}
-		runtime.modIdHelper = new ModIdHelper(new ModIDFormatConfig(), runtime.ingredientManager
-			//? if >=21.1
-			, runtime.modAliases
-		);
+		runtime.modIdHelper = new ModIDHelper(runtime);
 	}
 	
 	private void createJeiHelpers() {
@@ -238,7 +246,7 @@ public final class EMIPlugin implements EmiPlugin {
 		final var stackHelper = runtime.stackHelper;
 		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper
 			//? if >=21.1
-			, runtime.craftingCategory
+			, runtime.craftingCategory, Internal.getServerConnection()
 		);
 		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, runtime.jeiHelpers, Internal.getServerConnection());
 		runtime.jeiPluginManager.registerRecipeTransferHandlers(recipeTransferRegistration);

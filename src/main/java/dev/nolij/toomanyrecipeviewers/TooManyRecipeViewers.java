@@ -40,9 +40,11 @@ import mezz.jei.common.util.StackHelper;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.gui.helpers.GuiHelper;
 import mezz.jei.library.ingredients.IngredientBlacklistInternal;
+import mezz.jei.library.ingredients.IngredientVisibility;
 import mezz.jei.library.ingredients.subtypes.SubtypeManager;
 import mezz.jei.library.plugins.vanilla.anvil.SmithingRecipeCategory;
 import mezz.jei.library.plugins.vanilla.crafting.CraftingRecipeCategory;
+import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.runtime.JeiHelpers;
 import mezz.jei.neoforge.platform.FluidHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -62,6 +64,7 @@ public final class TooManyRecipeViewers {
 	public volatile JEIPluginManager jeiPluginManager = null;
 	public volatile SubtypeManager subtypeManager = null;
 	public volatile StackHelper stackHelper = null;
+	public volatile ItemStackHelper itemStackHelper = null;
 	public volatile IColorHelper colorHelper = null;
 	public volatile IngredientManager ingredientManager = null;
 	public volatile GuiHelper guiHelper = null;
@@ -72,7 +75,7 @@ public final class TooManyRecipeViewers {
 	public volatile IngredientBlacklistInternal blacklist = null;
 	public volatile IClientToggleState clientToggleState = null;
 	public volatile EditModeConfig editModeConfig = null;
-	public volatile IIngredientVisibility ingredientVisibility = null;
+	public volatile IngredientVisibility ingredientVisibility = null;
 	//? if >=21.1
 	public volatile ImmutableSetMultimap<String, String> modAliases = null;
 	public volatile IModIdHelper modIdHelper = null;

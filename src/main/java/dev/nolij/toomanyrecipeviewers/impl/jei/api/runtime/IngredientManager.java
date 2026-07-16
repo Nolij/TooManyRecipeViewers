@@ -3,6 +3,7 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 //? if >=21.1 {
 import com.mojang.serialization.Codec;
 import mezz.jei.api.gui.builder.IClickableIngredientFactory;
+import mezz.jei.common.ingredients.ITypedIngredientFactory;
 import mezz.jei.common.input.ClickableIngredientFactory;
 //?}
 import dev.emi.emi.api.stack.Comparison;
@@ -40,7 +41,6 @@ import mezz.jei.common.input.ClickableIngredient;
 import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.library.ingredients.IngredientInfo;
 import mezz.jei.library.ingredients.TypedIngredient;
-import mezz.jei.library.plugins.vanilla.ingredients.ItemStackHelper;
 import mezz.jei.library.plugins.vanilla.ingredients.fluid.FluidIngredientHelper;
 import mezz.jei.library.render.FluidTankRenderer;
 import mezz.jei.library.render.ItemStackRenderer;
@@ -48,7 +48,9 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -64,7 +66,12 @@ import java.util.stream.Stream;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
-public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
+//? if >=21.1
+@SuppressWarnings("NonExtendableApiUsage")
+public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, 
+	//? if >=21.1
+	ITypedIngredientFactory, 
+	TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
 	
 	private final TooManyRecipeViewers runtime;
 	
@@ -137,12 +144,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		registerIngredientType(new IngredientInfo<>(
 			VanillaTypes.ITEM_STACK,
 			Collections.emptyList(),
-			new ItemStackHelper(
-				//? if <21.1
-				//runtime.subtypeManager,
-				runtime.stackHelper,
-				runtime.colorHelper
-			),
+			runtime.itemStackHelper,
 			new ItemStackRenderer()
 			//? if >=21.1
 			, ItemStack.STRICT_SINGLE_ITEM_CODEC
@@ -409,7 +411,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	//? if <21.1
 	//@SuppressWarnings("UnnecessaryLocalVariable")
 	@Override
-	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> jeiType, V ingredient /*? if >=21.1 {*/, boolean normalize /*?}*/) {
+	public <V> @NotNull Optional<ITypedIngredient<V>> createTypedIngredient(@NotNull IIngredientType<V> jeiType, @NotNull V ingredient /*? if >=21.1 {*/, boolean normalize /*?}*/) {
         //? if <21.1
         //boolean normalize = false;
 		final var result = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, normalize);
@@ -607,6 +609,28 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	
+	//? if >=21.1 {
+	@Override
+	public void addAlias(Fluid fluid, String s) {
+		throw new UnsupportedOperationException(); // TODO
+	}
+	
+	@Override
+	public <B, I> void addAlias(IIngredientTypeWithSubtypes<B, I> iIngredientTypeWithSubtypes, B b, String s) {
+		throw new UnsupportedOperationException(); // TODO
+	}
+	
+	@Override
+	public void addAliases(Fluid fluid, Collection<String> collection) {
+		throw new UnsupportedOperationException(); // TODO
+	}
+	
+	@Override
+	public <B, I> void addAliases(IIngredientTypeWithSubtypes<B, I> iIngredientTypeWithSubtypes, B b, Collection<String> collection) {
+		throw new UnsupportedOperationException(); // TODO
+	}
+	//?}
+	
 	@Override
 	public <I> void addAliases(ITypedIngredient<I> typedIngredient, Collection<String> aliases) {
 		for (final var alias : aliases) {
@@ -614,7 +638,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	//endregion
-
+	
     //? if >=21.1 {
     @Override
     public IClickableIngredientFactory getClickableIngredientFactory() {

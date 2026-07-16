@@ -1,19 +1,161 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
+//? if >=21.1 {
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.config.JEIConfigValue;
+import mezz.jei.api.runtime.config.IJeiConfigValue;
+//?} else {
+/*import mezz.jei.common.config.file.IConfigListener;
+
+import java.util.Set;
+*///?}
 import mezz.jei.common.config.BookmarkTooltipFeature;
 import mezz.jei.common.config.GiveMode;
 import mezz.jei.common.config.HistoryDisplaySide;
 import mezz.jei.common.config.IClientConfig;
 import mezz.jei.common.config.IngredientSortStage;
 import mezz.jei.common.config.RecipeSorterStage;
-import mezz.jei.common.config.file.IConfigListener;
 
 import java.util.List;
-import java.util.Set;
 
 public class ClientConfig implements IClientConfig {
 	
+	//? if >=21.1 {
 	@Override
+	public IJeiConfigValue<Boolean> centerSearchBarEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Integer> maxRecipeGuiHeight() {
+		return new JEIConfigValue<>(0);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> toastReflowEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<GiveMode> giveMode() {
+		return new JEIConfigValue<>(GiveMode.defaultGiveMode);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> cheatToHotbarUsingHotkeysEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> showHiddenIngredients() {
+		return new JEIConfigValue<>(true);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> showTagRecipesEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> addBookmarksToFrontEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<List<BookmarkTooltipFeature>> bookmarkTooltipFeatures() {
+		return new JEIConfigValue<>(List.of());
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> holdShiftToShowBookmarkTooltipFeaturesEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> dragToRearrangeBookmarksEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> lookupHistoryEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Integer> maxLookupHistoryRows() {
+		return new JEIConfigValue<>(0);
+	}
+	
+	@Override
+	public IJeiConfigValue<Integer> maxLookupHistoryIngredients() {
+		return new JEIConfigValue<>(0);
+	}
+	
+	@Override
+	public IJeiConfigValue<HistoryDisplaySide> lookupHistoryDisplaySide() {
+		return new JEIConfigValue<>(null);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> ingredientsSummaryEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> lowMemorySlowSearchEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> catchRenderErrorsEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> lookupFluidContentsEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> lookupBlockTagsEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> showCreativeTabNamesEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Integer> dragDelayMs() {
+		return new JEIConfigValue<>(0);
+	}
+	
+	@Override
+	public IJeiConfigValue<Integer> smoothScrollRate() {
+		return new JEIConfigValue<>(0);
+	}
+	
+	@Override
+	public IJeiConfigValue<List<IngredientSortStage>> ingredientSorterStages() {
+		return new JEIConfigValue<>(List.of());
+	}
+	
+	@Override
+	public IJeiConfigValue<List<RecipeSorterStage>> recipeSorterStages() {
+		return new JEIConfigValue<>(List.of());
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> tagContentTooltipEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> hideSingleTagContentTooltipEnabled() {
+		return new JEIConfigValue<>(false);
+	}
+	//?} else {
+	/*@Override
 	public boolean isCenterSearchBarEnabled() {
 		return false;
 	}
@@ -54,10 +196,7 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
-	//? if >=21.1 {
-	public boolean getShowHiddenIngredients() {
-	//?} else
-	//public boolean isShowHiddenItemsEnabled() {
+	public boolean isShowHiddenItemsEnabled() {
 		return true;
 	}
 	
@@ -117,10 +256,7 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
-	//? if >=21.1 {
-	public boolean getHideSingleTagContentTooltipEnabled() {
-	//?} else
-	//public boolean isHideSingleIngredientTagsEnabled() {
+	public boolean isHideSingleIngredientTagsEnabled() {
 		return false;
 	}
 	
@@ -168,12 +304,6 @@ public class ClientConfig implements IClientConfig {
 	public HistoryDisplaySide getLookupHistoryDisplaySide() {
 		return null;
 	}
-	
-	//? if >=21.1 {
-	@Override
-	public boolean isIngredientsSummaryEnabled() {
-		return false;
-	}
-	//?}
+	*///?}
 	
 }

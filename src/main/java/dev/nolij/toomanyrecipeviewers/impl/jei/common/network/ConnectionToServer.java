@@ -2,6 +2,7 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.common.network;
 
 //? if >=21.1 {
 import mezz.jei.common.network.packets.PlayToServerPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import org.jetbrains.annotations.NotNull;
 //?} else {
 /*import mezz.jei.common.network.packets.PacketJei;
@@ -68,6 +69,18 @@ public class ConnectionToServer implements IConnectionToServer {
 	public boolean isJeiOnServer() {
 		return true;
 	}
+	
+	//? if >=21.1 {
+	@Override
+	public boolean isSameModLoader() {
+		return false;
+	}
+	
+	@Override
+	public boolean canSendPacket(CustomPacketPayload.Type<?> type) {
+		return type == PacketRecipeTransfer.TYPE;
+	}
+	//?}
 	
 	@Override
 	//? if >=21.1 {

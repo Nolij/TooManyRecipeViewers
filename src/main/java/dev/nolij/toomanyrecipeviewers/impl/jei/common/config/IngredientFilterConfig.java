@@ -1,11 +1,71 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.common.config;
 
+//? if >=21.1 {
+import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.config.JEIConfigValue;
+import mezz.jei.api.runtime.config.IJeiConfigValue;
+//?}
 import mezz.jei.common.config.IIngredientFilterConfig;
-import mezz.jei.core.search.SearchMode;
+import mezz.jei.common.search.SearchMode;
 
 public class IngredientFilterConfig implements IIngredientFilterConfig {
 	
+	//? if >=21.1 {
 	@Override
+	public IJeiConfigValue<SearchMode> modNameSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<SearchMode> tooltipSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<SearchMode> tagSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<SearchMode> colorSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<SearchMode> resourceLocationSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<SearchMode> creativeTabSearchMode() {
+		return new JEIConfigValue<>(SearchMode.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> searchAdvancedTooltips() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> searchModIds() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> searchModAliases() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> searchIngredientAliases() {
+		return new JEIConfigValue<>(false);
+	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> searchShortModNames() {
+		return new JEIConfigValue<>(false);
+	}
+	//?} else {
+	/*@Override
 	public SearchMode getModNameSearchMode() {
 		return SearchMode.DISABLED;
 	}
@@ -45,13 +105,6 @@ public class IngredientFilterConfig implements IIngredientFilterConfig {
 		return false;
 	}
 	
-	//? if >=21.1 {
-	@Override
-	public boolean getSearchModAliases() {
-		return false;
-	}
-	//?}
-	
 	@Override
 	public boolean getSearchIngredientAliases() {
 		return false;
@@ -61,5 +114,6 @@ public class IngredientFilterConfig implements IIngredientFilterConfig {
 	public boolean getSearchShortModNames() {
 		return false;
 	}
+	*///?}
 	
 }

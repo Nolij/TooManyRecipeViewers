@@ -68,7 +68,7 @@ repositories {
 	}
 	maven("https://maven.blamejared.com")
 	maven("https://maven.taumc.org/releases")
-	maven("https://maven.terraformersmc.com/")
+	maven("https://maven.teamresourceful.com/repository/TerrarformerMC/")
 	maven("https://maven.parchmentmc.org")
 //	maven("https://maven.createmod.net/")
 //	maven("https://maven.architectury.dev/")

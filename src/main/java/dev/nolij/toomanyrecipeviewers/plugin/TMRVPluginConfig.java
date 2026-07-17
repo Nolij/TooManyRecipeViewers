@@ -12,8 +12,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.*;
 
@@ -136,6 +138,9 @@ public class TMRVPluginConfig {
 		```
 		""")
 	public Map<ResourceLocation, Map<String, DispatchStrategy>> pluginPhaseOverrides = new HashMap<>();
+	
+	@ZsonField(comment = "NOTE: Support will not be provided for errors caused by using this setting")
+	public Set<String> blockedEMIPluginModIDs = new HashSet<>();
 	
 	public static @NotNull TMRVPluginConfig readOrCreate(final File file) {
 		final var result = read(file);

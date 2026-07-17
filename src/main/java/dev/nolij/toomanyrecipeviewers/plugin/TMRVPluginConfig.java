@@ -104,19 +104,37 @@ public class TMRVPluginConfig {
 		}
 	}
 	
-	@ZsonField
+	@ZsonField(comment = "If `false`, the `ASYNC` dispatch strategy will be replaced by `SYNC_EMI` by default (this excludes overrides)")
 	public @Nullable Boolean allowDefaultAsync = null;
 	
-	@ZsonField
+	@ZsonField(comment = "If `true`, duplicate plugins will be disabled instead of partially loaded by default (this excludes overrides)")
 	public boolean defaultDisableDuplicatePlugins = false;
 	
-	@ZsonField(serializeOnly = true)
+	@ZsonField(serializeOnly = true, comment = """
+		Overrides plugin type by ID.
+		OPTIONS: `NORMAL`, `DISABLED`, `FORCE_PARTIAL_LOAD` (technically others exist, but please don't use them unless you specifically want things to break)
+		""")
 	public Map<ResourceLocation, PluginType> typeOverrides = new HashMap<>();
 	
-	@ZsonField(serializeOnly = true)
+	@ZsonField(serializeOnly = true, comment = """
+		Default dispatch strategy overrides.
+		NOTES:
+		- Setting `ASYNC` here overrides `allowDefaultAsync`.
+		- Using `SYNC_MAIN` (runs on the main thread) is basically always a hack that replaces one problem with another. If a JEI plugin only loads by doing this, report it to the mod author as a bug.
+		OPTIONS: `ASYNC`, `SYNC_EMI`, `SYNC_MAIN`, `SKIP`
+		""")
 	public Map<String, DispatchStrategy> defaultPhaseOverrides = new HashMap<>();
 	
-	@ZsonField(serializeOnly = true)
+	@ZsonField(serializeOnly = true, comment = """
+		Dispatch strategy overrides per-plugin. These will override `defaultPhaseOverrides`. See `NOTES` and `OPTIONS` from `defaultPhaseOverrides` for more information.
+		EXAMPLE: ```json
+		"pluginPhaseOverrides": {
+			"apothic_enchanting:enchantment": {
+				"registerRecipes": "SYNC_MAIN"
+			}
+		}
+		```
+		""")
 	public Map<ResourceLocation, Map<String, DispatchStrategy>> pluginPhaseOverrides = new HashMap<>();
 	
 	public static @NotNull TMRVPluginConfig readOrCreate(final File file) {

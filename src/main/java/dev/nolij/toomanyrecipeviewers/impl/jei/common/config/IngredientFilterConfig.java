@@ -7,6 +7,9 @@ import mezz.jei.api.runtime.config.IJeiConfigValue;
 import mezz.jei.common.config.IIngredientFilterConfig;
 import mezz.jei.common.search.SearchMode;
 
+//? if >=21.1
+//import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+
 public class IngredientFilterConfig implements IIngredientFilterConfig {
 	
 	//? if >=21.1 {
@@ -122,7 +125,7 @@ public class IngredientFilterConfig implements IIngredientFilterConfig {
 	
 	@Override
 	public void addSearchConfigListener(Runnable runnable) {
-		throw new UnsupportedOperationException(); // TODO
+		LOGGER.error(new UnsupportedOperationException());
 	}
 	*///?}
 	

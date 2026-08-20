@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
+
 public class JEIKeyMappings implements IInternalKeyMappings {
 	
 	private record EMIDelegatedJEIKeyMapping(Supplier<EmiBind> delegateGetter) implements IJeiKeyMappingInternal {
@@ -43,7 +45,8 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 		
 		@Override
 		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
-			throw new UnsupportedOperationException(); // TODO
+			LOGGER.error(new UnsupportedOperationException());
+			return this;
 		}
 		
 	}
@@ -72,7 +75,8 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 		
 		@Override
 		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
-			throw new UnsupportedOperationException(); // TODO
+			consumer.accept(delegate);
+			return this;
 		}
 		
 	}
@@ -101,7 +105,7 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 		
 		@Override
 		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
-			return null;
+			return this;
 		}
 		
 	}

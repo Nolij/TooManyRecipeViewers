@@ -154,6 +154,11 @@ public class ClientConfig implements IClientConfig {
 	public IJeiConfigValue<Boolean> hideSingleTagContentTooltipEnabled() {
 		return new JEIConfigValue<>(false);
 	}
+	
+	@Override
+	public IJeiConfigValue<Boolean> bookmarkOutputAsRecipe() {
+		return new JEIConfigValue<>(true);
+	}
 	//?} else {
 	/*@Override
 	public boolean isCenterSearchBarEnabled() {
@@ -193,11 +198,6 @@ public class ClientConfig implements IClientConfig {
 	@Override
 	public GiveMode getGiveMode() {
 		return GiveMode.defaultGiveMode;
-	}
-	
-	@Override
-	public boolean isShowHiddenItemsEnabled() {
-		return true;
 	}
 	
 	@Override
@@ -256,11 +256,6 @@ public class ClientConfig implements IClientConfig {
 	}
 	
 	@Override
-	public boolean isHideSingleIngredientTagsEnabled() {
-		return false;
-	}
-	
-	@Override
 	public boolean isShowTagRecipesEnabled() {
 		return false;
 	}
@@ -303,6 +298,61 @@ public class ClientConfig implements IClientConfig {
 	@Override
 	public HistoryDisplaySide getLookupHistoryDisplaySide() {
 		return null;
+	}
+	
+	@Override
+	public void addCenterSearchBarEnabledListener(IConfigListener<Boolean> iConfigListener) {
+		
+	}
+	
+	@Override
+	public void addMaxRecipeGuiHeightListener(IConfigListener<Integer> iConfigListener) {
+		
+	}
+	
+	@Override
+	public void addLowMemorySlowSearchEnabledListener(IConfigListener<Boolean> iConfigListener) {
+		
+	}
+	
+	@Override
+	public boolean isBookmarkOutputAsRecipeEnabled() {
+		return true;
+	}
+	
+	@Override
+	public boolean getShowHiddenIngredients() {
+		return true;
+	}
+	
+	@Override
+	public void addMaxLookupHistoryRowsListener(IConfigListener<Integer> iConfigListener) {
+		
+	}
+	
+	@Override
+	public void addMaxLookupHistoryIngredientsListener(IConfigListener<Integer> iConfigListener) {
+		
+	}
+	
+	@Override
+	public boolean isIngredientsSummaryEnabled() {
+		return false;
+	}
+	
+	@Override
+	public void addIngredientSorterStagesListener(IConfigListener<List<IngredientSortStage>> iConfigListener) {
+		
+	}
+	
+	@Override
+	public boolean getHideSingleTagContentTooltipEnabled() {
+		return false;
+	}
+	
+	@Override
+	public boolean isToastReflowEnabled() {
+		return false;
 	}
 	*///?}
 	

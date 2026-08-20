@@ -29,19 +29,16 @@ public class ModIDHelper implements IModIdHelper {
 		return false;
 	}
 	
-	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	public String getFormattedModNameForModId(String id) {
 		return getModNameForModId(id);
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public Set<String> getModAliases(String id) {
 		return runtime.modAliases.get(id);
 	}
-	//?}
 	
 	@SuppressWarnings("removal")
 	@Override

@@ -11,21 +11,18 @@ import java.util.List;
 @SuppressWarnings("NonExtendableApiUsage")
 public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 	
-	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	default void draw(GuiGraphics guiGraphics) {
 		throw new UnsupportedOperationException();
 	}
 	
-	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	default void drawHoverOverlays(GuiGraphics guiGraphics) {
 		throw new UnsupportedOperationException();
 	}
 	
-	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	default List<Component> getTooltip() {
@@ -33,7 +30,6 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 		throw new UnsupportedOperationException();
 	}
 	
-	//? if >=21.1
 	@SuppressWarnings("removal")
 	@Override
 	default void getTooltip(ITooltipBuilder tooltipBuilder) {
@@ -41,13 +37,11 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 		throw new UnsupportedOperationException();
 	}
 	
-	//? if >=21.1 {
 	@Override
 	default void drawTooltip(GuiGraphics guiGraphics, int i, int i1) {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
-	//?}
 	
 	@SuppressWarnings("removal")
 	@Override

@@ -2,11 +2,8 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe;
 
 //? if >=21.1 {
 import mezz.jei.api.ingredients.IIngredientSupplier;
-import mezz.jei.api.recipe.advanced.IRecipeButtonControllerFactory;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.IExtendableCraftingRecipeCategory;
-import mezz.jei.common.Internal;
 import mezz.jei.common.gui.RecipeLayoutDrawableErrored;
-import mezz.jei.common.gui.elements.DrawableBlank;
 import mezz.jei.library.util.IngredientSupplierHelper;
 import net.minecraft.world.item.crafting.RecipeHolder;
 //?} else {
@@ -18,6 +15,7 @@ import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.recipe.category.extensions.IExtendableRecipeCategory;
+import mezz.jei.library.gui.recipes.layout.RecipeLayoutDrawableErrored;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.function.Predicate;
@@ -82,9 +80,12 @@ import mezz.jei.api.recipe.IRecipeLookup;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.advanced.IRecipeButtonControllerFactory;
 import mezz.jei.api.recipe.advanced.IRecipeManagerPlugin;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.recipe.category.extensions.IRecipeCategoryDecorator;
+import mezz.jei.api.recipe.category.extensions.vanilla.brewing.IBrewingCategoryExtension;
+import mezz.jei.api.recipe.category.extensions.vanilla.brewing.IExtendableBrewingRecipeCategory;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import mezz.jei.api.recipe.category.extensions.vanilla.smithing.IExtendableSmithingRecipeCategory;
 import mezz.jei.api.recipe.category.extensions.vanilla.smithing.ISmithingCategoryExtension;
@@ -98,6 +99,8 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IIngredientVisibility;
+import mezz.jei.common.gui.elements.DrawableBlank;
+import mezz.jei.common.Internal;
 import mezz.jei.common.util.ErrorUtil;
 import mezz.jei.library.focus.FocusGroup;
 import mezz.jei.library.gui.ingredients.CycleTimer;
@@ -139,6 +142,7 @@ import java.util.stream.Stream;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersConstants.MOD_ID;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
+@SuppressWarnings("NonExtendableApiUsage")
 public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistration, IRecipeCatalystRegistration, IVanillaCategoryExtensionRegistration, TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
 	
 	public static final Map<RecipeType<?>, EmiRecipeCategory> vanillaJEITypeEMICategoryMap =
@@ -175,7 +179,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 	
 	private ImmutableListMultimap<RecipeType<?>, IRecipeCategoryDecorator<?>> recipeCategoryDecorators;
 
-	//? if >=21.1
 	private List<IRecipeButtonControllerFactory> recipeButtonControllerFactories;
 	
 	private volatile boolean locked = false;
@@ -349,7 +352,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		hiddenCategories.remove(category(recipeType).getEMICategory());
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public <T> IRecipeLayoutDrawable<T> createRecipeLayoutDrawableOrShowError(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
 		//noinspection DuplicatedCode
@@ -382,7 +384,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			)
 			.orElseGet(() -> new RecipeLayoutDrawableErrored<>(recipeCategory, recipe, recipeBackground, borderPadding));
 	}
-	//?}
 	
 	@Override
 	public <T> Optional<IRecipeLayoutDrawable<T>> createRecipeLayoutDrawable(IRecipeCategory<T> recipeCategory, T recipe, IFocusGroup focusGroup) {
@@ -394,7 +395,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		final var recipeType = recipeCategory.getRecipeType();
 		final var decorators = getRecipeCategoryDecorators(recipeType);
 		
-		//? if >=21.1 {
 		final IScalableDrawable recipeBackground;
 		final int borderPadding;
 		if (recipeCategory.needsRecipeBorder()) {
@@ -404,7 +404,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			recipeBackground = DrawableBlank.EMPTY;
 			borderPadding = 0;
 		}
-		//?}
 		
 		return 
 			RecipeLayout.create(
@@ -412,11 +411,9 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 				decorators,
 				recipe,
 				focusGroup,
-				ingredientManager
-				//? if >=21.1 {
-				, recipeBackground,
+				ingredientManager, 
+				recipeBackground,
 				borderPadding
-				//?}
 			);
 	}
 	
@@ -627,7 +624,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		this.recipeCategoryDecorators = decorators;
 	}
 
-	//? if >=21.1 {
 	public void addRecipeButtonControllerFactories(List<IRecipeButtonControllerFactory> factories) {
 		if (locked)
 			throw new IllegalStateException("Tried to add recipe button controller factories after registry is locked");
@@ -639,7 +635,6 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 	public List<IRecipeButtonControllerFactory> getRecipeButtonControllerFactories() {
 		return recipeButtonControllerFactories;
 	}
-	//?}
 	//endregion
 	
 	//region IRecipeCategoryRegistration
@@ -735,7 +730,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		IExtendableCraftingRecipeCategory,
 		//?} else
 		//IExtendableRecipeCategory<CraftingRecipe, ICraftingCategoryExtension>,
-		IExtendableSmithingRecipeCategory {
+		IExtendableSmithingRecipeCategory, IExtendableBrewingRecipeCategory {
 		private final Plugin plugin;
 		
 		private ExtendableRecipeCategoryWrapper(Plugin plugin) {
@@ -856,6 +851,13 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			
 			runtime.smithingCategory.addExtension(recipeClass, extension);
 		}
+		
+		@Override
+		public <R> void addExtension(Class<? extends R> recipeClass, IBrewingCategoryExtension<R> extension) {
+			processExtension(extension);
+			
+			runtime.brewingExtensionHelper.addExtension(recipeClass, extension);
+		}
 	}
 	
 	private final Map<Plugin, ExtendableRecipeCategoryWrapper> pluginWrapperMap = new Reference2ReferenceOpenHashMap<>();
@@ -875,6 +877,15 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 	
 	@Override
 	public IExtendableSmithingRecipeCategory getSmithingCategory() {
+		final var threadContext = JEIPluginManager.threadContext.get();
+		if (threadContext == null)
+			throw new IllegalStateException();
+		
+		return pluginWrapperMap.computeIfAbsent(threadContext.plugin(), ExtendableRecipeCategoryWrapper::new);
+	}
+	
+	@Override
+	public IExtendableBrewingRecipeCategory getBrewingCategory() {
 		final var threadContext = JEIPluginManager.threadContext.get();
 		if (threadContext == null)
 			throw new IllegalStateException();
@@ -920,6 +931,16 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 		return new ExtensionLookupResult<>(extension, plugin);
 	}
 	
+	private <R extends IJeiBrewingRecipe> ExtensionLookupResult<IBrewingCategoryExtension<? super R>> getBrewingCategoryExtension(R recipe) {
+		final var extension = runtime.brewingExtensionHelper.getRecipeExtension(recipe);
+		
+		final var plugin = modRecipeCategoryExtensions.getOrDefault(extension, null);
+		if (plugin == null)
+			return null;
+		
+		return new ExtensionLookupResult<>(extension, plugin);
+	}
+	
 	// TODO: return plugin stats
 	public void registerExtendedVanillaRecipes() {
 		var timestamp = System.currentTimeMillis();
@@ -952,6 +973,10 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			}
 		}
 		LOGGER.info("Added {} extended smithing recipes in {}ms", smithingRecipes, System.currentTimeMillis() - timestamp);
+		
+//		timestamp = System.currentTimeMillis();
+//		var brewingRecipes = 0;
+//		final var brewingCategory = category(RecipeTypes.BREWING);
 	}
 	//endregion
 	
@@ -1602,6 +1627,12 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			@SuppressWarnings("DataFlowIssue")
 			private @NotNull EmiBrewingRecipe convertEMIBrewingRecipe() {
 				final var jeiRecipe = (IJeiBrewingRecipe) this.jeiRecipe;
+				
+				final var extension = getBrewingCategoryExtension(jeiRecipe);
+				if (extension != null) {
+					LOGGER.error("Plugin ID `{}` uses brewing extensions, which are currently not supported. Please report an issue with this plugin ID.", extension.plugin().toString());
+//					return new ExtendedBrewingRecipe(runtime, jeiRecipe, extension.extension(), getID());
+				}
 				
 				return new EmiBrewingRecipe(
 					ingredientManager.getEMIStack(jeiRecipe.getPotionInputs().getFirst()),

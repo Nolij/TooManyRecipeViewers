@@ -3,6 +3,7 @@ package dev.nolij.toomanyrecipeviewers.mixin;
 import dev.nolij.toomanyrecipeviewers.impl.ingredient.TMRVStack;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,6 +25,12 @@ public class TMRVStackMixin<T> implements ITypedIngredient<T> {
 	@Override
 	public T getIngredient() {
 		return ingredient;
+	}
+	
+	@Override
+	public @Nullable <V> ITypedIngredient<V> cast(IIngredientType<V> otherType) {
+		//noinspection unchecked
+		return type.equals(otherType) ? (ITypedIngredient<V>) this : null;
 	}
 	
 }

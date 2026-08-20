@@ -165,12 +165,7 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.focusFactory = new FocusFactory(runtime.ingredientManager);
 		//? if >=21.1
 		runtime.codecHelper = new CodecHelper(runtime.ingredientManager, runtime.focusFactory);
-		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(
-			//? if >=21.1 {
-			runtime.itemStackHelper
-			//?} else
-			//runtime.ingredientManager
-		);
+		runtime.vanillaRecipeFactory = new VanillaRecipeFactory(runtime.itemStackHelper);
 		
 		runtime.blacklist = new IngredientBlacklistInternal();
 		runtime.ingredientManager.registerIngredientListener(runtime.blacklist);
@@ -239,15 +234,14 @@ public final class EMIPlugin implements EmiPlugin {
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no crafting category!"));
 		runtime.smithingCategory = JEIPluginManager.vanillaPlugin.getSmithingCategory()
 			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no smithing category!"));
+		runtime.brewingExtensionHelper = JEIPluginManager.vanillaPlugin.getBrewingExtensionHelper()
+			.orElseThrow(() -> new AssertionError("JEI Vanilla plugin has no brewing category!"));
 		runtime.jeiPluginManager.registerVanillaCategoryExtensions(runtime.recipeManager);
 	}
 	
 	private void registerRecipeTransferHandlers() {
 		final var stackHelper = runtime.stackHelper;
-		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper
-			//? if >=21.1
-			, runtime.craftingCategory, Internal.getServerConnection()
-		);
+		final var handlerHelper = new RecipeTransferHandlerHelper(stackHelper, runtime.craftingCategory, Internal.getServerConnection());
 		final var recipeTransferRegistration = new RecipeTransferRegistration(stackHelper, handlerHelper, runtime.jeiHelpers, Internal.getServerConnection());
 		runtime.jeiPluginManager.registerRecipeTransferHandlers(recipeTransferRegistration);
 		runtime.recipeTransferManager = recipeTransferRegistration.createRecipeTransferManager();

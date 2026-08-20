@@ -113,27 +113,11 @@ stonecutter parameters {
 		}
 		string {
 			direction = eval(current.version, ">=21.1")
-			replace("TypedIngredient.deepCopy", "TypedIngredient.defensivelyCopyTypedIngredientFromApi")
-		}
-		string {
-			direction = eval(current.version, ">=21.1")
 			replace(".getNbt()", ".getComponentChanges()")
 		}
 		string {
 			direction = eval(current.version, ">=21.1")
 			replace(".getTag()", ".getComponentsPatch()")
-		}
-		string {
-			direction = eval(current.version, ">=21.1")
-			replace("RecipeErrorUtil.getInfoFromRecipe", "RecipeDebugUtil.getDebugInfoFromRecipe")
-		}
-		string {
-			direction = eval(current.version, ">=21.1")
-			replace("mezz.jei.library.util.RecipeErrorUtil", "mezz.jei.library.util.RecipeDebugUtil")
-		}
-		string {
-			direction = eval(current.version, ">=21.1")
-			replace("mezz.jei.core.search", "mezz.jei.common.search")
 		}
 	}
 }

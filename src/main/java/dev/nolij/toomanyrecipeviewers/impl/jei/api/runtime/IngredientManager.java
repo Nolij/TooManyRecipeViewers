@@ -3,7 +3,6 @@ package dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime;
 //? if >=21.1 {
 import com.mojang.serialization.Codec;
 import mezz.jei.api.gui.builder.IClickableIngredientFactory;
-import mezz.jei.common.ingredients.ITypedIngredientFactory;
 import mezz.jei.common.input.ClickableIngredientFactory;
 //?}
 import dev.emi.emi.api.stack.Comparison;
@@ -37,6 +36,7 @@ import mezz.jei.api.registration.IIngredientAliasRegistration;
 import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.runtime.IClickableIngredient;
 import mezz.jei.api.runtime.IIngredientManager;
+import mezz.jei.common.ingredients.ITypedIngredientFactory;
 import mezz.jei.common.input.ClickableIngredient;
 import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.library.ingredients.IngredientInfo;
@@ -66,12 +66,8 @@ import java.util.stream.Stream;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewers.fluidHelper;
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
-//? if >=21.1
 @SuppressWarnings("NonExtendableApiUsage")
-public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, 
-	//? if >=21.1
-	ITypedIngredientFactory, 
-	TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
+public class IngredientManager implements IIngredientManager, IModIngredientRegistration, IExtraIngredientRegistration, IIngredientAliasRegistration, ITypedIngredientFactory, TooManyRecipeViewers.ILockable, TooManyRecipeViewers.IPostBakeListener {
 	
 	private final TooManyRecipeViewers runtime;
 	
@@ -373,13 +369,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 		
 		if (!this.listeners.isEmpty()) {
-			//? if >=21.1 {
 			final var typedIngredients = TypedIngredient.createAndFilterInvalidNonnullList(this, jeiType, ingredients, false);
-			//?} else {
-			/*final var typedIngredients = ingredients.stream()
-				.flatMap(i -> TypedIngredient.createAndFilterInvalid(this, jeiType, i, false).stream())
-				.toList();
-			*///?}
 			this.listeners.forEach(listener -> listener.onIngredientsRemoved(ingredientHelper, typedIngredients));
 		}
 	}
@@ -408,17 +398,16 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.ofNullable((IIngredientType<V>) classTypeMap.get(ingredientClass));
 	}
 	
-	//? if <21.1
-	//@SuppressWarnings("UnnecessaryLocalVariable")
 	@Override
-	public <V> @NotNull Optional<ITypedIngredient<V>> createTypedIngredient(@NotNull IIngredientType<V> jeiType, @NotNull V ingredient /*? if >=21.1 {*/, boolean normalize /*?}*/) {
-        //? if <21.1
-        //boolean normalize = false;
+	public <V> @NotNull Optional<ITypedIngredient<V>> createTypedIngredient(@NotNull IIngredientType<V> jeiType, @NotNull V ingredient, boolean normalize) {
 		final var result = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, normalize);
-		//? if >=21.1 {
+		
 		return Optional.ofNullable(result);
-		//?} else
-		//return result;
+	}
+	
+	@Override
+	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> jeiType, V ingredient) {
+		return createTypedIngredient(jeiType, ingredient, false);
 	}
 	
 	@Override
@@ -432,10 +421,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<IClickableIngredient<V>> createClickableIngredient(IIngredientType<V> jeiType, V ingredient, Rect2i area, boolean normalize) {
-		final var typedIngredient = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, normalize)
-			//? if <21.1
-			//.orElse(null)
-			;
+		final var typedIngredient = TypedIngredient.createAndFilterInvalid(this, jeiType, ingredient, normalize);
 		if (typedIngredient == null) {
 			return Optional.empty();
 		}
@@ -563,11 +549,7 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	
 	@Override
 	public <I> void addAlias(IIngredientType<I> type, I ingredient, String alias) {
-		addAlias(
-			TypedIngredient.createAndFilterInvalid(this, type, ingredient, true)
-				//? if <21.1
-				//.orElseThrow()
-			, alias);
+		addAlias(TypedIngredient.createAndFilterInvalid(this, type, ingredient, true), alias);
 	}
 	
 	@Override
@@ -609,7 +591,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		}
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public void addAlias(Fluid fluid, String s) {
 		throw new UnsupportedOperationException(); // TODO
@@ -629,7 +610,6 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	public <B, I> void addAliases(IIngredientTypeWithSubtypes<B, I> iIngredientTypeWithSubtypes, B b, Collection<String> collection) {
 		throw new UnsupportedOperationException(); // TODO
 	}
-	//?}
 	
 	@Override
 	public <I> void addAliases(ITypedIngredient<I> typedIngredient, Collection<String> aliases) {

@@ -213,12 +213,10 @@ public class TMRVSlotWidget extends SlotWidget implements ITMRVRecipeSlotDrawabl
 		return getActiveIngredientCollector().stream();
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public @Unmodifiable List<@Nullable ITypedIngredient<?>> getAllIngredientsList() {
 		return getActiveIngredientCollector().getCollectedIngredients();
 	}
-	//?}
 	
 	@Override
 	public Optional<ITypedIngredient<?>> getDisplayedIngredient() {

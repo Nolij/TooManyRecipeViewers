@@ -182,6 +182,8 @@ tasks.shadowJar {
 		"mezz/jei/common/config/IIngredientGridConfig.class",
 		"mezz/jei/common/config/IJeiClientConfigs.class",
 		"mezz/jei/common/config/file/**/*.class", //
+		"mezz/jei/common/config/IngredientGridLayoutMode.class",
+		"mezz/jei/common/config/IngredientGridNavigationMode.class",
 		"mezz/jei/common/config/IngredientSortStage.class",
 		"mezz/jei/common/config/GiveMode.class",
 		"mezz/jei/common/config/RecipeSorterStage.class",
@@ -199,6 +201,7 @@ tasks.shadowJar {
 		"mezz/jei/common/network/PacketIdServer.class",
 		"mezz/jei/common/network/ServerPacketContext.class",
 		"mezz/jei/common/platform/*.class",
+		"mezz/jei/common/recipes/BrewingExtensionHelper.class",
 		"mezz/jei/common/search/SearchMode.class",
 		"mezz/jei/common/transfer/**/*.class",
 		"mezz/jei/common/util/DelayedExecutor.class",

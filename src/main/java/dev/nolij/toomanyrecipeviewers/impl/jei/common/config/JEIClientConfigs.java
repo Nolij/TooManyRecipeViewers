@@ -32,9 +32,7 @@ public class JEIClientConfigs implements IJeiClientConfigs {
 		return bookmarkListConfig;
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public void onRuntimeStopped() {}
-	//?}
 	
 }

@@ -114,6 +114,16 @@ public class IngredientFilterConfig implements IIngredientFilterConfig {
 	public boolean getSearchShortModNames() {
 		return false;
 	}
+	
+	@Override
+	public boolean getSearchModAliases() {
+		return false;
+	}
+	
+	@Override
+	public void addSearchConfigListener(Runnable runnable) {
+		throw new UnsupportedOperationException(); // TODO
+	}
 	*///?}
 	
 }

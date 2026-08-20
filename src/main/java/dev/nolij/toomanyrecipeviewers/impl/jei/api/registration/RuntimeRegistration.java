@@ -1,8 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.registration;
 
-//? if >=21.1 {
-import mezz.jei.api.search.ISearchStorageFactory;
-//?}
 import dev.emi.emi.jemi.runtime.JemiBookmarkOverlay;
 import dev.emi.emi.jemi.runtime.JemiIngredientFilter;
 import dev.emi.emi.jemi.runtime.JemiIngredientListOverlay;
@@ -19,6 +16,8 @@ import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IRecipesGui;
 import mezz.jei.api.runtime.IScreenHelper;
+import mezz.jei.api.search.ISearchStorageBuilderFactory;
+import mezz.jei.api.search.ISearchStorageFactory;
 import org.jetbrains.annotations.NotNull;
 
 import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
@@ -97,12 +96,17 @@ public class RuntimeRegistration implements IRuntimeRegistration {
 		return this.editModeConfig;
 	}
 	
-	//? if >=21.1 {
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	@Override
 	public ISearchStorageFactory getSearchStorageFactory() {
 		throw new UnsupportedOperationException(); // TODO
 	}
-	//?}
+	
+	@Override
+	public ISearchStorageBuilderFactory getSearchStorageBuilderFactory() {
+		throw new UnsupportedOperationException(); // TODO
+	}
 	
 	public IIngredientListOverlay getIngredientListOverlay() {
 		return ingredientListOverlay;

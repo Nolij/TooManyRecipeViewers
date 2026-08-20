@@ -13,6 +13,7 @@ import dev.nolij.toomanyrecipeviewers.util.FluidRendererParameters;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.drawable.TilingDirection;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.api.ingredients.IIngredientType;
@@ -183,7 +184,12 @@ public class RecipeSlotBuilder implements IRecipeSlotBuilder {
 	
 	@Override
 	public IRecipeSlotBuilder setFluidRenderer(long capacity, boolean showCapacity, int width, int height) {
-		fluidRendererParameters = new FluidRendererParameters(capacity, showCapacity, width, height);
+		return setFluidRenderer(capacity, showCapacity, width, height, TilingDirection.UP_RIGHT);
+	}
+	
+	@Override
+	public IRecipeSlotBuilder setFluidRenderer(long capacity, boolean showCapacity, int width, int height, TilingDirection tilingDirection) {
+		fluidRendererParameters = new FluidRendererParameters(capacity, showCapacity, width, height, tilingDirection);
 		rect = new ImmutableRect2i(rect.x(), rect.y(), width, height);
 		return this;
 	}

@@ -70,12 +70,12 @@ public class ConnectionToServer implements IConnectionToServer {
 		return true;
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public boolean isSameModLoader() {
 		return false;
 	}
 	
+	//? if >=21.1 {
 	@Override
 	public boolean canSendPacket(CustomPacketPayload.Type<?> type) {
 		return type == PacketRecipeTransfer.TYPE;

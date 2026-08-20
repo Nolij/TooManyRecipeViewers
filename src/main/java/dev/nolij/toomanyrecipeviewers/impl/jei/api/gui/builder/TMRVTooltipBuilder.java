@@ -1,17 +1,19 @@
 package dev.nolij.toomanyrecipeviewers.impl.jei.api.gui.builder;
 
+//? if >=21.1 {
+import mezz.jei.api.runtime.IJeiKeyMapping;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.MutableComponent;
+//?}
 import com.mojang.datafixers.util.Either;
 import dev.emi.emi.mixin.accessor.OrderedTextTooltipComponentAccessor;
 import dev.nolij.toomanyrecipeviewers.util.ComponentFormattedCharSink;
 import dev.nolij.toomanyrecipeviewers.util.FormattedTextConsumer;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.ingredients.ITypedIngredient;
-import mezz.jei.api.runtime.IJeiKeyMapping;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
@@ -21,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
+@SuppressWarnings("NonExtendableApiUsage")
 public class TMRVTooltipBuilder implements ITooltipBuilder {
 	
 	private static Component getComponent(Object object) {
@@ -71,7 +74,6 @@ public class TMRVTooltipBuilder implements ITooltipBuilder {
 		
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public void clear() {
 		lines.clear();
@@ -94,7 +96,6 @@ public class TMRVTooltipBuilder implements ITooltipBuilder {
 			})
 			.toList();
 	}
-	//?}
 	
 	@SuppressWarnings("removal")
 	@Override

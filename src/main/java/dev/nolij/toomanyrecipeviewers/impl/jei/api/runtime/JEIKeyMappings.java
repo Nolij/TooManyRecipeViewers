@@ -5,15 +5,17 @@ import dev.emi.emi.config.EmiConfig;
 import dev.emi.emi.input.EmiBind;
 import mezz.jei.api.runtime.IJeiKeyMapping;
 import mezz.jei.common.input.IInternalKeyMappings;
+import mezz.jei.common.input.keys.IJeiKeyMappingInternal;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class JEIKeyMappings implements IInternalKeyMappings {
 	
-	private record EMIDelegatedJEIKeyMapping(Supplier<EmiBind> delegateGetter) implements IJeiKeyMapping {
+	private record EMIDelegatedJEIKeyMapping(Supplier<EmiBind> delegateGetter) implements IJeiKeyMappingInternal {
 		
 		@Override
 		public boolean isActiveAndMatches(InputConstants.@NotNull Key key) {
@@ -34,9 +36,19 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 			return delegateGetter.get().getBindText();
 		}
 		
+		@Override
+		public boolean isDown() {
+			return delegateGetter.get().isHeld();
+		}
+		
+		@Override
+		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
+			throw new UnsupportedOperationException(); // TODO
+		}
+		
 	}
 	
-	private record MinecraftDelegatedJEIKeyMapping(KeyMapping delegate) implements IJeiKeyMapping {
+	private record MinecraftDelegatedJEIKeyMapping(KeyMapping delegate) implements IJeiKeyMappingInternal {
 		
 		@Override
 		public boolean isActiveAndMatches(InputConstants.@NotNull Key key) {
@@ -53,9 +65,19 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 			return delegate.getTranslatedKeyMessage();
 		}
 		
+		@Override
+		public boolean isDown() {
+			return delegate.isDown();
+		}
+		
+		@Override
+		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
+			throw new UnsupportedOperationException(); // TODO
+		}
+		
 	}
 	
-	private static class DummyJEIKeyMapping implements IJeiKeyMapping {
+	private static class DummyJEIKeyMapping implements IJeiKeyMappingInternal {
 		
 		@Override
 		public boolean isActiveAndMatches(InputConstants.@NotNull Key key) {
@@ -72,17 +94,27 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 			return Component.translatable("key.keyboard.unknown");
 		}
 		
+		@Override
+		public boolean isDown() {
+			return false;
+		}
+		
+		@Override
+		public IJeiKeyMappingInternal register(Consumer<KeyMapping> consumer) {
+			return null;
+		}
+		
 	}
 	
-	private final IJeiKeyMapping dummy = new DummyJEIKeyMapping();
+	private final IJeiKeyMappingInternal dummy = new DummyJEIKeyMapping();
 	
-	private final IJeiKeyMapping toggleVisibility = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.toggleVisibility);
-	private final IJeiKeyMapping focusSearch = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.focusSearch);
-	private final IJeiKeyMapping back = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.back);
-	private final IJeiKeyMapping viewRecipes = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.viewRecipes);
-	private final IJeiKeyMapping viewUses = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.viewUses);
-	private final IJeiKeyMapping cheatOneToInventory = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.cheatOneToInventory);
-	private final IJeiKeyMapping cheatStackToInventory = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.cheatStackToInventory);
+	private final IJeiKeyMappingInternal toggleVisibility = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.toggleVisibility);
+	private final IJeiKeyMappingInternal focusSearch = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.focusSearch);
+	private final IJeiKeyMappingInternal back = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.back);
+	private final IJeiKeyMappingInternal viewRecipes = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.viewRecipes);
+	private final IJeiKeyMappingInternal viewUses = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.viewUses);
+	private final IJeiKeyMappingInternal cheatOneToInventory = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.cheatOneToInventory);
+	private final IJeiKeyMappingInternal cheatStackToInventory = new EMIDelegatedJEIKeyMapping(() -> EmiConfig.cheatStackToInventory);
 	
 	@Override
 	public IJeiKeyMapping getToggleOverlay() {
@@ -179,12 +211,10 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 		return dummy;
 	}
 	
-	//? if >=21.1 {
 	@Override
 	public IJeiKeyMapping getQuickMove() {
 		return dummy;
 	}
-	//?}
 	
 	@Override
 	public IJeiKeyMapping getCheatOneItem() {
@@ -243,6 +273,21 @@ public class JEIKeyMappings implements IInternalKeyMappings {
 	
 	@Override
 	public IJeiKeyMapping getEnterKey() {
+		return dummy; // TODO
+	}
+	
+	@Override
+	public IJeiKeyMapping getShareToChat() {
+		return dummy; // TODO
+	}
+	
+	@Override
+	public IJeiKeyMappingInternal getShowBookmarkTooltipFeatures() {
+		return dummy; // TODO
+	}
+	
+	@Override
+	public IJeiKeyMappingInternal getPauseRecipeCycling() {
 		return dummy; // TODO
 	}
 	

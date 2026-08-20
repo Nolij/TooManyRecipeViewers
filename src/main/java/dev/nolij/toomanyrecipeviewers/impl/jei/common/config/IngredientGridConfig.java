@@ -6,10 +6,12 @@ import mezz.jei.api.runtime.config.IJeiConfigValue;
 import mezz.jei.api.gui.placement.HorizontalAlignment;
 import mezz.jei.api.gui.placement.VerticalAlignment;
 //?} else {
-/*import mezz.jei.common.util.HorizontalAlignment;
-import mezz.jei.common.util.VerticalAlignment;
+/*import mezz.jei.api.gui.placement.HorizontalAlignment;
+import mezz.jei.api.gui.placement.VerticalAlignment;
 *///?}
 import mezz.jei.common.config.IIngredientGridConfig;
+import mezz.jei.common.config.IngredientGridLayoutMode;
+import mezz.jei.common.config.IngredientGridNavigationMode;
 import mezz.jei.common.util.NavigationVisibility;
 
 public class IngredientGridConfig implements IIngredientGridConfig {
@@ -51,8 +53,18 @@ public class IngredientGridConfig implements IIngredientGridConfig {
 	}
 	
 	@Override
-	public IJeiConfigValue<NavigationVisibility> buttonNavigationVisibility() {
+	public IJeiConfigValue<NavigationVisibility> navigationVisibility() {
 		return new JEIConfigValue<>(NavigationVisibility.DISABLED);
+	}
+	
+	@Override
+	public IJeiConfigValue<IngredientGridLayoutMode> layoutMode() {
+		return new JEIConfigValue<>(IngredientGridLayoutMode.RECTANGULAR);
+	}
+	
+	@Override
+	public IJeiConfigValue<IngredientGridNavigationMode> navigationMode() {
+		return new JEIConfigValue<>(IngredientGridNavigationMode.PAGED);
 	}
 	//?} else {
 	/*@Override
@@ -91,8 +103,23 @@ public class IngredientGridConfig implements IIngredientGridConfig {
 	}
 	
 	@Override
-	public NavigationVisibility getButtonNavigationVisibility() {
+	public NavigationVisibility getNavigationVisibility() {
 		return NavigationVisibility.DISABLED;
+	}
+	
+	@Override
+	public IngredientGridLayoutMode getLayoutMode() {
+		return IngredientGridLayoutMode.RECTANGULAR;
+	}
+	
+	@Override
+	public IngredientGridNavigationMode getNavigationMode() {
+		return IngredientGridNavigationMode.PAGED;
+	}
+	
+	@Override
+	public void addLayoutListener(Runnable runnable) {
+		throw new UnsupportedOperationException(); // TODO
 	}
 	*///?}
 	

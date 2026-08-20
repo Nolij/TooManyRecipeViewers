@@ -25,20 +25,11 @@ public class TypedIngredientMixin {
 //		}
 //	}
 	
-	//? if >=21.1 {
 	@Inject(method = "defensivelyCopyTypedIngredientFromApi", at = @At("HEAD"), cancellable = true)
 	private static <T> void tmrv$defensivelyCopyTypedIngredientFromApi$HEAD(IIngredientManager ingredientManager, ITypedIngredient<T> value, CallbackInfoReturnable<ITypedIngredient<T>> cir) {
 		if (value instanceof IStackish<?> || value == ErrorIngredient.TYPED_INSTANCE) {
 			cir.setReturnValue(value);
 		}
 	}
-	//?} else {
-	/*@Inject(method = "deepCopy", at = @At("HEAD"), cancellable = true)
-	private static <T> void tmrv$deepCopy$HEAD(IIngredientManager ingredientManager, ITypedIngredient<T> value, CallbackInfoReturnable<Optional<ITypedIngredient<T>>> cir) {
-		if (value instanceof IStackish<?> || value == ErrorIngredient.TYPED_INSTANCE) {
-			cir.setReturnValue(Optional.of(value));
-		}
-	}
-	*///?}
 	
 }

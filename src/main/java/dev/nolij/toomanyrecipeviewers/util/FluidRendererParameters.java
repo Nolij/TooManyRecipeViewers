@@ -1,3 +1,5 @@
 package dev.nolij.toomanyrecipeviewers.util;
 
-public record FluidRendererParameters(long capacity, boolean showCapacity, int width, int height) {}
+import mezz.jei.api.gui.drawable.TilingDirection;
+
+public record FluidRendererParameters(long capacity, boolean showCapacity, int width, int height, TilingDirection tilingDirection) {}

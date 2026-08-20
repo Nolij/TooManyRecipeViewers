@@ -94,10 +94,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 			else
 				collectedIngredients.add(ErrorIngredient.TYPED_INSTANCE);
 		} else {
-			final var typedIngredient = TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false)
-				//? if <21.1
-				//.orElse(null)
-				;
+			final var typedIngredient = TypedIngredient.createAndFilterInvalid(ingredientManager, type, ingredient, false);
 			collectedIngredients.add(typedIngredient != null ? typedIngredient : ErrorIngredient.TYPED_INSTANCE);
 		}
 		
@@ -133,10 +130,7 @@ public class TMRVIngredientCollector implements IIngredientAcceptor<TMRVIngredie
 		} else if (typedIngredient instanceof IStackish<?>) {
 			collectedIngredients.add(typedIngredient);
 		} else {
-			final var copy = TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient)
-				//? if <21.1
-				//.orElse(null)
-				;
+			final var copy = TypedIngredient.defensivelyCopyTypedIngredientFromApi(ingredientManager, typedIngredient);
 			collectedIngredients.add(copy != null ? copy : ErrorIngredient.TYPED_INSTANCE);
 		}
 		

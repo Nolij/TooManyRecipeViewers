@@ -60,6 +60,10 @@ The full results and steps followed to obtain them are documented in [BENCHMARKS
 
 `.minecraft/config/jei/blacklist.json` is the only JEI config file that TMRV even reads. This file _should_ work fine for vanilla ingredient types and for modded ingredient types added by a JEI plugin (this does not include mods that support both JEI and EMI natively, such as Mekanism). This is meant to be a stop-gap for packs switching over from JEI. JEMI had a similar flaw. EMI has its own config for hiding ingredients - please use that instead. All other JEI config files are completely ignored by TMRV, and there are no plans to support them.
 
+### Extended Brewing Recipes
+
+This is a very new feature in JEI which I can't find any mods using yet. Currently, TMRV will log an error message and treat these as regular brewing recipes. I intend to support this, I just need a mod that actually uses it to test against.
+
 ### Recipe Manager Plugins
 
 The JEI API supports "Recipe Manager Plugins". These plugins allow mods to control their own recipe registries and handle recipe lookups themselves at runtime.

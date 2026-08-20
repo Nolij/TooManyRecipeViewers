@@ -2,8 +2,8 @@ package dev.nolij.toomanyrecipeviewers;
 
 //? if >=21.1 {
 import mezz.jei.api.helpers.ICodecHelper;
-import com.google.common.collect.ImmutableSetMultimap;
 //?}
+import com.google.common.collect.ImmutableSetMultimap;
 import dev.emi.emi.api.EmiRegistry;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.recipe.RecipeManager;
 import dev.nolij.toomanyrecipeviewers.impl.jei.api.runtime.IngredientManager;
@@ -36,6 +36,7 @@ import mezz.jei.api.runtime.config.IJeiConfigManager;
 import mezz.jei.common.config.IClientToggleState;
 import mezz.jei.common.input.IInternalKeyMappings;
 import mezz.jei.common.platform.IPlatformFluidHelperInternal;
+import mezz.jei.common.recipes.BrewingExtensionHelper;
 import mezz.jei.common.util.StackHelper;
 import mezz.jei.library.config.EditModeConfig;
 import mezz.jei.library.gui.helpers.GuiHelper;
@@ -76,12 +77,12 @@ public final class TooManyRecipeViewers {
 	public volatile IClientToggleState clientToggleState = null;
 	public volatile EditModeConfig editModeConfig = null;
 	public volatile IngredientVisibility ingredientVisibility = null;
-	//? if >=21.1
 	public volatile ImmutableSetMultimap<String, String> modAliases = null;
 	public volatile IModIdHelper modIdHelper = null;
 	public volatile JeiHelpers jeiHelpers = null;
 	public volatile CraftingRecipeCategory craftingCategory = null;
 	public volatile SmithingRecipeCategory smithingCategory = null;
+	public volatile BrewingExtensionHelper brewingExtensionHelper = null;
 	public volatile RecipeManager recipeManager = null;
 	public volatile IRecipeTransferManager recipeTransferManager = null;
 	public volatile IScreenHelper screenHelper = null;

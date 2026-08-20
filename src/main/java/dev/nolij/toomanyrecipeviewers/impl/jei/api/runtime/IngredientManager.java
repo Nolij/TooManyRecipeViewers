@@ -592,23 +592,23 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 	}
 	
 	@Override
-	public void addAlias(Fluid fluid, String s) {
-		throw new UnsupportedOperationException(); // TODO
+	public void addAlias(Fluid fluid, String alias) {
+		addAlias(fluidHelper.getFluidIngredientType(), fluid, alias);
 	}
 	
 	@Override
-	public <B, I> void addAlias(IIngredientTypeWithSubtypes<B, I> iIngredientTypeWithSubtypes, B b, String s) {
-		throw new UnsupportedOperationException(); // TODO
+	public <B, I> void addAlias(IIngredientTypeWithSubtypes<B, I> type, B base, String alias) {
+		addAlias(type, type.getDefaultIngredient(base), alias);
 	}
 	
 	@Override
-	public void addAliases(Fluid fluid, Collection<String> collection) {
-		throw new UnsupportedOperationException(); // TODO
+	public void addAliases(Fluid fluid, Collection<String> aliases) {
+		addAliases(fluidHelper.getFluidIngredientType(), fluid, aliases);
 	}
 	
 	@Override
-	public <B, I> void addAliases(IIngredientTypeWithSubtypes<B, I> iIngredientTypeWithSubtypes, B b, Collection<String> collection) {
-		throw new UnsupportedOperationException(); // TODO
+	public <B, I> void addAliases(IIngredientTypeWithSubtypes<B, I> type, B base, Collection<String> aliases) {
+		addAliases(type, type.getDefaultIngredient(base), aliases);
 	}
 	
 	@Override

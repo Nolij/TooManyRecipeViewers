@@ -70,6 +70,9 @@ repositories {
 	maven("https://maven.taumc.org/releases")
 	maven("https://maven.teamresourceful.com/repository/TerrarformerMC/")
 	maven("https://maven.parchmentmc.org")
+	maven("https://modmaven.dev/")
+	mavenCentral()
+	maven("https://central.sonatype.com/repository/maven-snapshots/")
 //	maven("https://maven.createmod.net/")
 //	maven("https://maven.architectury.dev/")
 //	maven("https://maven.squiddev.cc/")
@@ -152,6 +155,17 @@ val shade: Configuration by configurations.creating {
 
 val modRuntimeOnly: Configuration by configurations.creating {
 	configurations.runtimeClasspath.get().extendsFrom(this)
+}
+
+if (minecraftVersion < "20.5") {
+	configurations.configureEach {
+		resolutionStrategy.eachDependency {
+			if (requested.group == "org.lwjgl" && requested.version?.startsWith("3.") == true) {
+				useVersion("3.3.2")
+				because("compatible with Java 25")
+			}
+		}
+	}
 }
 
 unimined.minecraft {

@@ -54,7 +54,7 @@ public class TMRVStackSerializer implements EmiIngredientSerializer<TMRVStack> {
 		final var ingredient = decode.resultOrPartial(LOGGER::error).orElseThrow();
 		//?} else {
 		/*final var uid = GsonHelper.getAsString(object, UID);
-		final var ingredient = runtime.ingredientManager.getIngredientByUid(type, uid);
+		final var ingredient = runtime.ingredientManager.getIngredientByUid(type, uid).orElseThrow();
 		*///?}
 
 		final var stack = runtime.ingredientManager.getEMIStack(type, ingredient);

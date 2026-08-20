@@ -956,7 +956,7 @@ public class RecipeManager implements IRecipeManager, IRecipeCategoryRegistratio
 			}
 		}
 		LOGGER.info("Added {} extended crafting recipes in {}ms", craftingRecipes, System.currentTimeMillis() - timestamp);
-
+		
 		timestamp = System.currentTimeMillis();
 		var smithingRecipes = 0;
 		final var smithingCategory = category(RecipeTypes.SMITHING);

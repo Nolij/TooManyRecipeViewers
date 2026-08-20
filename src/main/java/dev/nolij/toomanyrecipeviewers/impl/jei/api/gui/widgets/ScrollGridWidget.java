@@ -93,8 +93,7 @@ public class ScrollGridWidget implements IScrollGridWidget {
 	
 	@Override
 	public Optional<RecipeSlotUnderMouse> getSlotUnderMouse(double x, double y) {
-		// TODO
-		return Optional.empty();
+		return Optional.empty(); // TODO
 	}
 	
 	@Override

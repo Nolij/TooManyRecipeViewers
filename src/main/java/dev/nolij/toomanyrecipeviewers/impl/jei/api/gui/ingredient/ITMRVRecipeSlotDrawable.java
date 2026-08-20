@@ -26,21 +26,18 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 	@SuppressWarnings("removal")
 	@Override
 	default List<Component> getTooltip() {
-		// TODO
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(); // TODO
 	}
 	
 	@SuppressWarnings("removal")
 	@Override
 	default void getTooltip(ITooltipBuilder tooltipBuilder) {
-		// TODO
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(); // TODO
 	}
 	
 	@Override
 	default void drawTooltip(GuiGraphics guiGraphics, int i, int i1) {
-		// TODO
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(); // TODO
 	}
 	
 	@SuppressWarnings("removal")
@@ -52,8 +49,7 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 	@SuppressWarnings("removal")
 	@Override
 	default void addTooltipCallback(mezz.jei.api.gui.ingredient.IRecipeSlotTooltipCallback tooltipCallback) {
-		// TODO
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(); // TODO
 	}
 	
 	@SuppressWarnings("removal")
@@ -64,8 +60,7 @@ public interface ITMRVRecipeSlotDrawable extends IRecipeSlotDrawable {
 	
 	@Override
 	default void drawHighlight(GuiGraphics guiGraphics, int colour) {
-		// TODO
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(); // TODO
 	}
 	
 }

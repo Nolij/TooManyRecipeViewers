@@ -405,6 +405,8 @@ public class IngredientManager implements IIngredientManager, IModIngredientRegi
 		return Optional.ofNullable(result);
 	}
 	
+	//? if >=21.1
+	@SuppressWarnings("removal")
 	@Override
 	public <V> Optional<ITypedIngredient<V>> createTypedIngredient(IIngredientType<V> jeiType, V ingredient) {
 		return createTypedIngredient(jeiType, ingredient, false);

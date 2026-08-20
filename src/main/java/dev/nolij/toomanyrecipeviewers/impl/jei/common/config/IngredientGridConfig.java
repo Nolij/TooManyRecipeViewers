@@ -14,7 +14,7 @@ import mezz.jei.common.config.IngredientGridLayoutMode;
 import mezz.jei.common.config.IngredientGridNavigationMode;
 import mezz.jei.common.util.NavigationVisibility;
 
-//? if >=21.1
+//? if <21.1
 //import static dev.nolij.toomanyrecipeviewers.TooManyRecipeViewersMod.LOGGER;
 
 public class IngredientGridConfig implements IIngredientGridConfig {

@@ -110,7 +110,7 @@ public final class EMIPlugin implements EmiPlugin {
 		runtime.lockRegistration();
 	}
 	
-	public static void onRuntimeUnavailable() {
+	public static synchronized void onRuntimeUnavailable() {
 		if (runtime != null) {
 			final var jeiPlugins = runtime.jeiPluginManager;
 			
